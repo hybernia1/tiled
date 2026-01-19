@@ -1,11 +1,11 @@
 import * as Phaser from "phaser";
-import { MAP_H, MAP_W, TILE_WIDTH } from "./constants.js";
+import { CANVAS_HEIGHT, CANVAS_WIDTH } from "./constants.js";
 
 export const createGameConfig = (scenes) => ({
   type: Phaser.AUTO,
   parent: "app",
-  width: TILE_WIDTH * MAP_W,
-  height: TILE_WIDTH * MAP_H,
+  width: CANVAS_WIDTH,
+  height: CANVAS_HEIGHT,
   backgroundColor: "#0f0f14",
   render: {
     pixelArt: true,
@@ -15,8 +15,8 @@ export const createGameConfig = (scenes) => ({
   scale: {
     mode: Phaser.Scale.FIT,
     autoCenter: Phaser.Scale.CENTER_BOTH,
-    width: TILE_WIDTH * MAP_W,
-    height: TILE_WIDTH * MAP_H,
+    width: CANVAS_WIDTH,
+    height: CANVAS_HEIGHT,
     expandParent: true,
     fullscreenTarget: "app",
     zoom: 1,

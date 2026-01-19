@@ -2,6 +2,10 @@ export const TILE_WIDTH = 32;
 export const TILE_HEIGHT = 16;
 export const MAP_W = 60;
 export const MAP_H = 60;
+export const VIEWPORT_W_TILES = 24;
+export const VIEWPORT_H_TILES = 18;
+export const CANVAS_WIDTH = TILE_WIDTH * VIEWPORT_W_TILES;
+export const CANVAS_HEIGHT = TILE_WIDTH * VIEWPORT_H_TILES;
 
 export const PLAYER_SPEED = 180;
 export const BULLET_SPEED = 360;
