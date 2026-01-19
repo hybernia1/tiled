@@ -10,18 +10,9 @@ const TILE_TYPES = {
   WALL: 1,
 };
 
-// ISO krok pro “diamant” (fix mezer)
-function getIsoStep(scene) {
-  const tex = scene.textures.get("tiles");
-  const fallback = TILE_WIDTH / 2;
-
-  if (!tex) return fallback;
-
-  const frame = tex.get("tile-0") || tex.get("tile-1") || tex.get("__BASE");
-  if (!frame) return fallback;
-
-  const w = frame.width || frame.cutWidth || 0;
-  return w ? w / 2 : fallback;
+// ISO krok musí sedět na kolizní grid, jinak jde hráč mimo viditelnou mapu.
+function getIsoStep() {
+  return TILE_WIDTH;
 }
 
 function getFrameWidth(scene, key, preferredFrame = null) {
