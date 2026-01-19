@@ -23,6 +23,13 @@ export class InteractionSystem {
     }
 
     const friendlyNpcDisplay = this.scene.getDisplaySprite(friendlyNpc);
+    const promptDepth =
+      friendlyNpcDisplay?.depth !== undefined
+        ? friendlyNpcDisplay.depth + 2
+        : 12;
+    if (friendlyNpcPrompt) {
+      friendlyNpcPrompt.setDepth(promptDepth);
+    }
     const distance = Phaser.Math.Distance.Between(
       player.x,
       player.y,
@@ -115,10 +122,15 @@ export class InteractionSystem {
     ];
     const joke = Phaser.Utils.Array.GetRandom(jokes);
     const friendlyNpcDisplay = this.scene.getDisplaySprite(this.scene.friendlyNpc);
+    const bubbleDepth =
+      friendlyNpcDisplay?.depth !== undefined
+        ? friendlyNpcDisplay.depth + 3
+        : 13;
 
     this.scene.friendlyNpcBubble
       .setText(joke)
       .setPosition(friendlyNpcDisplay.x, friendlyNpcDisplay.y - 52)
+      .setDepth(bubbleDepth)
       .setVisible(true);
 
     if (this.scene.friendlyNpcBubbleTimer) {
