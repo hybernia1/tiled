@@ -1,4 +1,4 @@
-import Phaser from "phaser";
+import * as Phaser from "phaser";
 
 const TILE_SIZE = 32;
 const MAP_WIDTH = 20;
