@@ -4,6 +4,7 @@ import { MAP_HEIGHT, MAP_WIDTH, TILE_SIZE } from "../config/constants.js";
 export class LightingSystem {
   constructor(scene) {
     this.scene = scene;
+    this.collisionVersion = 0;
   }
 
   createLighting() {
@@ -14,6 +15,7 @@ export class LightingSystem {
         y: TILE_SIZE * 3,
         radius: TILE_SIZE * 5.2,
         enabled: false,
+        isStatic: true,
         color: 0xf8d7a6,
         intensity: 2.1,
       },
@@ -23,6 +25,7 @@ export class LightingSystem {
         y: TILE_SIZE * 8,
         radius: TILE_SIZE * 5.2,
         enabled: false,
+        isStatic: true,
         color: 0xa6d5f8,
         intensity: 2.0,
       },
@@ -82,23 +85,32 @@ export class LightingSystem {
     });
   }
 
-  updateLightingMask() {
+  markCollisionsDirty() {
+    this.collisionVersion += 1;
+  }
+
+  updateLightingMask({ dirtyZoneIds = [], collisionsDirty = false } = {}) {
     if (!this.scene.lightMaskGraphics) {
       return;
     }
 
+    if (collisionsDirty) {
+      this.markCollisionsDirty();
+    }
+
+    const dirtySet = new Set(dirtyZoneIds);
     this.scene.lightMaskGraphics.clear();
     this.scene.lightMaskGraphics.fillStyle(0xffffff, 1);
     this.scene.lightZones.forEach((zone) => {
       if (!zone.enabled) {
         return;
       }
-      this.drawShadowedLight(zone);
+      this.drawShadowedLight(zone, dirtySet);
     });
   }
 
-  drawShadowedLight(zone) {
-    const points = this.castLightRays(zone);
+  drawShadowedLight(zone, dirtySet) {
+    const points = this.getCachedLightPoints(zone, dirtySet);
     const stepCount = 9;
     const maxAlpha = 0.8;
     const minScale = 0.12;
@@ -124,8 +136,58 @@ export class LightingSystem {
     }
   }
 
-  castLightRays(zone) {
-    const rayCount = 96;
+  getCachedLightPoints(zone, dirtySet) {
+    const rayCount = this.getAdaptiveRayCount(zone);
+    const isStatic = zone.isStatic !== false;
+    const needsRecalc =
+      !isStatic ||
+      dirtySet.has(zone.id) ||
+      zone.cacheCollisionVersion !== this.collisionVersion ||
+      zone.cacheRayCount !== rayCount ||
+      zone.cacheX !== zone.x ||
+      zone.cacheY !== zone.y ||
+      zone.cacheRadius !== zone.radius ||
+      !Array.isArray(zone.cachePoints);
+
+    if (!needsRecalc) {
+      return zone.cachePoints;
+    }
+
+    const points = this.castLightRays(zone, rayCount);
+    zone.cachePoints = points;
+    zone.cacheRayCount = rayCount;
+    zone.cacheCollisionVersion = this.collisionVersion;
+    zone.cacheX = zone.x;
+    zone.cacheY = zone.y;
+    zone.cacheRadius = zone.radius;
+    return points;
+  }
+
+  getAdaptiveRayCount(zone) {
+    const radiusFactor = Math.max(1, zone.radius / TILE_SIZE);
+    let rayCount = 48 + radiusFactor * 8;
+
+    if (this.scene.player) {
+      const distance = Phaser.Math.Distance.Between(
+        this.scene.player.x,
+        this.scene.player.y,
+        zone.x,
+        zone.y
+      );
+      if (distance > zone.radius * 4) {
+        rayCount *= 0.45;
+      } else if (distance > zone.radius * 2) {
+        rayCount *= 0.6;
+      } else if (distance > zone.radius * 1.25) {
+        rayCount *= 0.8;
+      }
+    }
+
+    rayCount = Phaser.Math.Clamp(Math.round(rayCount), 32, 160);
+    return Math.round(rayCount / 8) * 8;
+  }
+
+  castLightRays(zone, rayCount) {
     const stepSize = TILE_SIZE / 6;
     const points = [];
     for (let i = 0; i < rayCount; i += 1) {

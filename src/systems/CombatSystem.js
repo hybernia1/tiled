@@ -126,7 +126,7 @@ export class CombatSystem {
       destroyedTile.setCollision(false);
       this.scene.mapLayer.removeTileAt(tile.x, tile.y);
     }
-    this.scene.lightingSystem?.updateLightingMask();
+    this.scene.lightingSystem?.updateLightingMask({ collisionsDirty: true });
   }
 
   updateShooting(time) {
