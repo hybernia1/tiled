@@ -19,6 +19,8 @@ class DemoScene extends Phaser.Scene {
     this.createFriendlyNpcTexture();
     this.createPlayerTexture();
     this.createBulletTexture();
+    this.createAppleTexture();
+    this.createPearTexture();
   }
 
   create() {
@@ -27,6 +29,8 @@ class DemoScene extends Phaser.Scene {
     this.createBullets();
     this.createNpc();
     this.createFriendlyNpc();
+    this.createCollectibles();
+    this.createInventoryUi();
     this.setupNpcCombat();
     this.createInstructions();
     this.setupControls();
@@ -39,6 +43,7 @@ class DemoScene extends Phaser.Scene {
     this.cleanupBullets(time);
     this.updateNpcHealthDisplay();
     this.updateFriendlyNpcInteraction();
+    this.updateInventoryToggle();
   }
 
   createTilesetTexture() {
@@ -139,6 +144,37 @@ class DemoScene extends Phaser.Scene {
     bullet.refresh();
   }
 
+  createAppleTexture() {
+    const apple = this.textures.createCanvas("apple", 20, 20);
+    const ctx = apple.getContext();
+
+    ctx.fillStyle = "#d83b2d";
+    ctx.beginPath();
+    ctx.arc(10, 11, 8, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = "#4d7c2d";
+    ctx.fillRect(9, 2, 2, 5);
+
+    apple.refresh();
+  }
+
+  createPearTexture() {
+    const pear = this.textures.createCanvas("pear", 20, 20);
+    const ctx = pear.getContext();
+
+    ctx.fillStyle = "#d8c83b";
+    ctx.beginPath();
+    ctx.arc(10, 12, 7, 0, Math.PI * 2);
+    ctx.arc(10, 6, 4, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = "#6b8f3a";
+    ctx.fillRect(9, 1, 2, 4);
+
+    pear.refresh();
+  }
+
   createMap() {
     const data = [];
     for (let y = 0; y < MAP_HEIGHT; y += 1) {
@@ -204,12 +240,13 @@ class DemoScene extends Phaser.Scene {
 
   createNpc() {
     this.npcMaxHealth = 3;
-    this.npcHealth = this.npcMaxHealth;
     this.npc = this.physics.add.sprite(2 * TILE_SIZE, 2 * TILE_SIZE, "npc");
     this.npc.setOrigin(0.5, 0.5);
     this.npc.setImmovable(true);
     this.npc.body.setAllowGravity(false);
     this.npc.setData("lastHitAt", -Infinity);
+    this.npc.setData("maxHealth", this.npcMaxHealth);
+    this.npc.setData("health", this.npcMaxHealth);
 
     this.npcHealthBar = this.add.graphics().setDepth(9);
     this.npcHealthValue = this.add
@@ -278,6 +315,87 @@ class DemoScene extends Phaser.Scene {
       .setVisible(false);
   }
 
+  createCollectibles() {
+    this.collectibles = this.physics.add.group({ allowGravity: false });
+    const appleSpots = [
+      { x: 4, y: 3 },
+      { x: 9, y: 6 },
+      { x: 13, y: 9 },
+    ];
+    const pearSpots = [
+      { x: 6, y: 9 },
+      { x: 16, y: 4 },
+    ];
+
+    appleSpots.forEach((spot) => {
+      const apple = this.collectibles.create(
+        spot.x * TILE_SIZE,
+        spot.y * TILE_SIZE,
+        "apple"
+      );
+      apple.setData("itemType", "jablko");
+    });
+
+    pearSpots.forEach((spot) => {
+      const pear = this.collectibles.create(
+        spot.x * TILE_SIZE,
+        spot.y * TILE_SIZE,
+        "pear"
+      );
+      pear.setData("itemType", "hruska");
+    });
+
+    this.physics.add.overlap(
+      this.player,
+      this.collectibles,
+      this.handleCollectiblePickup,
+      null,
+      this
+    );
+  }
+
+  createInventoryUi() {
+    this.inventory = {
+      jablko: 0,
+      hruska: 0,
+    };
+    this.inventoryOpen = false;
+
+    const panelWidth = 220;
+    const panelHeight = 140;
+    const panelX = (TILE_SIZE * MAP_WIDTH - panelWidth) / 2;
+    const panelY = (TILE_SIZE * MAP_HEIGHT - panelHeight) / 2;
+
+    this.inventoryPanel = this.add.graphics().setDepth(20);
+    this.inventoryPanel.fillStyle(0x101522, 0.95);
+    this.inventoryPanel.fillRoundedRect(
+      panelX,
+      panelY,
+      panelWidth,
+      panelHeight,
+      10
+    );
+    this.inventoryPanel.lineStyle(2, 0x6fd3ff, 0.8);
+    this.inventoryPanel.strokeRoundedRect(
+      panelX,
+      panelY,
+      panelWidth,
+      panelHeight,
+      10
+    );
+
+    this.inventoryText = this.add
+      .text(panelX + 18, panelY + 16, "", {
+        fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+        fontSize: "14px",
+        color: "#f6f2ee",
+      })
+      .setDepth(21);
+
+    this.updateInventoryUi();
+    this.setInventoryUiVisible(false);
+  }
+
   setupNpcCombat() {
     this.physics.add.overlap(
       this.bullets,
@@ -324,10 +442,11 @@ class DemoScene extends Phaser.Scene {
       return;
     }
 
+    const npcHealth = this.npc.getData("health");
+    const npcMaxHealth = this.npc.getData("maxHealth");
     const barWidth = 44;
     const barHeight = 6;
-    const fillWidth =
-      (this.npcHealth / this.npcMaxHealth) * (barWidth - 2);
+    const fillWidth = (npcHealth / npcMaxHealth) * (barWidth - 2);
     const barX = this.npc.x - barWidth / 2;
     const barY = this.npc.y - 28;
 
@@ -345,7 +464,7 @@ class DemoScene extends Phaser.Scene {
     this.npcHealthBar.setVisible(true);
 
     this.npcHealthValue
-      .setText(`${this.npcHealth}/${this.npcMaxHealth}`)
+      .setText(`${npcHealth}/${npcMaxHealth}`)
       .setPosition(this.npc.x, barY - 2)
       .setVisible(true);
   }
@@ -365,10 +484,12 @@ class DemoScene extends Phaser.Scene {
     bullet.setData("hitNpc", true);
     bullet.disableBody(true, true);
 
-    this.npcHealth = Math.max(0, this.npcHealth - 1);
+    const currentHealth = npc.getData("health");
+    const newHealth = Math.max(0, currentHealth - 1);
+    npc.setData("health", newHealth);
     this.updateNpcHealthDisplay();
 
-    if (this.npcHealth === 0) {
+    if (newHealth === 0) {
       npc.setActive(false);
       npc.setVisible(false);
       npc.body.enable = false;
@@ -394,7 +515,7 @@ class DemoScene extends Phaser.Scene {
       .text(
         16,
         16,
-        "WASD/šipky: pohyb | Mezerník: střelba | E: rozhovor",
+        "WASD/šipky: pohyb | Mezerník: střelba | E: rozhovor | B: inventář",
         {
           fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
           fontSize: "16px",
@@ -420,6 +541,9 @@ class DemoScene extends Phaser.Scene {
     this.interactKey = this.input.keyboard.addKey(
       Phaser.Input.Keyboard.KeyCodes.E
     );
+    this.inventoryKey = this.input.keyboard.addKey(
+      Phaser.Input.Keyboard.KeyCodes.B
+    );
   }
 
   updateFriendlyNpcInteraction() {
@@ -442,6 +566,44 @@ class DemoScene extends Phaser.Scene {
     if (isClose && Phaser.Input.Keyboard.JustDown(this.interactKey)) {
       this.showFriendlyNpcDialogue();
     }
+  }
+
+  handleCollectiblePickup(player, collectible) {
+    if (!collectible?.active) {
+      return;
+    }
+
+    const itemType = collectible.getData("itemType");
+    if (itemType && this.inventory[itemType] !== undefined) {
+      this.inventory[itemType] += 1;
+      this.updateInventoryUi();
+    }
+
+    collectible.disableBody(true, true);
+  }
+
+  updateInventoryUi() {
+    if (!this.inventoryText) {
+      return;
+    }
+
+    this.inventoryText.setText(
+      ["Inventář", "", `Jablka: ${this.inventory.jablko}`, `Hrušky: ${this.inventory.hruska}`]
+    );
+  }
+
+  setInventoryUiVisible(isVisible) {
+    this.inventoryPanel.setVisible(isVisible);
+    this.inventoryText.setVisible(isVisible);
+  }
+
+  updateInventoryToggle() {
+    if (!this.inventoryKey || !Phaser.Input.Keyboard.JustDown(this.inventoryKey)) {
+      return;
+    }
+
+    this.inventoryOpen = !this.inventoryOpen;
+    this.setInventoryUiVisible(this.inventoryOpen);
   }
 
   showFriendlyNpcDialogue() {
