@@ -243,9 +243,6 @@ export class CombatSystem {
     bullet.body.enable = true;
     bullet.setPosition(this.scene.player.x, this.scene.player.y);
     bullet.setData("hitNpc", false);
-    if (this.scene.isometricEnabled) {
-      bullet.setScale(1, this.scene.isometricScaleY);
-    }
 
     const direction = this.scene.facing.clone().normalize();
     bullet.body.setVelocity(
