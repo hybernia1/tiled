@@ -11,6 +11,9 @@ class DemoScene extends Phaser.Scene {
     this.bulletSpeed = 360;
     this.fireCooldownMs = 220;
     this.nextFireTime = 0;
+    this.touchState = null;
+    this.touchActions = null;
+    this.mobileControls = null;
   }
 
   preload() {
@@ -37,6 +40,7 @@ class DemoScene extends Phaser.Scene {
     this.setupNpcCombat();
     this.createInstructions();
     this.setupControls();
+    this.setupMobileControls();
     this.setupColliders();
   }
 
@@ -628,7 +632,7 @@ class DemoScene extends Phaser.Scene {
       .text(
         16,
         16,
-        "WASD/šipky: pohyb | Mezerník: střelba | E: interakce | B: inventář",
+        "WASD/šipky: pohyb | Mezerník: střelba | E: interakce | B: inventář | Dotyk: ovládací tlačítka",
         {
           fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
           fontSize: "16px",
@@ -659,6 +663,137 @@ class DemoScene extends Phaser.Scene {
     );
   }
 
+  setupMobileControls() {
+    if (!this.sys.game.device.input.touch) {
+      return;
+    }
+
+    this.touchState = {
+      up: false,
+      down: false,
+      left: false,
+      right: false,
+      fire: false,
+    };
+    this.touchActions = {
+      interact: false,
+      inventory: false,
+    };
+
+    const uiDepth = 30;
+    const makeButton = (label, onPress) => {
+      const radius = 28;
+      const circle = this.add
+        .circle(0, 0, radius, 0x1c2433, 0.6)
+        .setStrokeStyle(2, 0x6fd3ff, 0.7)
+        .setScrollFactor(0)
+        .setDepth(uiDepth)
+        .setInteractive({ useHandCursor: false });
+      const text = this.add
+        .text(0, 0, label, {
+          fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+          fontSize: "12px",
+          color: "#f6f2ee",
+        })
+        .setOrigin(0.5)
+        .setScrollFactor(0)
+        .setDepth(uiDepth + 1);
+
+      const handlePress = (isDown) => {
+        onPress(isDown);
+      };
+      circle.on("pointerdown", () => handlePress(true));
+      circle.on("pointerup", () => handlePress(false));
+      circle.on("pointerout", () => handlePress(false));
+      circle.on("pointerupoutside", () => handlePress(false));
+
+      return { circle, text, radius };
+    };
+
+    this.mobileControls = {
+      dpad: {
+        up: makeButton("↑", (isDown) => {
+          this.touchState.up = isDown;
+        }),
+        down: makeButton("↓", (isDown) => {
+          this.touchState.down = isDown;
+        }),
+        left: makeButton("←", (isDown) => {
+          this.touchState.left = isDown;
+        }),
+        right: makeButton("→", (isDown) => {
+          this.touchState.right = isDown;
+        }),
+      },
+      actions: {
+        fire: makeButton("Palba", (isDown) => {
+          this.touchState.fire = isDown;
+        }),
+        interact: makeButton("E", (isDown) => {
+          if (isDown) {
+            this.touchActions.interact = true;
+          }
+        }),
+        inventory: makeButton("Inv", (isDown) => {
+          if (isDown) {
+            this.touchActions.inventory = true;
+          }
+        }),
+      },
+    };
+
+    this.positionMobileControls(this.scale.width, this.scale.height);
+    this.scale.on("resize", this.handleResize, this);
+  }
+
+  handleResize(gameSize) {
+    if (!this.mobileControls) {
+      return;
+    }
+    this.positionMobileControls(gameSize.width, gameSize.height);
+  }
+
+  positionMobileControls(width, height) {
+    if (!this.mobileControls) {
+      return;
+    }
+
+    const margin = 24;
+    const dpadCenterX = margin + 70;
+    const dpadCenterY = height - margin - 70;
+    const spacing = 54;
+
+    const { up, down, left, right } = this.mobileControls.dpad;
+    up.circle.setPosition(dpadCenterX, dpadCenterY - spacing);
+    up.text.setPosition(dpadCenterX, dpadCenterY - spacing);
+    down.circle.setPosition(dpadCenterX, dpadCenterY + spacing);
+    down.text.setPosition(dpadCenterX, dpadCenterY + spacing);
+    left.circle.setPosition(dpadCenterX - spacing, dpadCenterY);
+    left.text.setPosition(dpadCenterX - spacing, dpadCenterY);
+    right.circle.setPosition(dpadCenterX + spacing, dpadCenterY);
+    right.text.setPosition(dpadCenterX + spacing, dpadCenterY);
+
+    const actionX = width - margin - 70;
+    const actionY = height - margin - 70;
+    const actionSpacing = 64;
+    const { fire, interact, inventory } = this.mobileControls.actions;
+
+    fire.circle.setPosition(actionX, actionY);
+    fire.text.setPosition(actionX, actionY);
+    interact.circle.setPosition(actionX - actionSpacing, actionY - 40);
+    interact.text.setPosition(actionX - actionSpacing, actionY - 40);
+    inventory.circle.setPosition(actionX - actionSpacing, actionY + 40);
+    inventory.text.setPosition(actionX - actionSpacing, actionY + 40);
+  }
+
+  consumeTouchAction(action) {
+    if (!this.touchActions?.[action]) {
+      return false;
+    }
+    this.touchActions[action] = false;
+    return true;
+  }
+
   updateFriendlyNpcInteraction() {
     if (!this.friendlyNpc || !this.player) {
       return;
@@ -676,7 +811,10 @@ class DemoScene extends Phaser.Scene {
       .setPosition(this.friendlyNpc.x, this.friendlyNpc.y - 30)
       .setVisible(isClose);
 
-    if (isClose && Phaser.Input.Keyboard.JustDown(this.interactKey)) {
+    const interactTriggered =
+      Phaser.Input.Keyboard.JustDown(this.interactKey) ||
+      this.consumeTouchAction("interact");
+    if (isClose && interactTriggered) {
       this.showFriendlyNpcDialogue();
     }
   }
@@ -718,7 +856,10 @@ class DemoScene extends Phaser.Scene {
       .setPosition(closestSwitch.x, closestSwitch.y - 18)
       .setVisible(true);
 
-    if (Phaser.Input.Keyboard.JustDown(this.interactKey)) {
+    const interactTriggered =
+      Phaser.Input.Keyboard.JustDown(this.interactKey) ||
+      this.consumeTouchAction("interact");
+    if (interactTriggered) {
       closestSwitch.setData("isOn", !isOn);
       const zone = this.lightZones.find((entry) => entry.id === zoneId);
       if (zone) {
@@ -758,7 +899,11 @@ class DemoScene extends Phaser.Scene {
   }
 
   updateInventoryToggle() {
-    if (!this.inventoryKey || !Phaser.Input.Keyboard.JustDown(this.inventoryKey)) {
+    if (
+      !this.inventoryKey ||
+      !(Phaser.Input.Keyboard.JustDown(this.inventoryKey) ||
+        this.consumeTouchAction("inventory"))
+    ) {
       return;
     }
 
@@ -792,10 +937,20 @@ class DemoScene extends Phaser.Scene {
       return;
     }
 
-    const left = this.cursors.left.isDown || this.wasd.left.isDown;
-    const right = this.cursors.right.isDown || this.wasd.right.isDown;
-    const up = this.cursors.up.isDown || this.wasd.up.isDown;
-    const down = this.cursors.down.isDown || this.wasd.down.isDown;
+    const left =
+      this.cursors.left.isDown ||
+      this.wasd.left.isDown ||
+      this.touchState?.left;
+    const right =
+      this.cursors.right.isDown ||
+      this.wasd.right.isDown ||
+      this.touchState?.right;
+    const up =
+      this.cursors.up.isDown || this.wasd.up.isDown || this.touchState?.up;
+    const down =
+      this.cursors.down.isDown ||
+      this.wasd.down.isDown ||
+      this.touchState?.down;
 
     let velocityX = 0;
     let velocityY = 0;
@@ -826,7 +981,8 @@ class DemoScene extends Phaser.Scene {
   }
 
   updateShooting(time) {
-    if (!this.fireKey.isDown || time < this.nextFireTime) {
+    const isFiring = this.fireKey.isDown || this.touchState?.fire;
+    if (!isFiring || time < this.nextFireTime) {
       return;
     }
 
@@ -881,6 +1037,12 @@ const config = {
   width: TILE_SIZE * MAP_WIDTH,
   height: TILE_SIZE * MAP_HEIGHT,
   backgroundColor: "#0f0f14",
+  scale: {
+    mode: Phaser.Scale.FIT,
+    autoCenter: Phaser.Scale.CENTER_BOTH,
+    width: TILE_SIZE * MAP_WIDTH,
+    height: TILE_SIZE * MAP_HEIGHT,
+  },
   physics: {
     default: "arcade",
     arcade: {
