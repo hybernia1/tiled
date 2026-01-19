@@ -1,25 +1,37 @@
 import { Phaser } from "../../phaserGlobals.js";
 import { TILE_HEIGHT, TILE_WIDTH } from "../../config/constants.js";
 
-const drawDiamond = (ctx, offsetX, offsetY, fill, stroke) => {
+const drawDiamond = (ctx, offsetX, offsetY, fill, stroke = null, bleed = 0) => {
   const halfW = TILE_WIDTH / 2;
   const halfH = TILE_HEIGHT / 2;
+  const left = -bleed;
+  const right = TILE_WIDTH + bleed;
+  const top = -bleed;
+  const bottom = TILE_HEIGHT + bleed;
 
   ctx.save();
   ctx.translate(offsetX, offsetY);
   ctx.beginPath();
-  ctx.moveTo(halfW, 0);
-  ctx.lineTo(TILE_WIDTH, halfH);
-  ctx.lineTo(halfW, TILE_HEIGHT);
-  ctx.lineTo(0, halfH);
+  ctx.moveTo(halfW, top);
+  ctx.lineTo(right, halfH);
+  ctx.lineTo(halfW, bottom);
+  ctx.lineTo(left, halfH);
   ctx.closePath();
   ctx.fillStyle = fill;
   ctx.fill();
-  ctx.strokeStyle = stroke;
-  ctx.lineWidth = 1;
-  ctx.stroke();
+  if (stroke) {
+    ctx.strokeStyle = stroke;
+    ctx.lineWidth = 1;
+    ctx.stroke();
+  }
   ctx.restore();
 };
+
+const FLOOR_FILL = "#2f5d50";
+const FLOOR_STROKE = "#24463d";
+const WALL_TOP_FILL = "#9e7648";
+const WALL_LEFT_FILL = "#7a5c3b";
+const WALL_RIGHT_FILL = "#8a663f";
 
 export const createTilesetTexture = (scene) => {
   const texture = scene.textures.createCanvas(
@@ -31,8 +43,8 @@ export const createTilesetTexture = (scene) => {
 
   ctx.clearRect(0, 0, texture.width, texture.height);
 
-  drawDiamond(ctx, 0, 0, "#2f5d50", "#1e3a32");
-  drawDiamond(ctx, TILE_WIDTH, 0, "#3c7f73", "#2a544c");
+  drawDiamond(ctx, 0, 0, FLOOR_FILL, FLOOR_STROKE);
+  drawDiamond(ctx, TILE_WIDTH, 0, FLOOR_FILL, FLOOR_STROKE);
 
   texture.add("tile-0", 0, 0, 0, TILE_WIDTH, TILE_HEIGHT);
   texture.add("tile-1", 0, TILE_WIDTH, 0, TILE_WIDTH, TILE_HEIGHT);
@@ -63,9 +75,9 @@ export const createWallTexture = (scene) => {
   ctx.lineTo(halfW, bottomY);
   ctx.lineTo(0, halfH);
   ctx.closePath();
-  ctx.fillStyle = "#9e7648";
+  ctx.fillStyle = WALL_TOP_FILL;
   ctx.fill();
-  ctx.strokeStyle = "#6f5132";
+  ctx.strokeStyle = WALL_TOP_FILL;
   ctx.stroke();
 
   ctx.beginPath();
@@ -74,7 +86,7 @@ export const createWallTexture = (scene) => {
   ctx.lineTo(halfW, baseY);
   ctx.lineTo(0, halfH + wallHeight);
   ctx.closePath();
-  ctx.fillStyle = "#7a5c3b";
+  ctx.fillStyle = WALL_LEFT_FILL;
   ctx.fill();
 
   ctx.beginPath();
@@ -83,7 +95,7 @@ export const createWallTexture = (scene) => {
   ctx.lineTo(halfW, baseY);
   ctx.lineTo(TILE_WIDTH, halfH + wallHeight);
   ctx.closePath();
-  ctx.fillStyle = "#8a663f";
+  ctx.fillStyle = WALL_RIGHT_FILL;
   ctx.fill();
 
   texture.refresh();
