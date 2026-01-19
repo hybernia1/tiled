@@ -14,7 +14,7 @@ export const createSwitches = (scene) => {
       "switch"
     );
     switchSprite.setData("zoneId", spot.zoneId);
-    switchSprite.setData("isOn", false);
+    switchSprite.setData("isOn", true);
     switchSprite.setDepth(3);
     scene.lightObstacles?.add(switchSprite);
   });

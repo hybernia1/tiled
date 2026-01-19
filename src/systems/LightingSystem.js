@@ -14,7 +14,7 @@ export class LightingSystem {
         x: TILE_SIZE * 5,
         y: TILE_SIZE * 3,
         radius: TILE_SIZE * 5.2,
-        enabled: false,
+        enabled: true,
         isStatic: true,
         color: 0xf8d7a6,
         intensity: 2.1,
@@ -24,7 +24,7 @@ export class LightingSystem {
         x: TILE_SIZE * 14,
         y: TILE_SIZE * 8,
         radius: TILE_SIZE * 5.2,
-        enabled: false,
+        enabled: true,
         isStatic: true,
         color: 0xa6d5f8,
         intensity: 2.0,
@@ -32,7 +32,7 @@ export class LightingSystem {
     ];
 
     this.scene.darknessOverlay = this.scene.add.graphics().setDepth(8);
-    this.scene.darknessOverlay.fillStyle(0x06080f, 0.86);
+    this.scene.darknessOverlay.fillStyle(0x06080f, 0.7);
     this.scene.darknessOverlay.fillRect(
       0,
       0,
@@ -112,7 +112,7 @@ export class LightingSystem {
   drawShadowedLight(zone, dirtySet) {
     const points = this.getCachedLightPoints(zone, dirtySet);
     const stepCount = 9;
-    const maxAlpha = 0.8;
+    const maxAlpha = 1;
     const minScale = 0.12;
 
     for (let stepIndex = 0; stepIndex < stepCount; stepIndex += 1) {
