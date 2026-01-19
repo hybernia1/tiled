@@ -1,4 +1,4 @@
-import { TILE_WIDTH } from "../config/constants.js";
+import { TILE_HEIGHT, TILE_WIDTH } from "../config/constants.js";
 
 export const createCollectibles = (scene, onPickup) => {
   scene.collectibles = scene.physics.add.group({ allowGravity: false });
@@ -12,13 +12,21 @@ export const createCollectibles = (scene, onPickup) => {
     { x: 16, y: 4 },
   ];
 
+  const registerCollectible = (sprite, itemType) => {
+    sprite.setDisplaySize(18, 18);
+    sprite.setOrigin(0.5, 0.9);
+    sprite.setData("isoOrigin", { x: 0.5, y: 0.9 });
+    sprite.setData("isoZ", TILE_HEIGHT * 0.5);
+    sprite.setData("itemType", itemType);
+  };
+
   appleSpots.forEach((spot) => {
     const apple = scene.collectibles.create(
       spot.x * TILE_WIDTH,
       spot.y * TILE_WIDTH,
       "apple"
     );
-    apple.setData("itemType", "jablko");
+    registerCollectible(apple, "jablko");
   });
 
   pearSpots.forEach((spot) => {
@@ -27,7 +35,7 @@ export const createCollectibles = (scene, onPickup) => {
       spot.y * TILE_WIDTH,
       "pear"
     );
-    pear.setData("itemType", "hruska");
+    registerCollectible(pear, "hruska");
   });
 
   scene.physics.add.overlap(scene.player, scene.collectibles, onPickup, null, scene);

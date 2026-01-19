@@ -17,20 +17,25 @@ export class InventorySystem {
     const panelX = (this.scene.mapWidthPx - panelWidth) / 2;
     const panelY = (this.scene.mapHeightPx - panelHeight) / 2;
 
-    this.scene.inventoryUi = this.scene.add.container(0, 0).setDepth(20);
+    this.scene.inventoryUi = this.scene.add
+      .container(0, 0)
+      .setDepth(20)
+      .setScrollFactor(0);
 
-    const panel = this.scene.add.graphics();
+    const panel = this.scene.add.graphics().setScrollFactor(0);
     panel.fillStyle(0x101522, 0.95);
     panel.fillRoundedRect(panelX, panelY, panelWidth, panelHeight, 12);
     panel.lineStyle(2, 0x6fd3ff, 0.8);
     panel.strokeRoundedRect(panelX, panelY, panelWidth, panelHeight, 12);
     this.scene.inventoryUi.add(panel);
 
-    const title = this.scene.add.text(panelX + 18, panelY + 14, "Inventář", {
-      fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
-      fontSize: "16px",
-      color: "#f6f2ee",
-    });
+    const title = this.scene.add
+      .text(panelX + 18, panelY + 14, "Inventář", {
+        fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+        fontSize: "16px",
+        color: "#f6f2ee",
+      })
+      .setScrollFactor(0);
     this.scene.inventoryUi.add(title);
 
     const slotSize = 46;
@@ -53,7 +58,8 @@ export class InventorySystem {
           0x1c2433,
           0.9
         )
-        .setStrokeStyle(2, slotStroke, 0.8);
+        .setStrokeStyle(2, slotStroke, 0.8)
+        .setScrollFactor(0);
       this.scene.inventoryUi.add(slot);
       return { slotX, slotY, slot };
     };
@@ -73,14 +79,16 @@ export class InventorySystem {
       const { slotX, slotY } = slotPositions[slotIndex];
       const icon = this.scene.add
         .image(slotX + slotSize / 2, slotY + slotSize / 2, iconTexture)
-        .setDisplaySize(26, 26);
+        .setDisplaySize(26, 26)
+        .setScrollFactor(0);
       const count = this.scene.add
         .text(slotX + slotSize - 6, slotY + slotSize - 6, "0", {
           fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
           fontSize: "12px",
           color: "#f6f2ee",
         })
-        .setOrigin(1, 1);
+        .setOrigin(1, 1)
+        .setScrollFactor(0);
 
       this.scene.inventoryUi.add(icon);
       this.scene.inventoryUi.add(count);
