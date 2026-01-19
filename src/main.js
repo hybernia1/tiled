@@ -25,6 +25,7 @@ class DemoScene extends Phaser.Scene {
     this.createPlayer();
     this.createBullets();
     this.createNpc();
+    this.setupNpcCombat();
     this.createInstructions();
     this.setupControls();
   }
@@ -156,8 +157,23 @@ class DemoScene extends Phaser.Scene {
   }
 
   createNpc() {
-    this.npc = this.add.sprite(2 * TILE_SIZE, 2 * TILE_SIZE, "npc");
+    this.npcMaxHealth = 3;
+    this.npcHealth = this.npcMaxHealth;
+    this.npc = this.physics.add.sprite(2 * TILE_SIZE, 2 * TILE_SIZE, "npc");
     this.npc.setOrigin(0.5, 0.5);
+    this.npc.setImmovable(true);
+    this.npc.body.setAllowGravity(false);
+
+    this.npcHealthText = this.add
+      .text(16, 48, "", {
+        fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+        fontSize: "16px",
+        color: "#f6f2ee",
+        backgroundColor: "rgba(0, 0, 0, 0.35)",
+        padding: { x: 8, y: 4 },
+      })
+      .setDepth(10);
+    this.updateNpcHealthText();
 
     const pathPoints = [
       { x: 2, y: 2 },
@@ -166,7 +182,7 @@ class DemoScene extends Phaser.Scene {
       { x: 2, y: MAP_HEIGHT - 3 },
     ];
 
-    this.tweens.chain({
+    this.npcTween = this.tweens.chain({
       targets: this.npc,
       loop: -1,
       tweens: pathPoints.map((point) => ({
@@ -176,6 +192,54 @@ class DemoScene extends Phaser.Scene {
         ease: "Sine.easeInOut",
       })),
     });
+  }
+
+  setupNpcCombat() {
+    this.physics.add.overlap(
+      this.bullets,
+      this.npc,
+      this.handleNpcHit,
+      null,
+      this
+    );
+  }
+
+  updateNpcHealthText() {
+    if (!this.npcHealthText) {
+      return;
+    }
+    this.npcHealthText.setText(`NPC životy: ${this.npcHealth}`);
+  }
+
+  handleNpcHit(bullet, npc) {
+    if (!npc.active || !bullet.active) {
+      return;
+    }
+
+    bullet.setActive(false);
+    bullet.setVisible(false);
+    bullet.body.setVelocity(0, 0);
+
+    this.npcHealth = Math.max(0, this.npcHealth - 1);
+    this.updateNpcHealthText();
+
+    if (this.npcHealth === 0) {
+      npc.setActive(false);
+      npc.setVisible(false);
+      npc.body.enable = false;
+      if (this.npcTween) {
+        this.npcTween.stop();
+      }
+      this.add
+        .text(16, 80, "NPC poražen!", {
+          fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+          fontSize: "16px",
+          color: "#f6f2ee",
+          backgroundColor: "rgba(0, 0, 0, 0.35)",
+          padding: { x: 8, y: 4 },
+        })
+        .setDepth(10);
+    }
   }
 
   createInstructions() {
