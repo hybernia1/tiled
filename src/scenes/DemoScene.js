@@ -56,6 +56,7 @@ export class DemoScene extends Phaser.Scene {
 
   create() {
     this.locale = this.registry.get("locale") ?? resolveLocale();
+    this.isPaused = false;
     this.lightingSystem = new LightingSystem(this);
     this.inventorySystem = new InventorySystem(this);
     this.interactionSystem = new InteractionSystem(
@@ -79,12 +80,17 @@ export class DemoScene extends Phaser.Scene {
     this.inventorySystem.createInventoryUi();
     this.combatSystem.setupNpcCombat();
     this.createInstructions();
+    this.createPauseMenu();
     this.inputSystem.setupControls();
     this.inputSystem.setupMobileControls();
+    this.setupPauseInput();
     this.setupColliders();
   }
 
   update(time) {
+    if (this.isPaused) {
+      return;
+    }
     this.movementSystem.updatePlayerMovement();
     this.combatSystem.updateShooting(time);
     this.combatSystem.cleanupBullets(time);
@@ -111,6 +117,105 @@ export class DemoScene extends Phaser.Scene {
         }
       )
       .setDepth(10);
+  }
+
+  createPauseMenu() {
+    const { width, height } = this.scale;
+    const overlay = this.add
+      .rectangle(0, 0, width, height, 0x0b0c10, 0.65)
+      .setOrigin(0)
+      .setScrollFactor(0);
+
+    this.pauseTitleText = this.add
+      .text(width / 2, height / 2 - 90, "", {
+        fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+        fontSize: "36px",
+        color: "#f6f2ee",
+      })
+      .setOrigin(0.5)
+      .setScrollFactor(0);
+
+    this.pauseResumeText = this.add
+      .text(width / 2, height / 2 - 10, "", {
+        fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+        fontSize: "22px",
+        color: "#f6f2ee",
+      })
+      .setOrigin(0.5)
+      .setScrollFactor(0)
+      .setInteractive({ useHandCursor: true });
+
+    this.pauseQuitText = this.add
+      .text(width / 2, height / 2 + 30, "", {
+        fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+        fontSize: "20px",
+        color: "#cfc9c4",
+      })
+      .setOrigin(0.5)
+      .setScrollFactor(0)
+      .setInteractive({ useHandCursor: true });
+
+    this.pauseHintText = this.add
+      .text(width / 2, height / 2 + 80, "", {
+        fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+        fontSize: "14px",
+        color: "#b7b2ad",
+      })
+      .setOrigin(0.5)
+      .setScrollFactor(0);
+
+    this.pauseMenuContainer = this.add
+      .container(0, 0, [
+        overlay,
+        this.pauseTitleText,
+        this.pauseResumeText,
+        this.pauseQuitText,
+        this.pauseHintText,
+      ])
+      .setDepth(60)
+      .setVisible(false);
+
+    this.updatePauseTexts();
+
+    this.pauseResumeText.on("pointerdown", () => this.resumeGame());
+    this.pauseQuitText.on("pointerdown", () => this.quitToMenu());
+  }
+
+  updatePauseTexts() {
+    this.pauseTitleText.setText(t(this.locale, "pauseTitle"));
+    this.pauseResumeText.setText(t(this.locale, "pauseResume"));
+    this.pauseQuitText.setText(t(this.locale, "pauseQuit"));
+    this.pauseHintText.setText(t(this.locale, "pauseHint"));
+  }
+
+  setupPauseInput() {
+    this.input.keyboard.on("keydown-ESC", () => this.togglePause());
+    this.input.keyboard.on("keydown-P", () => this.togglePause());
+  }
+
+  togglePause() {
+    if (this.isPaused) {
+      this.resumeGame();
+      return;
+    }
+    this.pauseGame();
+  }
+
+  pauseGame() {
+    this.isPaused = true;
+    this.physics.world.pause();
+    this.pauseMenuContainer.setVisible(true);
+  }
+
+  resumeGame() {
+    this.isPaused = false;
+    this.physics.world.resume();
+    this.pauseMenuContainer.setVisible(false);
+  }
+
+  quitToMenu() {
+    this.resumeGame();
+    this.scene.start("menu");
   }
 
   setupColliders() {
