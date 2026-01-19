@@ -55,6 +55,7 @@ export const createMap = (scene) => {
         y * TILE_SIZE,
         0,
         "tiles",
+        undefined,
         `tile-${tileIndex}`
       );
       isoTile.setDepth(0);
