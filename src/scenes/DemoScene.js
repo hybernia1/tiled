@@ -97,7 +97,7 @@ export class DemoScene extends Phaser.Scene {
     this.inventorySystem.createInventoryUi();
     this.setupIsometricSprites();
     this.physics.world.setBounds(0, 0, this.mapWidthPx, this.mapHeightPx);
-    this.cameras.main.setBounds(0, 0, this.mapWidthPx, this.mapHeightPx);
+    this.configureIsometricCameraBounds();
     this.cameras.main.startFollow(this.getDisplaySprite(this.player), true, 1, 1);
     this.cameras.main.setZoom(1);
     this.cameras.main.roundPixels = true;
@@ -132,6 +132,39 @@ export class DemoScene extends Phaser.Scene {
     this.attachIsoSprite(this.npc);
     this.attachIsoSprite(this.friendlyNpc);
     this.attachIsoGroup(this.collectibles);
+  }
+
+  configureIsometricCameraBounds() {
+    const projector = this.iso?.projector;
+    if (!projector) {
+      this.cameras.main.setBounds(0, 0, this.mapWidthPx, this.mapHeightPx);
+      return;
+    }
+
+    const maxIsoX = this.mapWidthPx - TILE_WIDTH;
+    const maxIsoY = this.mapHeightPx - TILE_WIDTH;
+    const corners = [
+      { x: 0, y: 0, z: 0 },
+      { x: maxIsoX, y: 0, z: 0 },
+      { x: 0, y: maxIsoY, z: 0 },
+      { x: maxIsoX, y: maxIsoY, z: 0 },
+    ].map((point) => projector.project(point));
+
+    const xs = corners.map((point) => point.x);
+    const ys = corners.map((point) => point.y);
+    const paddingX = TILE_WIDTH;
+    const paddingY = TILE_WIDTH;
+    const minX = Math.min(...xs) - paddingX;
+    const maxX = Math.max(...xs) + paddingX;
+    const minY = Math.min(...ys) - paddingY;
+    const maxY = Math.max(...ys) + paddingY;
+
+    this.cameras.main.setBounds(
+      Math.floor(minX),
+      Math.floor(minY),
+      Math.ceil(maxX - minX),
+      Math.ceil(maxY - minY)
+    );
   }
 
   attachIsoGroup(group) {
