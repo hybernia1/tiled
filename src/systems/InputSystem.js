@@ -42,7 +42,7 @@ export class InputSystem {
       inventory: false,
     };
 
-    const uiDepth = 30;
+    const uiDepth = 10000;
     const makeButton = (label, onPress) => {
       const radius = 28;
       const circle = this.scene.add

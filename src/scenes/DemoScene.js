@@ -259,7 +259,7 @@ export class DemoScene extends Phaser.Scene {
         this.pauseFullscreenText,
         this.pauseHintText,
       ])
-      .setDepth(60)
+      .setDepth(11000)
       .setVisible(false);
 
     this.updatePauseTexts();
