@@ -57,6 +57,7 @@ export class DemoScene extends Phaser.Scene {
   create() {
     this.locale = this.registry.get("locale") ?? resolveLocale();
     this.isPaused = false;
+    this.lights.enable().setAmbientColor(0x1b1f2e);
     this.lightingSystem = new LightingSystem(this);
     this.inventorySystem = new InventorySystem(this);
     this.interactionSystem = new InteractionSystem(
@@ -86,6 +87,7 @@ export class DemoScene extends Phaser.Scene {
     this.setupPauseInput();
     this.setupFullscreenInput();
     this.setupColliders();
+    this.applyLightPipeline();
   }
 
   update(time) {
@@ -101,6 +103,26 @@ export class DemoScene extends Phaser.Scene {
     this.inventorySystem.updateInventoryToggle((action) =>
       this.interactionSystem.consumeTouchAction(action)
     );
+    this.lightingSystem.updateZoneLights();
+  }
+
+  applyLightPipeline() {
+    const applyPipeline = (gameObject) => {
+      if (gameObject?.setPipeline) {
+        gameObject.setPipeline("Light2D");
+      }
+    };
+
+    const applyGroupPipeline = (group) => {
+      group?.children?.iterate((child) => applyPipeline(child));
+    };
+
+    applyPipeline(this.mapLayer);
+    applyPipeline(this.player);
+    applyPipeline(this.npc);
+    applyPipeline(this.friendlyNpc);
+    applyGroupPipeline(this.switches);
+    applyGroupPipeline(this.collectibles);
   }
 
   createInstructions() {

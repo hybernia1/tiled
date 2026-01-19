@@ -1,3 +1,5 @@
+import { setFlatNormalMap } from "./normalMaps.js";
+
 const drawPlayerFrame = (ctx, offsetX, pose) => {
   ctx.save();
   ctx.translate(offsetX, 0);
@@ -52,4 +54,6 @@ export const createPlayerTexture = (scene) => {
       frameHeight: 32,
     });
   }
+
+  setFlatNormalMap(scene, "player", 96, 32);
 };

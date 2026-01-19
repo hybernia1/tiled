@@ -88,6 +88,7 @@ export class InteractionSystem {
       if (zone) {
         zone.enabled = !isOn;
         this.lightingSystem.updateLightingMask();
+        this.lightingSystem.updateZoneLights();
       }
     }
   }

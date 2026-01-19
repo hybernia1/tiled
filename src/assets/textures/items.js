@@ -1,3 +1,5 @@
+import { setFlatNormalMap } from "./normalMaps.js";
+
 export const createAppleTexture = (scene) => {
   const apple = scene.textures.createCanvas("apple", 20, 20);
   const ctx = apple.getContext();
@@ -11,6 +13,8 @@ export const createAppleTexture = (scene) => {
   ctx.fillRect(9, 2, 2, 5);
 
   apple.refresh();
+
+  setFlatNormalMap(scene, "apple", 20, 20);
 };
 
 export const createPearTexture = (scene) => {
@@ -27,4 +31,6 @@ export const createPearTexture = (scene) => {
   ctx.fillRect(9, 1, 2, 4);
 
   pear.refresh();
+
+  setFlatNormalMap(scene, "pear", 20, 20);
 };

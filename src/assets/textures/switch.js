@@ -1,3 +1,5 @@
+import { setFlatNormalMap } from "./normalMaps.js";
+
 export const createSwitchTexture = (scene) => {
   const switchTexture = scene.textures.createCanvas("switch", 18, 18);
   const ctx = switchTexture.getContext();
@@ -12,4 +14,6 @@ export const createSwitchTexture = (scene) => {
   ctx.fillRect(7, 6, 4, 6);
 
   switchTexture.refresh();
+
+  setFlatNormalMap(scene, "switch", 18, 18);
 };

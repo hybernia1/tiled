@@ -1,3 +1,5 @@
+import { setFlatNormalMap } from "./normalMaps.js";
+
 export const createNpcTexture = (scene) => {
   const npc = scene.textures.createCanvas("npc", 32, 32);
   const ctx = npc.getContext();
@@ -17,4 +19,6 @@ export const createNpcTexture = (scene) => {
   ctx.fill();
 
   npc.refresh();
+
+  setFlatNormalMap(scene, "npc", 32, 32);
 };
