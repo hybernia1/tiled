@@ -42,10 +42,15 @@ export class MovementSystem {
         direction.y * this.scene.playerSpeed
       );
       this.scene.facing = direction.clone();
-      player.anims.play("player-walk", true);
+      player.setFlipX(direction.x < 0);
+      const walkAnim = direction.y < 0 ? "player-walk-back" : "player-walk-front";
+      player.anims.play(walkAnim, true);
     } else {
       player.body.setVelocity(0, 0);
-      player.anims.play("player-idle", true);
+      player.setFlipX(this.scene.facing?.x < 0);
+      const idleAnim =
+        this.scene.facing?.y < 0 ? "player-idle-back" : "player-idle-front";
+      player.anims.play(idleAnim, true);
     }
   }
 }

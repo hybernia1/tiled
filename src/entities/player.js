@@ -3,6 +3,8 @@ import { PLAYER_MAX_HEALTH, TILE_HEIGHT, TILE_WIDTH } from "../config/constants.
 
 const IDLE_FRAMES = 4;
 const WALK_FRAMES = 4;
+const BACK_IDLE_FRAMES = 4;
+const BACK_WALK_FRAMES = 4;
 
 export const createPlayer = (scene) => {
   const startX = 4 * TILE_WIDTH;
@@ -17,9 +19,9 @@ export const createPlayer = (scene) => {
   scene.player.setData("health", PLAYER_MAX_HEALTH);
   scene.facing = new Phaser.Math.Vector2(1, 0);
 
-  if (!scene.anims.exists("player-idle")) {
+  if (!scene.anims.exists("player-idle-front")) {
     scene.anims.create({
-      key: "player-idle",
+      key: "player-idle-front",
       frames: scene.anims.generateFrameNumbers("player", {
         start: 0,
         end: IDLE_FRAMES - 1,
@@ -29,9 +31,9 @@ export const createPlayer = (scene) => {
     });
   }
 
-  if (!scene.anims.exists("player-walk")) {
+  if (!scene.anims.exists("player-walk-front")) {
     scene.anims.create({
-      key: "player-walk",
+      key: "player-walk-front",
       frames: scene.anims.generateFrameNumbers("player", {
         start: IDLE_FRAMES,
         end: IDLE_FRAMES + WALK_FRAMES - 1,
@@ -41,5 +43,34 @@ export const createPlayer = (scene) => {
     });
   }
 
-  scene.player.play("player-idle");
+  if (!scene.anims.exists("player-idle-back")) {
+    scene.anims.create({
+      key: "player-idle-back",
+      frames: scene.anims.generateFrameNumbers("player", {
+        start: IDLE_FRAMES + WALK_FRAMES,
+        end: IDLE_FRAMES + WALK_FRAMES + BACK_IDLE_FRAMES - 1,
+      }),
+      frameRate: 3,
+      repeat: -1,
+    });
+  }
+
+  if (!scene.anims.exists("player-walk-back")) {
+    scene.anims.create({
+      key: "player-walk-back",
+      frames: scene.anims.generateFrameNumbers("player", {
+        start: IDLE_FRAMES + WALK_FRAMES + BACK_IDLE_FRAMES,
+        end:
+          IDLE_FRAMES +
+          WALK_FRAMES +
+          BACK_IDLE_FRAMES +
+          BACK_WALK_FRAMES -
+          1,
+      }),
+      frameRate: 8,
+      repeat: -1,
+    });
+  }
+
+  scene.player.play("player-idle-front");
 };
