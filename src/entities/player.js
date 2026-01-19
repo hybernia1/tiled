@@ -1,5 +1,5 @@
 import * as Phaser from "phaser";
-import { TILE_SIZE } from "../config/constants.js";
+import { PLAYER_MAX_HEALTH, TILE_SIZE } from "../config/constants.js";
 
 export const createPlayer = (scene) => {
   const startX = 4 * TILE_SIZE;
@@ -8,6 +8,8 @@ export const createPlayer = (scene) => {
   scene.player = scene.physics.add.sprite(startX, startY, "player", 0);
   scene.player.setCollideWorldBounds(true);
   scene.player.setDepth(2);
+  scene.player.setData("maxHealth", PLAYER_MAX_HEALTH);
+  scene.player.setData("health", PLAYER_MAX_HEALTH);
   scene.facing = new Phaser.Math.Vector2(1, 0);
 
   if (!scene.anims.exists("player-idle")) {
