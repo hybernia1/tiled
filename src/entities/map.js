@@ -9,6 +9,7 @@ const TILE_TYPES = {
   FLOOR: 0,
   WALL: 1,
   HARD_WALL: 2,
+  POND: 3,
 };
 
 // ISO krok musí sedět na kolizní grid, jinak jde hráč mimo viditelnou mapu.
@@ -61,11 +62,24 @@ const generateMapData = () => {
     }
   });
 
-  return { data };
+  const pondTiles = [
+    { x: 26, y: 27 },
+    { x: 27, y: 27 },
+    { x: 26, y: 28 },
+    { x: 27, y: 28 },
+  ];
+
+  pondTiles.forEach(({ x, y }) => {
+    if (data[y]?.[x] !== undefined) {
+      data[y][x] = TILE_TYPES.POND;
+    }
+  });
+
+  return { data, pondTiles };
 };
 
 export const createMap = (scene) => {
-  const { data } = generateMapData();
+  const { data, pondTiles } = generateMapData();
 
   // collision tilemap (grid)
   const map = scene.make.tilemap({
@@ -101,7 +115,7 @@ export const createMap = (scene) => {
   const ISO_STEP = getIsoStep(scene);
 
   // iso dlaždice mají šířku 2× krok, jinak vzniknou optické mezery
-  const floorW = getFrameWidth(scene, "tiles", "tile-0") || ISO_STEP * 2;
+  const floorW = getFrameWidth(scene, "grass", "grass-0") || ISO_STEP * 2;
   const desiredFloorW = ISO_STEP * 2;
   const floorScale = floorW ? desiredFloorW / floorW : 1;
   const wallW = getFrameWidth(scene, "wall") || 0;
@@ -109,6 +123,8 @@ export const createMap = (scene) => {
   const mountainW = getFrameWidth(scene, "mountains", "mountain-0") || 0;
   const mountainScale = mountainW ? desiredFloorW / mountainW : floorScale;
   const mountainFrames = ["mountain-0", "mountain-1", "mountain-2"];
+  const pondW = getFrameWidth(scene, "pond") || 0;
+  const pondScale = pondW ? desiredFloorW / pondW : floorScale;
 
   for (let y = 0; y < MAP_H; y += 1) {
     for (let x = 0; x < MAP_W; x += 1) {
@@ -116,12 +132,12 @@ export const createMap = (scene) => {
       const isoY = y * ISO_STEP;
 
       // podlaha všude
-      const floorFrame = (x + y) % 2 === 0 ? "tile-0" : "tile-1";
+      const floorFrame = (x + y) % 2 === 0 ? "grass-0" : "grass-1";
       const floorTile = scene.add.isoSprite(
         isoX,
         isoY,
         0,
-        "tiles",
+        "grass",
         undefined,
         floorFrame
       );
@@ -134,6 +150,16 @@ export const createMap = (scene) => {
 
       if (!scene.isoTiles[y]) scene.isoTiles[y] = [];
       scene.isoTiles[y][x] = floorTile;
+
+      if (data[y][x] === TILE_TYPES.POND) {
+        const pondTile = scene.add.isoSprite(isoX, isoY, 1, "pond");
+        pondTile.setOrigin(0.5, 1);
+        pondTile.setScale(pondScale);
+        pondTile.isoX = isoX;
+        pondTile.isoY = isoY;
+        pondTile.isoZ = 1;
+        pondTile.setDepth(pondTile.isoX + pondTile.isoY + 1);
+      }
 
       // zdi jen okolo
       if (data[y][x] === TILE_TYPES.WALL) {

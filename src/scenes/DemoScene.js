@@ -18,13 +18,12 @@ import { createAppleTexture, createPearTexture } from "../assets/textures/items.
 import { createBulletTexture } from "../assets/textures/bullet.js";
 import { createFriendlyNpcTexture } from "../assets/textures/npcFriend.js";
 import { createNpcTexture } from "../assets/textures/npc.js";
-import {
-  createCollisionTilesTexture,
-  createMountainTexture,
-  createStairsTexture,
-  createTilesetTexture,
-  createWallTexture,
-} from "../assets/textures/tiles.js";
+import { createCollisionTilesTexture } from "../assets/textures/terrain/collision.js";
+import { createGrassTexture } from "../assets/textures/terrain/grass.js";
+import { createMountainTexture } from "../assets/textures/terrain/mountain.js";
+import { createPondTexture } from "../assets/textures/terrain/pond.js";
+import { createStairsTexture } from "../assets/textures/terrain/stairs.js";
+import { createWallTexture } from "../assets/textures/terrain/wall.js";
 import { createBullets } from "../entities/bullets.js";
 import { createFriendlyNpc } from "../entities/friendlyNpc.js";
 import { createCollectibles } from "../entities/collectibles.js";
@@ -65,10 +64,11 @@ export class DemoScene extends Phaser.Scene {
   }
 
   preload() {
-    createTilesetTexture(this);
+    createGrassTexture(this);
     createWallTexture(this);
     createMountainTexture(this);
     createStairsTexture(this);
+    createPondTexture(this);
     createCollisionTilesTexture(this);
     createPlayerTexture(this);
     createNpcTexture(this);
