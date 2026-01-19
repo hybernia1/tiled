@@ -42,8 +42,10 @@ export class MovementSystem {
         direction.y * this.scene.playerSpeed
       );
       this.scene.facing = direction.clone();
+      player.anims.play("player-walk", true);
     } else {
       player.body.setVelocity(0, 0);
+      player.anims.play("player-idle", true);
     }
   }
 }
