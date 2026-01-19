@@ -54,12 +54,12 @@ export class DemoScene extends Phaser.Scene {
 
     createMap(this);
     createPlayer(this);
+    this.setupIsometricSprites();
     this.physics.world.setBounds(0, 0, this.mapWidthPx, this.mapHeightPx);
     this.cameras.main.setBounds(0, 0, this.mapWidthPx, this.mapHeightPx);
-    this.cameras.main.startFollow(this.player, true, 1, 1);
+    this.cameras.main.startFollow(this.getDisplaySprite(this.player), true, 1, 1);
     this.cameras.main.setZoom(1);
     this.cameras.main.roundPixels = true;
-    this.setupIsometricSprites();
     this.createInstructions();
     this.createPauseMenu();
     this.inputSystem.setupControls();
