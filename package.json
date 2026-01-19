@@ -15,7 +15,6 @@
     "phaser": "^3.90.0",
     "howler": "^2.2.4",
     "localforage": "^1.10.0",
-    "phaser3-rex-plugins": "^1.80.0",
-    "phaser-navmesh": "^2.1.0"
+    "phaser3-rex-plugins": "^1.80.0"
   }
 }
