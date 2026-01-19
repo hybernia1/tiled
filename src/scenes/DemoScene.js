@@ -1,4 +1,4 @@
-import * as Phaser from "phaser";
+import { Phaser } from "../phaserGlobals.js";
 import IsoPlugin from "phaser3-plugin-isometric";
 import {
   BULLET_SPEED,
