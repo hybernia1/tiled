@@ -6,9 +6,9 @@ const WALK_FRAMES = 4;
 const BACK_IDLE_FRAMES = 4;
 const BACK_WALK_FRAMES = 4;
 
-export const createPlayer = (scene) => {
-  const startX = 4 * TILE_WIDTH;
-  const startY = 6 * TILE_WIDTH;
+export const createPlayer = (scene, startPosition = null) => {
+  const startX = startPosition?.x ?? 4 * TILE_WIDTH;
+  const startY = startPosition?.y ?? 6 * TILE_WIDTH;
 
   scene.player = scene.physics.add.sprite(startX, startY, "player", 0);
   scene.player.setCollideWorldBounds(true);

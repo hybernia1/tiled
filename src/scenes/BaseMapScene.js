@@ -28,7 +28,7 @@ import { createWallTexture } from "../assets/textures/terrain/wall.js";
 import { createBullets } from "../entities/bullets.js";
 import { createFriendlyNpc } from "../entities/friendlyNpc.js";
 import { createCollectibles } from "../entities/collectibles.js";
-import { createMap } from "../entities/map.js";
+import { createMap, MAP_PORTALS } from "../entities/map.js";
 import { createNpc } from "../entities/npc.js";
 import { createPlayer } from "../entities/player.js";
 import { resolveLocale, t } from "../config/localization.js";
@@ -39,9 +39,12 @@ import { InteractionSystem } from "../systems/InteractionSystem.js";
 import { MovementSystem } from "../systems/MovementSystem.js";
 import { NpcAggroSystem } from "../systems/NpcAggroSystem.js";
 
-export class DemoScene extends Phaser.Scene {
-  constructor() {
-    super({ key: "demo", mapAdd: { isoPlugin: "iso" } });
+export class BaseMapScene extends Phaser.Scene {
+  constructor({ key, mapType, portalTargetKey, portalPromptKey }) {
+    super({ key, mapAdd: { isoPlugin: "iso" } });
+    this.mapType = mapType;
+    this.portalTargetKey = portalTargetKey;
+    this.portalPromptKey = portalPromptKey;
     this.playerSpeed = PLAYER_SPEED;
     this.touchState = null;
     this.touchActions = null;
@@ -58,10 +61,11 @@ export class DemoScene extends Phaser.Scene {
     this.npcAttackDamage = NPC_ATTACK_DAMAGE;
   }
 
-  init() {
+  init(data) {
     if (!Phaser.Plugins.PluginCache.hasCore("IsoPlugin")) {
       this.plugins.installScenePlugin("IsoPlugin", IsoPlugin, "iso", this);
     }
+    this.spawnPoint = data?.spawnPoint ?? null;
   }
 
   preload() {
@@ -92,8 +96,8 @@ export class DemoScene extends Phaser.Scene {
     this.inventorySystem = new InventorySystem(this);
     this.interactionSystem = new InteractionSystem(this, null, this.inventorySystem);
 
-    createMap(this);
-    createPlayer(this);
+    createMap(this, { type: this.mapType });
+    createPlayer(this, this.spawnPoint);
     createCollectibles(this, this.interactionSystem.handleCollectiblePickup);
     createBullets(this);
     createNpc(this);
@@ -106,6 +110,7 @@ export class DemoScene extends Phaser.Scene {
     this.cameras.main.setZoom(1);
     this.cameras.main.roundPixels = true;
     this.createPauseMenu();
+    this.createPortalPrompt();
     this.combatSystem.setupPlayerHealth();
     this.combatSystem.setupNpcCombat();
     this.inputSystem.setupControls();
@@ -128,6 +133,7 @@ export class DemoScene extends Phaser.Scene {
     this.inventorySystem.updateInventoryToggle(
       this.interactionSystem.consumeTouchAction.bind(this.interactionSystem)
     );
+    this.updatePortalInteraction();
     this.syncIsometricSprites();
   }
 
@@ -303,6 +309,62 @@ export class DemoScene extends Phaser.Scene {
       )
       .setDepth(10000)
       .setScrollFactor(0);
+  }
+
+  createPortalPrompt() {
+    this.portalPrompt = this.add
+      .text(0, 0, t(this.locale, this.portalPromptKey), {
+        fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+        fontSize: "16px",
+        color: "#f6f2ee",
+        backgroundColor: "rgba(0, 0, 0, 0.4)",
+        padding: { x: 6, y: 4 },
+      })
+      .setOrigin(0.5)
+      .setVisible(false);
+  }
+
+  updatePortalInteraction() {
+    if (!this.portalSprite || !this.player) {
+      return;
+    }
+
+    const distance = Phaser.Math.Distance.Between(
+      this.player.x,
+      this.player.y,
+      this.portalSprite.isoX ?? this.portalSprite.x,
+      this.portalSprite.isoY ?? this.portalSprite.y
+    );
+    const isClose = distance < 70;
+
+    this.portalPrompt
+      .setPosition(this.portalSprite.x, this.portalSprite.y - 32)
+      .setDepth(this.portalSprite.depth + 2)
+      .setVisible(isClose);
+
+    if (!isClose) {
+      return;
+    }
+
+    const interactTriggered =
+      Phaser.Input.Keyboard.JustDown(this.interactKey) ||
+      this.interactionSystem.consumeTouchAction("interact");
+    if (interactTriggered) {
+      this.scene.start(this.portalTargetKey, {
+        spawnPoint: this.getPortalSpawnPoint(this.portalTargetKey),
+      });
+    }
+  }
+
+  getPortalSpawnPoint(targetKey) {
+    const targetPortal = MAP_PORTALS[targetKey];
+    if (!targetPortal) {
+      return null;
+    }
+    return {
+      x: targetPortal.x * TILE_WIDTH,
+      y: (targetPortal.y + 1) * TILE_WIDTH,
+    };
   }
 
   createPauseMenu() {

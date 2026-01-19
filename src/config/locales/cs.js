@@ -15,4 +15,6 @@ export const cs = {
   pauseQuit: "Zpět do menu",
   pauseFullscreen: "Celá obrazovka",
   pauseHint: "Pokračuj klávesou Esc nebo P",
+  enterCave: "Stiskni E pro vstup do jeskyně",
+  exitCave: "Stiskni E pro návrat ven",
 };
