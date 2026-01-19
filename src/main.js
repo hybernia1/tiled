@@ -16,6 +16,7 @@ class DemoScene extends Phaser.Scene {
   preload() {
     this.createTilesetTexture();
     this.createNpcTexture();
+    this.createFriendlyNpcTexture();
     this.createPlayerTexture();
     this.createBulletTexture();
   }
@@ -25,15 +26,19 @@ class DemoScene extends Phaser.Scene {
     this.createPlayer();
     this.createBullets();
     this.createNpc();
+    this.createFriendlyNpc();
     this.setupNpcCombat();
     this.createInstructions();
     this.setupControls();
+    this.setupColliders();
   }
 
   update(time) {
     this.updatePlayerMovement();
     this.updateShooting(time);
     this.cleanupBullets(time);
+    this.updateNpcHealthDisplay();
+    this.updateFriendlyNpcInteraction();
   }
 
   createTilesetTexture() {
@@ -72,6 +77,27 @@ class DemoScene extends Phaser.Scene {
     ctx.fill();
 
     ctx.fillStyle = "#1a1d2e";
+    ctx.beginPath();
+    ctx.arc(12, 14, 2, 0, Math.PI * 2);
+    ctx.arc(20, 14, 2, 0, Math.PI * 2);
+    ctx.fill();
+
+    npc.refresh();
+  }
+
+  createFriendlyNpcTexture() {
+    const npc = this.textures.createCanvas("npcFriend", 32, 32);
+    const ctx = npc.getContext();
+
+    ctx.fillStyle = "#1d2c3b";
+    ctx.fillRect(0, 0, 32, 32);
+
+    ctx.fillStyle = "#7ad0ff";
+    ctx.beginPath();
+    ctx.arc(16, 16, 10, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = "#0f1a24";
     ctx.beginPath();
     ctx.arc(12, 14, 2, 0, Math.PI * 2);
     ctx.arc(20, 14, 2, 0, Math.PI * 2);
@@ -184,16 +210,18 @@ class DemoScene extends Phaser.Scene {
     this.npc.setImmovable(true);
     this.npc.body.setAllowGravity(false);
 
-    this.npcHealthText = this.add
-      .text(16, 48, "", {
+    this.npcHealthBar = this.add.graphics().setDepth(9);
+    this.npcHealthValue = this.add
+      .text(0, 0, "", {
         fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
-        fontSize: "16px",
+        fontSize: "12px",
         color: "#f6f2ee",
         backgroundColor: "rgba(0, 0, 0, 0.35)",
-        padding: { x: 8, y: 4 },
+        padding: { x: 4, y: 2 },
       })
+      .setOrigin(0.5, 1)
       .setDepth(10);
-    this.updateNpcHealthText();
+    this.updateNpcHealthDisplay();
 
     const pathPoints = [
       { x: 2, y: 2 },
@@ -214,6 +242,41 @@ class DemoScene extends Phaser.Scene {
     });
   }
 
+  createFriendlyNpc() {
+    this.friendlyNpc = this.physics.add.sprite(
+      15 * TILE_SIZE,
+      6 * TILE_SIZE,
+      "npcFriend"
+    );
+    this.friendlyNpc.setImmovable(true);
+    this.friendlyNpc.body.setAllowGravity(false);
+    this.friendlyNpc.setDepth(2);
+
+    this.friendlyNpcPrompt = this.add
+      .text(0, 0, "Stiskni E pro rozhovor", {
+        fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+        fontSize: "12px",
+        color: "#f6f2ee",
+        backgroundColor: "rgba(0, 0, 0, 0.35)",
+        padding: { x: 6, y: 3 },
+      })
+      .setOrigin(0.5, 1)
+      .setDepth(10)
+      .setVisible(false);
+
+    this.friendlyNpcBubble = this.add
+      .text(0, 0, "", {
+        fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+        fontSize: "12px",
+        color: "#f6f2ee",
+        backgroundColor: "rgba(23, 26, 44, 0.9)",
+        padding: { x: 8, y: 4 },
+      })
+      .setOrigin(0.5, 1)
+      .setDepth(11)
+      .setVisible(false);
+  }
+
   setupNpcCombat() {
     this.physics.add.overlap(
       this.bullets,
@@ -231,6 +294,11 @@ class DemoScene extends Phaser.Scene {
     );
   }
 
+  setupColliders() {
+    this.physics.add.collider(this.player, this.mapLayer);
+    this.physics.add.collider(this.player, this.friendlyNpc);
+  }
+
   handleWallHit(bullet, tile) {
     if (!bullet.active || !tile) {
       return;
@@ -244,25 +312,56 @@ class DemoScene extends Phaser.Scene {
     this.mapLayer.removeTileAt(tile.x, tile.y);
   }
 
-  updateNpcHealthText() {
-    if (!this.npcHealthText) {
+  updateNpcHealthDisplay() {
+    if (!this.npcHealthBar || !this.npcHealthValue || !this.npc?.active) {
+      if (this.npcHealthBar) {
+        this.npcHealthBar.setVisible(false);
+      }
+      if (this.npcHealthValue) {
+        this.npcHealthValue.setVisible(false);
+      }
       return;
     }
-    this.npcHealthText.setText(`NPC životy: ${this.npcHealth}`);
+
+    const barWidth = 44;
+    const barHeight = 6;
+    const fillWidth =
+      (this.npcHealth / this.npcMaxHealth) * (barWidth - 2);
+    const barX = this.npc.x - barWidth / 2;
+    const barY = this.npc.y - 28;
+
+    this.npcHealthBar.clear();
+    this.npcHealthBar.fillStyle(0x0f0f14, 0.8);
+    this.npcHealthBar.fillRoundedRect(barX, barY, barWidth, barHeight, 2);
+    this.npcHealthBar.fillStyle(0xf65a5a, 0.9);
+    this.npcHealthBar.fillRoundedRect(
+      barX + 1,
+      barY + 1,
+      Math.max(0, fillWidth),
+      barHeight - 2,
+      2
+    );
+    this.npcHealthBar.setVisible(true);
+
+    this.npcHealthValue
+      .setText(`${this.npcHealth}/${this.npcMaxHealth}`)
+      .setPosition(this.npc.x, barY - 2)
+      .setVisible(true);
   }
 
   handleNpcHit(bullet, npc) {
-    if (!npc.active || !bullet.active) {
+    if (!npc.active || !bullet.active || bullet.getData("hitNpc")) {
       return;
     }
 
+    bullet.setData("hitNpc", true);
     bullet.setActive(false);
     bullet.setVisible(false);
     bullet.body.setVelocity(0, 0);
     bullet.body.enable = false;
 
     this.npcHealth = Math.max(0, this.npcHealth - 1);
-    this.updateNpcHealthText();
+    this.updateNpcHealthDisplay();
 
     if (this.npcHealth === 0) {
       npc.setActive(false);
@@ -271,6 +370,8 @@ class DemoScene extends Phaser.Scene {
       if (this.npcTween) {
         this.npcTween.stop();
       }
+      this.npcHealthBar.setVisible(false);
+      this.npcHealthValue.setVisible(false);
       this.add
         .text(16, 80, "NPC poražen!", {
           fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
@@ -285,13 +386,18 @@ class DemoScene extends Phaser.Scene {
 
   createInstructions() {
     this.add
-      .text(16, 16, "WASD/šipky: pohyb | Mezerník: střelba", {
-        fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
-        fontSize: "16px",
-        color: "#f6f2ee",
-        backgroundColor: "rgba(0, 0, 0, 0.35)",
-        padding: { x: 8, y: 4 },
-      })
+      .text(
+        16,
+        16,
+        "WASD/šipky: pohyb | Mezerník: střelba | E: rozhovor",
+        {
+          fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+          fontSize: "16px",
+          color: "#f6f2ee",
+          backgroundColor: "rgba(0, 0, 0, 0.35)",
+          padding: { x: 8, y: 4 },
+        }
+      )
       .setDepth(10);
   }
 
@@ -306,6 +412,52 @@ class DemoScene extends Phaser.Scene {
     this.fireKey = this.input.keyboard.addKey(
       Phaser.Input.Keyboard.KeyCodes.SPACE
     );
+    this.interactKey = this.input.keyboard.addKey(
+      Phaser.Input.Keyboard.KeyCodes.E
+    );
+  }
+
+  updateFriendlyNpcInteraction() {
+    if (!this.friendlyNpc || !this.player) {
+      return;
+    }
+
+    const distance = Phaser.Math.Distance.Between(
+      this.player.x,
+      this.player.y,
+      this.friendlyNpc.x,
+      this.friendlyNpc.y
+    );
+    const isClose = distance < 70;
+
+    this.friendlyNpcPrompt
+      .setPosition(this.friendlyNpc.x, this.friendlyNpc.y - 30)
+      .setVisible(isClose);
+
+    if (isClose && Phaser.Input.Keyboard.JustDown(this.interactKey)) {
+      this.showFriendlyNpcDialogue();
+    }
+  }
+
+  showFriendlyNpcDialogue() {
+    const jokes = [
+      "Víš, proč kostra nešla do baru? Neměla na to žaludek.",
+      "Říkám si: střela je rychlá, ale vtip je rychlejší!",
+      "Potkal jsem bug. Chtěl autogram, ale zmizel po jedné ráně.",
+    ];
+    const joke = Phaser.Utils.Array.GetRandom(jokes);
+
+    this.friendlyNpcBubble
+      .setText(joke)
+      .setPosition(this.friendlyNpc.x, this.friendlyNpc.y - 52)
+      .setVisible(true);
+
+    if (this.friendlyNpcBubbleTimer) {
+      this.friendlyNpcBubbleTimer.remove(false);
+    }
+    this.friendlyNpcBubbleTimer = this.time.delayedCall(2200, () => {
+      this.friendlyNpcBubble.setVisible(false);
+    });
   }
 
   updatePlayerMovement() {
@@ -362,6 +514,7 @@ class DemoScene extends Phaser.Scene {
     bullet.body.setAllowGravity(false);
     bullet.body.enable = true;
     bullet.setPosition(this.player.x, this.player.y);
+    bullet.setData("hitNpc", false);
 
     const direction = this.facing.clone().normalize();
     bullet.body.setVelocity(
