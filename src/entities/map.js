@@ -7,7 +7,7 @@ export const createMap = (scene) => {
 
   const placeWall = (x, y) => {
     if (data[y] && typeof data[y][x] !== "undefined") {
-      data[y][x] = 2;
+      data[y][x] = 1;
     }
   };
 
@@ -20,18 +20,6 @@ export const createMap = (scene) => {
     placeWall(MAP_WIDTH - 1, y);
   }
 
-  for (let y = 2; y < MAP_HEIGHT - 2; y += 1) {
-    if (y !== 6 && y !== 7) {
-      placeWall(7, y);
-    }
-  }
-
-  for (let x = 3; x < MAP_WIDTH - 3; x += 1) {
-    if (x !== 11 && x !== 12) {
-      placeWall(x, 8);
-    }
-  }
-
   const map = scene.make.tilemap({
     data,
     tileWidth: TILE_SIZE,
@@ -40,27 +28,41 @@ export const createMap = (scene) => {
   const tiles = map.addTilesetImage("tiles", null, TILE_SIZE, TILE_SIZE, 0, 0);
   const layer = map.createLayer(0, tiles, 0, 0);
   layer.setScale(1);
-  layer.setCollision([2]);
+  layer.setCollision([1]);
   layer.setVisible(false);
   scene.mapLayer = layer;
   scene.isoTiles = [];
+  scene.isoWalls = [];
 
   for (let y = 0; y < MAP_HEIGHT; y += 1) {
     for (let x = 0; x < MAP_WIDTH; x += 1) {
-      const tileIndex = data[y][x];
+      const floorFrame = (x + y) % 2 === 0 ? "tile-0" : "tile-1";
       const isoTile = scene.add.isoSprite(
         x * TILE_SIZE,
         y * TILE_SIZE,
         0,
         "tiles",
         undefined,
-        `tile-${tileIndex}`
+        floorFrame
       );
-      isoTile.setDepth(0);
+      isoTile.setDepth(x + y);
       if (!scene.isoTiles[y]) {
         scene.isoTiles[y] = [];
       }
       scene.isoTiles[y][x] = isoTile;
+
+      if (data[y][x] === 1) {
+        const wallTile = scene.add.isoSprite(
+          x * TILE_SIZE,
+          y * TILE_SIZE,
+          0,
+          "wall"
+        );
+        wallTile.setOrigin(0.5, 1);
+        wallTile.isoZ = TILE_SIZE / 2;
+        wallTile.setDepth(x + y + 1);
+        scene.isoWalls.push(wallTile);
+      }
     }
   }
 };

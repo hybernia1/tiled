@@ -8,6 +8,8 @@ export const createPlayer = (scene) => {
   scene.player = scene.physics.add.sprite(startX, startY, "player", 0);
   scene.player.setCollideWorldBounds(true);
   scene.player.setDepth(2);
+  scene.player.setData("isoOrigin", { x: 0.5, y: 1 });
+  scene.player.setData("isoZ", TILE_SIZE / 2);
   scene.player.setData("maxHealth", PLAYER_MAX_HEALTH);
   scene.player.setData("health", PLAYER_MAX_HEALTH);
   scene.facing = new Phaser.Math.Vector2(1, 0);
