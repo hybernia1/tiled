@@ -1,4 +1,4 @@
-import { TILE_SIZE } from "../../config/constants";
+import { TILE_SIZE } from "../../config/constants.js";
 
 export const createTilesetTexture = (scene) => {
   const texture = scene.textures.createCanvas(
