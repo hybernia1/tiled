@@ -9,7 +9,7 @@ export const cs = {
   fullscreenOff: "Vypnuto",
   languageName: "Čeština",
   demoInstructions:
-    "WASD/šipky: pohyb | Mezerník: střelba | E: interakce | B: inventář | F: celá obrazovka | Esc/P: pauza | Dotyk: ovládací tlačítka",
+    "WASD/šipky: pohyb | F: celá obrazovka | Esc/P: pauza | Dotyk: ovládací tlačítka",
   pauseTitle: "Pauza",
   pauseResume: "Pokračovat",
   pauseQuit: "Zpět do menu",

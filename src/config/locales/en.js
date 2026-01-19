@@ -9,7 +9,7 @@ export const en = {
   fullscreenOff: "Off",
   languageName: "English",
   demoInstructions:
-    "WASD/Arrow keys: move | Space: shoot | E: interact | B: inventory | F: fullscreen | Esc/P: pause | Touch: on-screen controls",
+    "WASD/Arrow keys: move | F: fullscreen | Esc/P: pause | Touch: on-screen controls",
   pauseTitle: "Paused",
   pauseResume: "Resume",
   pauseQuit: "Exit to Menu",
