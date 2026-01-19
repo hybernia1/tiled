@@ -19,6 +19,7 @@ export const createCollectibles = (scene, onPickup) => {
       "apple"
     );
     apple.setData("itemType", "jablko");
+    scene.lightObstacles?.add(apple);
   });
 
   pearSpots.forEach((spot) => {
@@ -28,6 +29,7 @@ export const createCollectibles = (scene, onPickup) => {
       "pear"
     );
     pear.setData("itemType", "hruska");
+    scene.lightObstacles?.add(pear);
   });
 
   scene.physics.add.overlap(scene.player, scene.collectibles, onPickup, null, scene);

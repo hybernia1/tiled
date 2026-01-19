@@ -58,6 +58,7 @@ export class DemoScene extends Phaser.Scene {
     this.locale = this.registry.get("locale") ?? resolveLocale();
     this.isPaused = false;
     this.lights.enable().setAmbientColor(0x1b1f2e);
+    this.lightObstacles = this.add.group();
     this.lightingSystem = new LightingSystem(this);
     this.inventorySystem = new InventorySystem(this);
     this.interactionSystem = new InteractionSystem(

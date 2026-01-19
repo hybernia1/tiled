@@ -103,7 +103,11 @@ export class InteractionSystem {
       this.inventorySystem.addItem(itemType);
     }
 
+    if (this.scene.lightObstacles) {
+      this.scene.lightObstacles.remove(collectible);
+    }
     collectible.disableBody(true, true);
+    this.lightingSystem.updateLightingMask();
   }
 
   showFriendlyNpcDialogue() {
