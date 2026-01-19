@@ -215,10 +215,16 @@ export class CombatSystem {
     bullet.body.enable = false;
 
     const destroyedTile = this.scene.mapLayer.getTileAt(tile.x, tile.y);
+    if (
+      destroyedTile?.index !== this.scene.destructibleWallIndex &&
+      destroyedTile?.index !== undefined
+    ) {
+      return;
+    }
     if (destroyedTile) {
       destroyedTile.setCollision(false);
       this.scene.mapLayer.removeTileAt(tile.x, tile.y);
-      this.scene.removeIsoTileAt(tile.x, tile.y);
+      this.scene.removeIsoWallAt(tile.x, tile.y);
     }
     this.scene.lightingSystem?.updateLightingMask();
   }

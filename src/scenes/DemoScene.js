@@ -268,6 +268,21 @@ export class DemoScene extends Phaser.Scene {
     }
   }
 
+  removeIsoWallAt(x, y) {
+    const isoWall = this.isoWallsGrid?.[y]?.[x];
+    if (!isoWall) {
+      return;
+    }
+
+    isoWall.destroy();
+    this.isoWallsGrid[y][x] = null;
+
+    const wallIndex = this.isoWalls?.indexOf(isoWall);
+    if (wallIndex !== undefined && wallIndex >= 0) {
+      this.isoWalls.splice(wallIndex, 1);
+    }
+  }
+
   createInstructions() {
     this.add
       .text(
