@@ -97,7 +97,7 @@ class DemoScene extends Phaser.Scene {
       { x: 2, y: MAP_HEIGHT - 3 },
     ];
 
-    this.tweens.timeline({
+    this.tweens.chain({
       targets: this.npc,
       loop: -1,
       tweens: pathPoints.map((point) => ({
