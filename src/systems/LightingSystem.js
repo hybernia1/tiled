@@ -1,4 +1,4 @@
-import { MAP_HEIGHT, MAP_WIDTH, TILE_SIZE } from "../config/constants.js";
+import { MAP_H, MAP_W, TILE_WIDTH } from "../config/constants.js";
 
 export class LightingSystem {
   constructor(scene) {
@@ -9,16 +9,16 @@ export class LightingSystem {
     this.scene.lightZones = [
       {
         id: "north",
-        x: TILE_SIZE * 5,
-        y: TILE_SIZE * 3,
-        radius: TILE_SIZE * 5.2,
+        x: TILE_WIDTH * 5,
+        y: TILE_WIDTH * 3,
+        radius: TILE_WIDTH * 5.2,
         enabled: false,
       },
       {
         id: "south",
-        x: TILE_SIZE * 14,
-        y: TILE_SIZE * 8,
-        radius: TILE_SIZE * 5.2,
+        x: TILE_WIDTH * 14,
+        y: TILE_WIDTH * 8,
+        radius: TILE_WIDTH * 5.2,
         enabled: false,
       },
     ];
@@ -28,8 +28,8 @@ export class LightingSystem {
     this.scene.darknessOverlay.fillRect(
       0,
       0,
-      TILE_SIZE * MAP_WIDTH,
-      TILE_SIZE * MAP_HEIGHT
+      TILE_WIDTH * MAP_W,
+      TILE_WIDTH * MAP_H
     );
 
     this.scene.lightMaskGraphics = this.scene.make.graphics({
@@ -87,7 +87,7 @@ export class LightingSystem {
 
   castLightRays(zone) {
     const rayCount = 96;
-    const stepSize = TILE_SIZE / 6;
+    const stepSize = TILE_WIDTH / 6;
     const points = [];
     for (let i = 0; i < rayCount; i += 1) {
       const angle = (i / rayCount) * Math.PI * 2;
@@ -112,8 +112,8 @@ export class LightingSystem {
     if (
       worldX < 0 ||
       worldY < 0 ||
-      worldX > MAP_WIDTH * TILE_SIZE ||
-      worldY > MAP_HEIGHT * TILE_SIZE
+      worldX > MAP_W * TILE_WIDTH ||
+      worldY > MAP_H * TILE_WIDTH
     ) {
       return true;
     }

@@ -1,11 +1,11 @@
-import { MAP_HEIGHT, MAP_WIDTH, TILE_SIZE } from "../config/constants.js";
+import { MAP_H, MAP_W, TILE_WIDTH } from "../config/constants.js";
 
 const isBlockedTile = (layer, tileX, tileY) => {
   if (
     tileX < 0 ||
     tileY < 0 ||
-    tileX >= MAP_WIDTH ||
-    tileY >= MAP_HEIGHT
+    tileX >= MAP_W ||
+    tileY >= MAP_H
   ) {
     return true;
   }
@@ -27,7 +27,7 @@ export const findNearestOpenTilePosition = (
   const startTileX = layer.worldToTileX(worldX);
   const startTileY = layer.worldToTileY(worldY);
   if (!isBlockedTile(layer, startTileX, startTileY)) {
-    return { x: startTileX * TILE_SIZE, y: startTileY * TILE_SIZE };
+    return { x: startTileX * TILE_WIDTH, y: startTileY * TILE_WIDTH };
   }
 
   for (let radius = 1; radius <= maxRadius; radius += 1) {
@@ -40,8 +40,8 @@ export const findNearestOpenTilePosition = (
         const candidateY = startTileY + dy;
         if (!isBlockedTile(layer, candidateX, candidateY)) {
           return {
-            x: candidateX * TILE_SIZE,
-            y: candidateY * TILE_SIZE,
+            x: candidateX * TILE_WIDTH,
+            y: candidateY * TILE_WIDTH,
           };
         }
       }

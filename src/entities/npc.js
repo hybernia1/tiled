@@ -1,12 +1,12 @@
-import { MAP_HEIGHT, MAP_WIDTH, TILE_SIZE } from "../config/constants.js";
+import { MAP_H, MAP_W, TILE_WIDTH } from "../config/constants.js";
 import { findNearestOpenTilePosition } from "./spawnUtils.js";
 
 export const createNpc = (scene) => {
   scene.npcMaxHealth = 3;
   const startPosition = findNearestOpenTilePosition(
     scene,
-    2 * TILE_SIZE,
-    2 * TILE_SIZE
+    2 * TILE_WIDTH,
+    2 * TILE_WIDTH
   );
   scene.npc = scene.physics.add.sprite(startPosition.x, startPosition.y, "npc");
   scene.npc.setOrigin(0.5, 0.5);
@@ -31,28 +31,28 @@ export const createNpc = (scene) => {
 
   const pathPoints = [
     { x: 2, y: 2 },
-    { x: MAP_WIDTH - 3, y: 2 },
-    { x: MAP_WIDTH - 3, y: MAP_HEIGHT - 3 },
-    { x: 2, y: MAP_HEIGHT - 3 },
+    { x: MAP_W - 3, y: 2 },
+    { x: MAP_W - 3, y: MAP_H - 3 },
+    { x: 2, y: MAP_H - 3 },
   ]
     .map((point) =>
       findNearestOpenTilePosition(
         scene,
-        point.x * TILE_SIZE,
-        point.y * TILE_SIZE
+        point.x * TILE_WIDTH,
+        point.y * TILE_WIDTH
       )
     )
     .map((point) => ({
-      x: point.x / TILE_SIZE,
-      y: point.y / TILE_SIZE,
+      x: point.x / TILE_WIDTH,
+      y: point.y / TILE_WIDTH,
     }));
 
   scene.npcTween = scene.tweens.chain({
     targets: scene.npc,
     loop: -1,
     tweens: pathPoints.map((point) => ({
-      x: point.x * TILE_SIZE,
-      y: point.y * TILE_SIZE,
+      x: point.x * TILE_WIDTH,
+      y: point.y * TILE_WIDTH,
       duration: 2400,
       ease: "Sine.easeInOut",
     })),

@@ -1,11 +1,11 @@
-import { TILE_SIZE } from "../config/constants.js";
+import { TILE_WIDTH } from "../config/constants.js";
 import { findNearestOpenTilePosition } from "./spawnUtils.js";
 
 export const createFriendlyNpc = (scene) => {
   const startPosition = findNearestOpenTilePosition(
     scene,
-    15 * TILE_SIZE,
-    6 * TILE_SIZE
+    15 * TILE_WIDTH,
+    6 * TILE_WIDTH
   );
   scene.friendlyNpc = scene.physics.add.sprite(
     startPosition.x,

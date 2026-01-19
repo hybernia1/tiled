@@ -1,4 +1,4 @@
-import { TILE_SIZE } from "../config/constants.js";
+import { TILE_WIDTH } from "../config/constants.js";
 
 export const createCollectibles = (scene, onPickup) => {
   scene.collectibles = scene.physics.add.group({ allowGravity: false });
@@ -14,8 +14,8 @@ export const createCollectibles = (scene, onPickup) => {
 
   appleSpots.forEach((spot) => {
     const apple = scene.collectibles.create(
-      spot.x * TILE_SIZE,
-      spot.y * TILE_SIZE,
+      spot.x * TILE_WIDTH,
+      spot.y * TILE_WIDTH,
       "apple"
     );
     apple.setData("itemType", "jablko");
@@ -23,8 +23,8 @@ export const createCollectibles = (scene, onPickup) => {
 
   pearSpots.forEach((spot) => {
     const pear = scene.collectibles.create(
-      spot.x * TILE_SIZE,
-      spot.y * TILE_SIZE,
+      spot.x * TILE_WIDTH,
+      spot.y * TILE_WIDTH,
       "pear"
     );
     pear.setData("itemType", "hruska");

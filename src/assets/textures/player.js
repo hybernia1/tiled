@@ -1,3 +1,5 @@
+import { Phaser } from "../../phaserGlobals.js";
+
 const drawPlayerFrame = (ctx, offsetX, pose) => {
   ctx.save();
   ctx.translate(offsetX, 0);
@@ -52,4 +54,6 @@ export const createPlayerTexture = (scene) => {
       frameHeight: 32,
     });
   }
+
+  scene.textures.get("player").setFilter(Phaser.Textures.FilterMode.NEAREST);
 };
