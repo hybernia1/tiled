@@ -12,6 +12,8 @@ export const createGameConfig = (scenes) => ({
     autoCenter: Phaser.Scale.CENTER_BOTH,
     width: TILE_SIZE * MAP_WIDTH,
     height: TILE_SIZE * MAP_HEIGHT,
+    expandParent: true,
+    fullscreenTarget: "app",
   },
   physics: {
     default: "arcade",

@@ -60,18 +60,20 @@ export class LightingSystem {
 
   drawShadowedLight(zone) {
     const points = this.castLightRays(zone);
-    const falloffSteps = [
-      { scale: 1, alpha: 0.7 },
-      { scale: 0.72, alpha: 0.45 },
-      { scale: 0.45, alpha: 0.25 },
-    ];
+    const stepCount = 9;
+    const maxAlpha = 0.8;
+    const minScale = 0.12;
 
-    falloffSteps.forEach((step) => {
-      this.scene.lightMaskGraphics.fillStyle(0xffffff, step.alpha);
+    for (let stepIndex = 0; stepIndex < stepCount; stepIndex += 1) {
+      const t = stepIndex / (stepCount - 1);
+      const scale = 1 - t * (1 - minScale);
+      const intensity = Math.pow(1 - t, 2.2);
+      const alpha = maxAlpha * intensity;
+      this.scene.lightMaskGraphics.fillStyle(0xffffff, alpha);
       this.scene.lightMaskGraphics.beginPath();
       points.forEach((point, index) => {
-        const scaledX = zone.x + (point.x - zone.x) * step.scale;
-        const scaledY = zone.y + (point.y - zone.y) * step.scale;
+        const scaledX = zone.x + (point.x - zone.x) * scale;
+        const scaledY = zone.y + (point.y - zone.y) * scale;
         if (index === 0) {
           this.scene.lightMaskGraphics.moveTo(scaledX, scaledY);
         } else {
@@ -80,12 +82,12 @@ export class LightingSystem {
       });
       this.scene.lightMaskGraphics.closePath();
       this.scene.lightMaskGraphics.fillPath();
-    });
+    }
   }
 
   castLightRays(zone) {
-    const rayCount = 72;
-    const stepSize = TILE_SIZE / 4;
+    const rayCount = 96;
+    const stepSize = TILE_SIZE / 6;
     const points = [];
     for (let i = 0; i < rayCount; i += 1) {
       const angle = (i / rayCount) * Math.PI * 2;
