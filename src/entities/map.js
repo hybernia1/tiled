@@ -79,10 +79,12 @@ export const createMap = (scene) => {
   // iso render
   const ISO_STEP = getIsoStep(scene);
 
-  // srovnat wall “půdorys” na floor (aby se vedle sebe nechovaly divně)
+  // iso dlaždice mají šířku 2× krok, jinak vzniknou optické mezery
   const floorW = getFrameWidth(scene, "tiles", "tile-0") || ISO_STEP * 2;
+  const desiredFloorW = ISO_STEP * 2;
+  const floorScale = floorW ? desiredFloorW / floorW : 1;
   const wallW = getFrameWidth(scene, "wall") || 0;
-  const wallScale = wallW ? floorW / wallW : 1;
+  const wallScale = wallW ? desiredFloorW / wallW : floorScale;
 
   for (let y = 0; y < MAP_H; y += 1) {
     for (let x = 0; x < MAP_W; x += 1) {
@@ -100,6 +102,7 @@ export const createMap = (scene) => {
         floorFrame
       );
       floorTile.setOrigin(0.5, 1);
+      floorTile.setScale(floorScale);
       floorTile.isoX = isoX;
       floorTile.isoY = isoY;
       floorTile.isoZ = 0;
