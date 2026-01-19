@@ -7,7 +7,7 @@ export class MovementSystem {
 
   updatePlayerMovement() {
     const { player, cursors, wasd, touchState } = this.scene;
-    if (!player?.body) {
+    if (!player?.body || !player.active) {
       return;
     }
 

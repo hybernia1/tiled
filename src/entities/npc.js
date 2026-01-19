@@ -10,11 +10,12 @@ export const createNpc = (scene) => {
   );
   scene.npc = scene.physics.add.sprite(startPosition.x, startPosition.y, "npc");
   scene.npc.setOrigin(0.5, 0.5);
-  scene.npc.setImmovable(true);
   scene.npc.body.setAllowGravity(false);
+  scene.npc.setCollideWorldBounds(true);
   scene.npc.setData("lastHitAt", -Infinity);
   scene.npc.setData("maxHealth", scene.npcMaxHealth);
   scene.npc.setData("health", scene.npcMaxHealth);
+  scene.npc.setData("nextAttackAt", 0);
 
   scene.npcHealthBar = scene.add.graphics().setDepth(9);
   scene.npcHealthValue = scene.add

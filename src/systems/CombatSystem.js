@@ -5,6 +5,98 @@ export class CombatSystem {
     this.handleWallHit = this.handleWallHit.bind(this);
   }
 
+  setupPlayerHealth() {
+    const { player } = this.scene;
+    if (!player) {
+      return;
+    }
+
+    const maxHealth = Number(player.getData("maxHealth")) || 1;
+    player.setData("health", maxHealth);
+
+    this.scene.playerHealthBar = this.scene.add
+      .graphics()
+      .setDepth(11)
+      .setScrollFactor(0);
+    this.scene.playerHealthValue = this.scene.add
+      .text(16, 44, "", {
+        fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+        fontSize: "14px",
+        color: "#f6f2ee",
+        backgroundColor: "rgba(0, 0, 0, 0.35)",
+        padding: { x: 6, y: 4 },
+      })
+      .setDepth(12)
+      .setScrollFactor(0);
+
+    this.updatePlayerHealthDisplay();
+  }
+
+  updatePlayerHealthDisplay() {
+    const { player, playerHealthBar, playerHealthValue } = this.scene;
+    if (!playerHealthBar || !playerHealthValue || !player) {
+      return;
+    }
+
+    const maxHealth = Number(player.getData("maxHealth")) || 1;
+    const storedHealth = Number(player.getData("health"));
+    const currentHealth = Number.isFinite(storedHealth)
+      ? storedHealth
+      : maxHealth;
+
+    const barWidth = 120;
+    const barHeight = 10;
+    const barX = 16;
+    const barY = 20;
+    const fillWidth = (currentHealth / maxHealth) * (barWidth - 2);
+
+    playerHealthBar.clear();
+    playerHealthBar.fillStyle(0x0f0f14, 0.8);
+    playerHealthBar.fillRoundedRect(barX, barY, barWidth, barHeight, 3);
+    playerHealthBar.fillStyle(0x58d68d, 0.9);
+    playerHealthBar.fillRoundedRect(
+      barX + 1,
+      barY + 1,
+      Math.max(0, fillWidth),
+      barHeight - 2,
+      3
+    );
+
+    playerHealthValue.setText(`HP: ${currentHealth}/${maxHealth}`);
+  }
+
+  damagePlayer(amount) {
+    const { player } = this.scene;
+    if (!player?.active) {
+      return;
+    }
+    const maxHealth = Number(player.getData("maxHealth")) || 1;
+    const storedHealth = Number(player.getData("health"));
+    const currentHealth = Number.isFinite(storedHealth)
+      ? storedHealth
+      : maxHealth;
+    const newHealth = Math.max(0, currentHealth - amount);
+    player.setData("health", newHealth);
+    this.updatePlayerHealthDisplay();
+
+    if (newHealth === 0) {
+      player.setActive(false);
+      player.setVisible(false);
+      player.body.enable = false;
+      player.body.setVelocity(0, 0);
+      this.scene.add
+        .text(16, 80, "Postava padla!", {
+          fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+          fontSize: "16px",
+          color: "#f6f2ee",
+          backgroundColor: "rgba(0, 0, 0, 0.35)",
+          padding: { x: 8, y: 4 },
+        })
+        .setDepth(12)
+        .setScrollFactor(0);
+    }
+  }
+
   setupNpcCombat() {
     this.scene.physics.add.overlap(
       this.scene.bullets,
@@ -130,6 +222,9 @@ export class CombatSystem {
   }
 
   updateShooting(time) {
+    if (!this.scene.player?.active) {
+      return;
+    }
     const { fireKey, touchState, nextFireTime } = this.scene;
     const isFiring = fireKey.isDown || touchState?.fire;
     if (!isFiring || time < nextFireTime) {

@@ -4,6 +4,11 @@ import {
   FIRE_COOLDOWN_MS,
   MAP_HEIGHT,
   MAP_WIDTH,
+  NPC_AGGRO_RANGE_TILES,
+  NPC_ATTACK_COOLDOWN_MS,
+  NPC_ATTACK_DAMAGE,
+  NPC_ATTACK_RANGE_TILES,
+  NPC_CHASE_SPEED,
   PLAYER_SPEED,
   TILE_SIZE,
 } from "../config/constants.js";
@@ -28,6 +33,7 @@ import { InteractionSystem } from "../systems/InteractionSystem.js";
 import { InventorySystem } from "../systems/InventorySystem.js";
 import { LightingSystem } from "../systems/LightingSystem.js";
 import { MovementSystem } from "../systems/MovementSystem.js";
+import { NpcAggroSystem } from "../systems/NpcAggroSystem.js";
 
 export class DemoScene extends Phaser.Scene {
   constructor() {
@@ -41,6 +47,12 @@ export class DemoScene extends Phaser.Scene {
     this.mobileControls = null;
     this.mapWidthPx = TILE_SIZE * MAP_WIDTH;
     this.mapHeightPx = TILE_SIZE * MAP_HEIGHT;
+    this.npcAggroRangePx = NPC_AGGRO_RANGE_TILES * TILE_SIZE;
+    this.npcAttackRangePx = NPC_ATTACK_RANGE_TILES * TILE_SIZE;
+    this.npcChaseSpeed = NPC_CHASE_SPEED;
+    this.npcAttackCooldownMs = NPC_ATTACK_COOLDOWN_MS;
+    this.npcAttackDamage = NPC_ATTACK_DAMAGE;
+    this.npcIsAggro = false;
   }
 
   preload() {
@@ -67,12 +79,14 @@ export class DemoScene extends Phaser.Scene {
     this.combatSystem = new CombatSystem(this);
     this.movementSystem = new MovementSystem(this);
     this.inputSystem = new InputSystem(this);
+    this.npcAggroSystem = new NpcAggroSystem(this);
 
     createMap(this);
     createPlayer(this);
     createBullets(this);
     createNpc(this);
     createFriendlyNpc(this);
+    this.combatSystem.setupPlayerHealth();
     this.combatSystem.updateNpcHealthDisplay();
     this.lightingSystem.createLighting();
     createSwitches(this);
@@ -93,6 +107,7 @@ export class DemoScene extends Phaser.Scene {
       return;
     }
     this.movementSystem.updatePlayerMovement();
+    this.npcAggroSystem.updateNpcAggro(time);
     this.combatSystem.updateShooting(time);
     this.combatSystem.cleanupBullets(time);
     this.combatSystem.updateNpcHealthDisplay();
@@ -261,5 +276,7 @@ export class DemoScene extends Phaser.Scene {
   setupColliders() {
     this.physics.add.collider(this.player, this.mapLayer);
     this.physics.add.collider(this.player, this.friendlyNpc);
+    this.physics.add.collider(this.npc, this.mapLayer);
+    this.physics.add.collider(this.npc, this.player);
   }
 }
