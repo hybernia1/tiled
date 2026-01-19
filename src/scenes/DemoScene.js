@@ -23,6 +23,7 @@ import { createGrassTexture } from "../assets/textures/terrain/grass.js";
 import { createMountainTexture } from "../assets/textures/terrain/mountain.js";
 import { createPondTexture } from "../assets/textures/terrain/pond.js";
 import { createStairsTexture } from "../assets/textures/terrain/stairs.js";
+import { createTreeTextures } from "../assets/textures/terrain/trees.js";
 import { createWallTexture } from "../assets/textures/terrain/wall.js";
 import { createBullets } from "../entities/bullets.js";
 import { createFriendlyNpc } from "../entities/friendlyNpc.js";
@@ -69,6 +70,7 @@ export class DemoScene extends Phaser.Scene {
     createMountainTexture(this);
     createStairsTexture(this);
     createPondTexture(this);
+    createTreeTextures(this);
     createCollisionTilesTexture(this);
     createPlayerTexture(this);
     createNpcTexture(this);

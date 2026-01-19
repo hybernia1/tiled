@@ -75,11 +75,49 @@ const generateMapData = () => {
     }
   });
 
-  return { data, pondTiles };
+  const coniferTrees = [
+    { x: 6, y: 8 },
+    { x: 7, y: 8 },
+    { x: 8, y: 9 },
+    { x: 9, y: 10 },
+    { x: 13, y: 6 },
+    { x: 14, y: 7 },
+    { x: 15, y: 8 },
+    { x: 17, y: 6 },
+  ];
+
+  const deciduousTrees = [
+    { x: 22, y: 12 },
+    { x: 23, y: 13 },
+    { x: 24, y: 12 },
+    { x: 28, y: 18 },
+    { x: 29, y: 18 },
+    { x: 30, y: 19 },
+    { x: 34, y: 14 },
+    { x: 35, y: 15 },
+  ];
+
+  return {
+    data,
+    pondTiles,
+    coniferTrees,
+    deciduousTrees,
+  };
 };
 
 export const createMap = (scene) => {
-  const { data, pondTiles } = generateMapData();
+  const {
+    data,
+    pondTiles,
+    coniferTrees,
+    deciduousTrees,
+  } = generateMapData();
+  const coniferTreeSet = new Set(
+    coniferTrees.map(({ x, y }) => `${x},${y}`)
+  );
+  const deciduousTreeSet = new Set(
+    deciduousTrees.map(({ x, y }) => `${x},${y}`)
+  );
 
   // collision tilemap (grid)
   const map = scene.make.tilemap({
@@ -125,6 +163,8 @@ export const createMap = (scene) => {
   const mountainFrames = ["mountain-0", "mountain-1", "mountain-2"];
   const pondW = getFrameWidth(scene, "pond") || 0;
   const pondScale = pondW ? desiredFloorW / pondW : floorScale;
+  const treeW = getFrameWidth(scene, "tree-conifer") || desiredFloorW;
+  const treeScale = treeW ? desiredFloorW / treeW : floorScale;
 
   for (let y = 0; y < MAP_H; y += 1) {
     for (let x = 0; x < MAP_W; x += 1) {
@@ -201,6 +241,22 @@ export const createMap = (scene) => {
         );
 
         scene.isoWalls.push(hardWallTile);
+      }
+
+      const treeKey = coniferTreeSet.has(`${x},${y}`)
+        ? "tree-conifer"
+        : deciduousTreeSet.has(`${x},${y}`)
+        ? "tree-deciduous"
+        : null;
+
+      if (treeKey && data[y][x] === TILE_TYPES.FLOOR) {
+        const treeTile = scene.add.isoSprite(isoX, isoY, 0, treeKey);
+        treeTile.setOrigin(0.5, 1);
+        treeTile.setScale(treeScale);
+        treeTile.isoX = isoX;
+        treeTile.isoY = isoY;
+        treeTile.isoZ = 0;
+        treeTile.setDepth(treeTile.isoX + treeTile.isoY + TILE_HEIGHT * 2);
       }
     }
   }
