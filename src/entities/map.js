@@ -189,7 +189,11 @@ export const createMap = (scene, options = {}) => {
   const ISO_STEP = getIsoStep(scene);
 
   // iso dlaždice mají šířku 2× krok, jinak vzniknou optické mezery
-  const floorW = getFrameWidth(scene, "grass", "grass-0") || ISO_STEP * 2;
+  const floorTextureKey = type === "cave" ? "rock" : "grass";
+  const floorFramePrefix = type === "cave" ? "rock" : "grass";
+  const floorW =
+    getFrameWidth(scene, floorTextureKey, `${floorFramePrefix}-0`) ||
+    ISO_STEP * 2;
   const desiredFloorW = ISO_STEP * 2;
   const floorScale = floorW ? desiredFloorW / floorW : 1;
   const wallW = getFrameWidth(scene, "wall") || 0;
@@ -210,12 +214,15 @@ export const createMap = (scene, options = {}) => {
       const isoY = y * ISO_STEP;
 
       // podlaha všude
-      const floorFrame = (x + y) % 2 === 0 ? "grass-0" : "grass-1";
+      const floorFrame =
+        (x + y) % 2 === 0
+          ? `${floorFramePrefix}-0`
+          : `${floorFramePrefix}-1`;
       const floorTile = scene.add.isoSprite(
         isoX,
         isoY,
         0,
-        "grass",
+        floorTextureKey,
         undefined,
         floorFrame
       );
