@@ -17,6 +17,7 @@ class DemoScene extends Phaser.Scene {
     this.createTilesetTexture();
     this.createNpcTexture();
     this.createFriendlyNpcTexture();
+    this.createSwitchTexture();
     this.createPlayerTexture();
     this.createBulletTexture();
     this.createAppleTexture();
@@ -29,6 +30,8 @@ class DemoScene extends Phaser.Scene {
     this.createBullets();
     this.createNpc();
     this.createFriendlyNpc();
+    this.createLighting();
+    this.createSwitches();
     this.createCollectibles();
     this.createInventoryUi();
     this.setupNpcCombat();
@@ -42,6 +45,7 @@ class DemoScene extends Phaser.Scene {
     this.updateShooting(time);
     this.cleanupBullets(time);
     this.updateNpcHealthDisplay();
+    this.updateSwitchInteraction();
     this.updateFriendlyNpcInteraction();
     this.updateInventoryToggle();
   }
@@ -111,6 +115,22 @@ class DemoScene extends Phaser.Scene {
     npc.refresh();
   }
 
+  createSwitchTexture() {
+    const switchTexture = this.textures.createCanvas("switch", 18, 18);
+    const ctx = switchTexture.getContext();
+
+    ctx.fillStyle = "#1b1f2e";
+    ctx.fillRect(0, 0, 18, 18);
+
+    ctx.fillStyle = "#f6f2ee";
+    ctx.fillRect(4, 4, 10, 10);
+
+    ctx.fillStyle = "#4bd66f";
+    ctx.fillRect(7, 6, 4, 6);
+
+    switchTexture.refresh();
+  }
+
   createPlayerTexture() {
     const player = this.textures.createCanvas("player", 32, 32);
     const ctx = player.getContext();
@@ -142,6 +162,42 @@ class DemoScene extends Phaser.Scene {
     ctx.fill();
 
     bullet.refresh();
+  }
+
+  createLighting() {
+    this.lightZones = [
+      {
+        id: "north",
+        x: TILE_SIZE * 2,
+        y: TILE_SIZE * 1,
+        width: TILE_SIZE * 8,
+        height: TILE_SIZE * 4,
+        enabled: false,
+      },
+      {
+        id: "south",
+        x: TILE_SIZE * 10,
+        y: TILE_SIZE * 6,
+        width: TILE_SIZE * 8,
+        height: TILE_SIZE * 4,
+        enabled: false,
+      },
+    ];
+
+    this.darknessOverlay = this.add.graphics().setDepth(8);
+    this.darknessOverlay.fillStyle(0x000000, 0.82);
+    this.darknessOverlay.fillRect(
+      0,
+      0,
+      TILE_SIZE * MAP_WIDTH,
+      TILE_SIZE * MAP_HEIGHT
+    );
+
+    this.lightMaskGraphics = this.make.graphics({ x: 0, y: 0, add: false });
+    this.lightMask = this.lightMaskGraphics.createGeometryMask();
+    this.lightMask.invertAlpha = true;
+    this.darknessOverlay.setMask(this.lightMask);
+    this.updateLightingMask();
   }
 
   createAppleTexture() {
@@ -219,6 +275,37 @@ class DemoScene extends Phaser.Scene {
     layer.setScale(1);
     layer.setCollision([3]);
     this.mapLayer = layer;
+  }
+
+  createSwitches() {
+    this.switches = this.physics.add.staticGroup();
+    const switchPositions = [
+      { x: 4, y: 2, zoneId: "north" },
+      { x: 16, y: 8, zoneId: "south" },
+    ];
+
+    switchPositions.forEach((spot) => {
+      const switchSprite = this.switches.create(
+        spot.x * TILE_SIZE,
+        spot.y * TILE_SIZE,
+        "switch"
+      );
+      switchSprite.setData("zoneId", spot.zoneId);
+      switchSprite.setData("isOn", false);
+      switchSprite.setDepth(3);
+    });
+
+    this.switchPrompt = this.add
+      .text(0, 0, "", {
+        fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+        fontSize: "12px",
+        color: "#f6f2ee",
+        backgroundColor: "rgba(0, 0, 0, 0.35)",
+        padding: { x: 6, y: 3 },
+      })
+      .setOrigin(0.5, 1)
+      .setDepth(12)
+      .setVisible(false);
   }
 
   createPlayer() {
@@ -442,8 +529,11 @@ class DemoScene extends Phaser.Scene {
       return;
     }
 
-    const npcHealth = this.npc.getData("health");
-    const npcMaxHealth = this.npc.getData("maxHealth");
+    const npcMaxHealth = Number(this.npc.getData("maxHealth")) || this.npcMaxHealth;
+    const storedHealth = Number(this.npc.getData("health"));
+    const npcHealth = Number.isFinite(storedHealth)
+      ? storedHealth
+      : npcMaxHealth;
     const barWidth = 44;
     const barHeight = 6;
     const fillWidth = (npcHealth / npcMaxHealth) * (barWidth - 2);
@@ -484,7 +574,9 @@ class DemoScene extends Phaser.Scene {
     bullet.setData("hitNpc", true);
     bullet.disableBody(true, true);
 
-    const currentHealth = npc.getData("health");
+    const maxHealth = Number(npc.getData("maxHealth")) || this.npcMaxHealth;
+    const storedHealth = Number(npc.getData("health"));
+    const currentHealth = Number.isFinite(storedHealth) ? storedHealth : maxHealth;
     const newHealth = Math.max(0, currentHealth - 1);
     npc.setData("health", newHealth);
     this.updateNpcHealthDisplay();
@@ -510,12 +602,33 @@ class DemoScene extends Phaser.Scene {
     }
   }
 
+  updateLightingMask() {
+    if (!this.lightMaskGraphics) {
+      return;
+    }
+
+    this.lightMaskGraphics.clear();
+    this.lightMaskGraphics.fillStyle(0xffffff, 1);
+    this.lightZones.forEach((zone) => {
+      if (!zone.enabled) {
+        return;
+      }
+      this.lightMaskGraphics.fillRoundedRect(
+        zone.x,
+        zone.y,
+        zone.width,
+        zone.height,
+        10
+      );
+    });
+  }
+
   createInstructions() {
     this.add
       .text(
         16,
         16,
-        "WASD/šipky: pohyb | Mezerník: střelba | E: rozhovor | B: inventář",
+        "WASD/šipky: pohyb | Mezerník: střelba | E: interakce | B: inventář",
         {
           fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
           fontSize: "16px",
@@ -565,6 +678,53 @@ class DemoScene extends Phaser.Scene {
 
     if (isClose && Phaser.Input.Keyboard.JustDown(this.interactKey)) {
       this.showFriendlyNpcDialogue();
+    }
+  }
+
+  updateSwitchInteraction() {
+    if (!this.switches || !this.player || !this.interactKey) {
+      return;
+    }
+
+    let closestSwitch = null;
+    let closestDistance = Infinity;
+    this.switches.children.iterate((switchSprite) => {
+      if (!switchSprite) {
+        return;
+      }
+      const distance = Phaser.Math.Distance.Between(
+        this.player.x,
+        this.player.y,
+        switchSprite.x,
+        switchSprite.y
+      );
+      if (distance < closestDistance) {
+        closestDistance = distance;
+        closestSwitch = switchSprite;
+      }
+    });
+
+    const isClose = closestSwitch && closestDistance < 70;
+    if (!isClose) {
+      this.switchPrompt.setVisible(false);
+      return;
+    }
+
+    const zoneId = closestSwitch.getData("zoneId");
+    const isOn = closestSwitch.getData("isOn");
+    const actionLabel = isOn ? "zhasni" : "rozsviť";
+    this.switchPrompt
+      .setText(`Stiskni E pro ${actionLabel} světlo`)
+      .setPosition(closestSwitch.x, closestSwitch.y - 18)
+      .setVisible(true);
+
+    if (Phaser.Input.Keyboard.JustDown(this.interactKey)) {
+      closestSwitch.setData("isOn", !isOn);
+      const zone = this.lightZones.find((entry) => entry.id === zoneId);
+      if (zone) {
+        zone.enabled = !isOn;
+        this.updateLightingMask();
+      }
     }
   }
 
