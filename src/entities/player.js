@@ -1,6 +1,9 @@
 import * as Phaser from "phaser";
 import { PLAYER_MAX_HEALTH, TILE_HEIGHT, TILE_WIDTH } from "../config/constants.js";
 
+const IDLE_FRAMES = 4;
+const WALK_FRAMES = 4;
+
 export const createPlayer = (scene) => {
   const startX = 4 * TILE_WIDTH;
   const startY = 6 * TILE_WIDTH;
@@ -17,8 +20,11 @@ export const createPlayer = (scene) => {
   if (!scene.anims.exists("player-idle")) {
     scene.anims.create({
       key: "player-idle",
-      frames: [{ key: "player", frame: 0 }],
-      frameRate: 1,
+      frames: scene.anims.generateFrameNumbers("player", {
+        start: 0,
+        end: IDLE_FRAMES - 1,
+      }),
+      frameRate: 3,
       repeat: -1,
     });
   }
@@ -27,10 +33,10 @@ export const createPlayer = (scene) => {
     scene.anims.create({
       key: "player-walk",
       frames: scene.anims.generateFrameNumbers("player", {
-        start: 1,
-        end: 2,
+        start: IDLE_FRAMES,
+        end: IDLE_FRAMES + WALK_FRAMES - 1,
       }),
-      frameRate: 6,
+      frameRate: 8,
       repeat: -1,
     });
   }
