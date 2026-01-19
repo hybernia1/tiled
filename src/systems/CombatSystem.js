@@ -63,6 +63,12 @@ export class CombatSystem {
   }
 
   handleNpcHit(bullet, npc) {
+    if (bullet?.texture?.key !== "bullet" && npc?.texture?.key === "bullet") {
+      [bullet, npc] = [npc, bullet];
+    }
+    if (bullet?.texture?.key !== "bullet" || npc?.texture?.key !== "npc") {
+      return;
+    }
     if (!npc.active || !bullet.active || bullet.getData("hitNpc")) {
       return;
     }
