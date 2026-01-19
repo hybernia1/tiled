@@ -158,6 +158,7 @@ export class DemoScene extends Phaser.Scene {
       sprite.y,
       0,
       sprite.texture.key,
+      undefined,
       frame
     );
     isoSprite.setDepth(sprite.depth ?? 0);
