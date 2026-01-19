@@ -8,6 +8,7 @@ import {
 const TILE_TYPES = {
   FLOOR: 0,
   WALL: 1,
+  HARD_WALL: 2,
 };
 
 // ISO krok musí sedět na kolizní grid, jinak jde hráč mimo viditelnou mapu.
@@ -34,13 +35,31 @@ const generateMapData = () => {
 
   // jen okraj wall
   for (let x = 0; x < MAP_W; x += 1) {
-    data[0][x] = TILE_TYPES.WALL;
-    data[MAP_H - 1][x] = TILE_TYPES.WALL;
+    data[0][x] = TILE_TYPES.HARD_WALL;
+    data[MAP_H - 1][x] = TILE_TYPES.HARD_WALL;
   }
   for (let y = 0; y < MAP_H; y += 1) {
-    data[y][0] = TILE_TYPES.WALL;
-    data[y][MAP_W - 1] = TILE_TYPES.WALL;
+    data[y][0] = TILE_TYPES.HARD_WALL;
+    data[y][MAP_W - 1] = TILE_TYPES.HARD_WALL;
   }
+
+  const destructibleWalls = [
+    { x: 10, y: 9 },
+    { x: 11, y: 9 },
+    { x: 12, y: 9 },
+    { x: 18, y: 16 },
+    { x: 19, y: 16 },
+    { x: 20, y: 16 },
+    { x: 32, y: 24 },
+    { x: 33, y: 25 },
+    { x: 34, y: 26 },
+  ];
+
+  destructibleWalls.forEach(({ x, y }) => {
+    if (data[y]?.[x] !== undefined) {
+      data[y][x] = TILE_TYPES.WALL;
+    }
+  });
 
   return { data };
 };
@@ -66,15 +85,17 @@ export const createMap = (scene) => {
 
   const layer = map.createLayer(0, tiles, 0, 0);
   layer.setScale(1);
-  layer.setCollision([TILE_TYPES.WALL]);
+  layer.setCollision([TILE_TYPES.WALL, TILE_TYPES.HARD_WALL]);
   if (layer.calculateFacesWithin) {
     layer.calculateFacesWithin(0, 0, MAP_W, MAP_H);
   }
   layer.setVisible(false);
 
   scene.mapLayer = layer;
+  scene.destructibleWallIndex = TILE_TYPES.WALL;
   scene.isoTiles = [];
   scene.isoWalls = [];
+  scene.isoWallsGrid = [];
 
   // iso render
   const ISO_STEP = getIsoStep(scene);
@@ -125,6 +146,23 @@ export const createMap = (scene) => {
         wallTile.setDepth(wallTile.isoX + wallTile.isoY + TILE_HEIGHT);
 
         scene.isoWalls.push(wallTile);
+        if (!scene.isoWallsGrid[y]) {
+          scene.isoWallsGrid[y] = [];
+        }
+        scene.isoWallsGrid[y][x] = wallTile;
+      } else if (data[y][x] === TILE_TYPES.HARD_WALL) {
+        const hardWallTile = scene.add.isoSprite(isoX, isoY, 0, "wall");
+        hardWallTile.setOrigin(0.5, 1);
+        hardWallTile.setScale(wallScale);
+
+        hardWallTile.isoX = isoX;
+        hardWallTile.isoY = isoY;
+        hardWallTile.isoZ = 0;
+        hardWallTile.setDepth(
+          hardWallTile.isoX + hardWallTile.isoY + TILE_HEIGHT
+        );
+
+        scene.isoWalls.push(hardWallTile);
       }
     }
   }
