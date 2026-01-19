@@ -121,7 +121,12 @@ export class CombatSystem {
     bullet.body.setVelocity(0, 0);
     bullet.body.enable = false;
 
-    this.scene.mapLayer.removeTileAt(tile.x, tile.y);
+    const destroyedTile = this.scene.mapLayer.getTileAt(tile.x, tile.y);
+    if (destroyedTile) {
+      destroyedTile.setCollision(false);
+      this.scene.mapLayer.removeTileAt(tile.x, tile.y);
+    }
+    this.scene.lightingSystem?.updateLightingMask();
   }
 
   updateShooting(time) {
