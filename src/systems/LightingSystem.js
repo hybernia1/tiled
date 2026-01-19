@@ -1,3 +1,4 @@
+import * as Phaser from "phaser";
 import { MAP_HEIGHT, MAP_WIDTH, TILE_SIZE } from "../config/constants.js";
 
 export class LightingSystem {
@@ -133,7 +134,7 @@ export class LightingSystem {
       for (let step = 0; step <= zone.radius; step += stepSize) {
         const sampleX = zone.x + Math.cos(angle) * step;
         const sampleY = zone.y + Math.sin(angle) * step;
-        if (this.isWallAt(sampleX, sampleY)) {
+        if (this.isWallAt(sampleX, sampleY) || this.isObstacleAt(sampleX, sampleY)) {
           distance = Math.max(0, step - stepSize);
           break;
         }
@@ -161,5 +162,23 @@ export class LightingSystem {
     }
     const tile = layer.getTileAtWorldXY(worldX, worldY);
     return Boolean(tile && tile.collides);
+  }
+
+  isObstacleAt(worldX, worldY) {
+    const obstacles = this.scene.lightObstacles;
+    if (!obstacles) {
+      return false;
+    }
+    const children = obstacles.getChildren();
+    for (const obstacle of children) {
+      if (!obstacle?.active || !obstacle.getBounds) {
+        continue;
+      }
+      const bounds = obstacle.getBounds();
+      if (Phaser.Geom.Rectangle.Contains(bounds, worldX, worldY)) {
+        return true;
+      }
+    }
+    return false;
   }
 }
