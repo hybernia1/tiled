@@ -129,6 +129,24 @@ class DemoScene extends Phaser.Scene {
       data.push(row);
     }
 
+    const destructibleWalls = [
+      { x: 6, y: 3 },
+      { x: 7, y: 3 },
+      { x: 12, y: 4 },
+      { x: 13, y: 4 },
+      { x: 5, y: 7 },
+      { x: 6, y: 7 },
+      { x: 10, y: 8 },
+      { x: 11, y: 8 },
+      { x: 14, y: 6 },
+    ];
+
+    destructibleWalls.forEach(({ x, y }) => {
+      if (data[y] && typeof data[y][x] !== "undefined") {
+        data[y][x] = 3;
+      }
+    });
+
     const map = this.make.tilemap({
       data,
       tileWidth: TILE_SIZE,
@@ -137,6 +155,8 @@ class DemoScene extends Phaser.Scene {
     const tiles = map.addTilesetImage("tiles", null, TILE_SIZE, TILE_SIZE, 0, 0);
     const layer = map.createLayer(0, tiles, 0, 0);
     layer.setScale(1);
+    layer.setCollision([3]);
+    this.mapLayer = layer;
   }
 
   createPlayer() {
@@ -202,6 +222,26 @@ class DemoScene extends Phaser.Scene {
       null,
       this
     );
+    this.physics.add.collider(
+      this.bullets,
+      this.mapLayer,
+      this.handleWallHit,
+      null,
+      this
+    );
+  }
+
+  handleWallHit(bullet, tile) {
+    if (!bullet.active || !tile) {
+      return;
+    }
+
+    bullet.setActive(false);
+    bullet.setVisible(false);
+    bullet.body.setVelocity(0, 0);
+    bullet.body.enable = false;
+
+    this.mapLayer.removeTileAt(tile.x, tile.y);
   }
 
   updateNpcHealthText() {
@@ -219,6 +259,7 @@ class DemoScene extends Phaser.Scene {
     bullet.setActive(false);
     bullet.setVisible(false);
     bullet.body.setVelocity(0, 0);
+    bullet.body.enable = false;
 
     this.npcHealth = Math.max(0, this.npcHealth - 1);
     this.updateNpcHealthText();
@@ -319,6 +360,8 @@ class DemoScene extends Phaser.Scene {
     bullet.setVisible(true);
     bullet.setDepth(1);
     bullet.body.setAllowGravity(false);
+    bullet.body.enable = true;
+    bullet.setPosition(this.player.x, this.player.y);
 
     const direction = this.facing.clone().normalize();
     bullet.body.setVelocity(
