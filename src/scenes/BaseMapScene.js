@@ -22,6 +22,7 @@ import { createCollisionTilesTexture } from "../assets/textures/terrain/collisio
 import { createGrassTexture } from "../assets/textures/terrain/grass.js";
 import { createMountainTexture } from "../assets/textures/terrain/mountain.js";
 import { createPondTexture } from "../assets/textures/terrain/pond.js";
+import { createRockTexture } from "../assets/textures/terrain/rock.js";
 import { createStairsTexture } from "../assets/textures/terrain/stairs.js";
 import { createTreeTextures } from "../assets/textures/terrain/trees.js";
 import { createWallTexture } from "../assets/textures/terrain/wall.js";
@@ -70,6 +71,7 @@ export class BaseMapScene extends Phaser.Scene {
 
   preload() {
     createGrassTexture(this);
+    createRockTexture(this);
     createWallTexture(this);
     createMountainTexture(this);
     createStairsTexture(this);
@@ -329,11 +331,17 @@ export class BaseMapScene extends Phaser.Scene {
       return;
     }
 
+    const portalWorldX = this.portalTile
+      ? this.portalTile.x * TILE_WIDTH
+      : this.portalSprite.isoX ?? this.portalSprite.x;
+    const portalWorldY = this.portalTile
+      ? this.portalTile.y * TILE_WIDTH
+      : this.portalSprite.isoY ?? this.portalSprite.y;
     const distance = Phaser.Math.Distance.Between(
       this.player.x,
       this.player.y,
-      this.portalSprite.isoX ?? this.portalSprite.x,
-      this.portalSprite.isoY ?? this.portalSprite.y
+      portalWorldX,
+      portalWorldY
     );
     const isClose = distance < 70;
 
