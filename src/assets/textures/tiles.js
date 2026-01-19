@@ -1,4 +1,5 @@
 import { TILE_SIZE } from "../../config/constants.js";
+import { setFlatNormalMap } from "./normalMaps.js";
 
 export const createTilesetTexture = (scene) => {
   const texture = scene.textures.createCanvas(
@@ -21,4 +22,6 @@ export const createTilesetTexture = (scene) => {
   ctx.fillRect(TILE_SIZE, TILE_SIZE, TILE_SIZE, TILE_SIZE);
 
   texture.refresh();
+
+  setFlatNormalMap(scene, "tiles", TILE_SIZE * 2, TILE_SIZE * 2);
 };

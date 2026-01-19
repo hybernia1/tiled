@@ -13,6 +13,8 @@ export class LightingSystem {
         y: TILE_SIZE * 3,
         radius: TILE_SIZE * 5.2,
         enabled: false,
+        color: 0xf8d7a6,
+        intensity: 2.1,
       },
       {
         id: "south",
@@ -20,6 +22,8 @@ export class LightingSystem {
         y: TILE_SIZE * 8,
         radius: TILE_SIZE * 5.2,
         enabled: false,
+        color: 0xa6d5f8,
+        intensity: 2.0,
       },
     ];
 
@@ -40,7 +44,41 @@ export class LightingSystem {
     this.scene.lightMask = this.scene.lightMaskGraphics.createGeometryMask();
     this.scene.lightMask.invertAlpha = true;
     this.scene.darknessOverlay.setMask(this.scene.lightMask);
+
+    this.scene.lightZones.forEach((zone) => {
+      if (!this.scene.lights?.addLight) {
+        return;
+      }
+      zone.light = this.scene.lights.addLight(
+        zone.x,
+        zone.y,
+        zone.radius,
+        zone.color,
+        zone.intensity
+      );
+      zone.light.setVisible(zone.enabled);
+    });
+
+    this.updateZoneLights();
     this.updateLightingMask();
+  }
+
+  updateZoneLights() {
+    if (!this.scene.lightZones) {
+      return;
+    }
+
+    this.scene.lightZones.forEach((zone) => {
+      if (!zone.light) {
+        return;
+      }
+      zone.light.x = zone.x;
+      zone.light.y = zone.y;
+      zone.light.radius = zone.radius;
+      zone.light.color = zone.color;
+      zone.light.intensity = zone.enabled ? zone.intensity : 0;
+      zone.light.setVisible(zone.enabled);
+    });
   }
 
   updateLightingMask() {

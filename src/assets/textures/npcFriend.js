@@ -1,3 +1,5 @@
+import { setFlatNormalMap } from "./normalMaps.js";
+
 export const createFriendlyNpcTexture = (scene) => {
   const npc = scene.textures.createCanvas("npcFriend", 32, 32);
   const ctx = npc.getContext();
@@ -17,4 +19,6 @@ export const createFriendlyNpcTexture = (scene) => {
   ctx.fill();
 
   npc.refresh();
+
+  setFlatNormalMap(scene, "npcFriend", 32, 32);
 };
