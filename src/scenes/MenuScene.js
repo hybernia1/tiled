@@ -94,7 +94,7 @@ export class MenuScene extends Phaser.Scene {
   }
 
   startGame() {
-    this.scene.start("demo");
+    this.scene.start("world");
   }
 
   updateFullscreenText() {

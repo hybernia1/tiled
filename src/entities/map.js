@@ -28,7 +28,12 @@ function getFrameWidth(scene, key, preferredFrame = null) {
   return frame.width || frame.cutWidth || 0;
 }
 
-const generateMapData = () => {
+export const MAP_PORTALS = {
+  world: { x: 12, y: 44 },
+  cave: { x: 30, y: 30 },
+};
+
+const generateMapData = (type = "world") => {
   // vše floor
   const data = Array.from({ length: MAP_H }, () =>
     Array.from({ length: MAP_W }, () => TILE_TYPES.FLOOR)
@@ -97,21 +102,52 @@ const generateMapData = () => {
     { x: 35, y: 15 },
   ];
 
+  if (type === "cave") {
+    for (let y = 0; y < MAP_H; y += 1) {
+      for (let x = 0; x < MAP_W; x += 1) {
+        data[y][x] = TILE_TYPES.HARD_WALL;
+      }
+    }
+
+    const room = {
+      x: 20,
+      y: 20,
+      width: 20,
+      height: 20,
+    };
+    for (let y = room.y; y < room.y + room.height; y += 1) {
+      for (let x = room.x; x < room.x + room.width; x += 1) {
+        data[y][x] = TILE_TYPES.FLOOR;
+      }
+    }
+
+    return {
+      data,
+      pondTiles: [],
+      coniferTrees: [],
+      deciduousTrees: [],
+      portal: MAP_PORTALS.cave,
+    };
+  }
+
   return {
     data,
     pondTiles,
     coniferTrees,
     deciduousTrees,
+    portal: MAP_PORTALS.world,
   };
 };
 
-export const createMap = (scene) => {
+export const createMap = (scene, options = {}) => {
+  const { type = "world" } = options;
   const {
     data,
     pondTiles,
     coniferTrees,
     deciduousTrees,
-  } = generateMapData();
+    portal,
+  } = generateMapData(type);
   const coniferTreeSet = new Set(
     coniferTrees.map(({ x, y }) => `${x},${y}`)
   );
@@ -163,6 +199,8 @@ export const createMap = (scene) => {
   const mountainFrames = ["mountain-0", "mountain-1", "mountain-2"];
   const pondW = getFrameWidth(scene, "pond") || 0;
   const pondScale = pondW ? desiredFloorW / pondW : floorScale;
+  const stairsW = getFrameWidth(scene, "stairs") || 0;
+  const stairsScale = stairsW ? desiredFloorW / stairsW : floorScale;
   const treeW = getFrameWidth(scene, "tree-conifer") || desiredFloorW;
   const treeScale = treeW ? desiredFloorW / treeW : floorScale;
 
@@ -260,4 +298,27 @@ export const createMap = (scene) => {
       }
     }
   }
+
+  if (portal) {
+    const portalIsoX = portal.x * ISO_STEP;
+    const portalIsoY = portal.y * ISO_STEP;
+    const portalTile = scene.add.isoSprite(
+      portalIsoX,
+      portalIsoY,
+      1,
+      "stairs"
+    );
+    portalTile.setOrigin(0.5, 1);
+    portalTile.setScale(stairsScale);
+    portalTile.isoX = portalIsoX;
+    portalTile.isoY = portalIsoY;
+    portalTile.isoZ = 1;
+    portalTile.setDepth(portalTile.isoX + portalTile.isoY + TILE_HEIGHT);
+    scene.portalSprite = portalTile;
+    scene.portalTile = portal;
+  }
+
+  return {
+    portal,
+  };
 };

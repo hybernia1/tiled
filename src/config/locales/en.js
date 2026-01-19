@@ -15,4 +15,6 @@ export const en = {
   pauseQuit: "Exit to Menu",
   pauseFullscreen: "Fullscreen",
   pauseHint: "Press Esc or P to continue",
+  enterCave: "Press E to enter the cave",
+  exitCave: "Press E to go back outside",
 };
