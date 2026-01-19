@@ -7,17 +7,32 @@ const MAP_HEIGHT = 12;
 class DemoScene extends Phaser.Scene {
   constructor() {
     super("demo");
+    this.playerSpeed = 180;
+    this.bulletSpeed = 360;
+    this.fireCooldownMs = 220;
+    this.nextFireTime = 0;
   }
 
   preload() {
     this.createTilesetTexture();
     this.createNpcTexture();
+    this.createPlayerTexture();
+    this.createBulletTexture();
   }
 
   create() {
     this.createMap();
+    this.createPlayer();
+    this.createBullets();
     this.createNpc();
     this.createInstructions();
+    this.setupControls();
+  }
+
+  update(time) {
+    this.updatePlayerMovement();
+    this.updateShooting(time);
+    this.cleanupBullets(time);
   }
 
   createTilesetTexture() {
@@ -64,12 +79,49 @@ class DemoScene extends Phaser.Scene {
     npc.refresh();
   }
 
+  createPlayerTexture() {
+    const player = this.textures.createCanvas("player", 32, 32);
+    const ctx = player.getContext();
+
+    ctx.fillStyle = "#c84b31";
+    ctx.fillRect(0, 0, 32, 32);
+
+    ctx.fillStyle = "#f1d18a";
+    ctx.beginPath();
+    ctx.arc(16, 16, 9, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = "#4b2c20";
+    ctx.beginPath();
+    ctx.arc(13, 15, 2, 0, Math.PI * 2);
+    ctx.arc(19, 15, 2, 0, Math.PI * 2);
+    ctx.fill();
+
+    player.refresh();
+  }
+
+  createBulletTexture() {
+    const bullet = this.textures.createCanvas("bullet", 10, 10);
+    const ctx = bullet.getContext();
+
+    ctx.fillStyle = "#f6f2ee";
+    ctx.beginPath();
+    ctx.arc(5, 5, 4, 0, Math.PI * 2);
+    ctx.fill();
+
+    bullet.refresh();
+  }
+
   createMap() {
     const data = [];
     for (let y = 0; y < MAP_HEIGHT; y += 1) {
       const row = [];
       for (let x = 0; x < MAP_WIDTH; x += 1) {
-        const isPath = x === 0 || y === 0 || x === MAP_WIDTH - 1 || y === MAP_HEIGHT - 1;
+        const isPath =
+          x === 0 ||
+          y === 0 ||
+          x === MAP_WIDTH - 1 ||
+          y === MAP_HEIGHT - 1;
         const tileIndex = isPath ? 2 : (x + y) % 2;
         row.push(tileIndex);
       }
@@ -84,6 +136,23 @@ class DemoScene extends Phaser.Scene {
     const tiles = map.addTilesetImage("tiles", null, TILE_SIZE, TILE_SIZE, 0, 0);
     const layer = map.createLayer(0, tiles, 0, 0);
     layer.setScale(1);
+  }
+
+  createPlayer() {
+    const startX = 4 * TILE_SIZE;
+    const startY = 6 * TILE_SIZE;
+
+    this.player = this.physics.add.sprite(startX, startY, "player");
+    this.player.setCollideWorldBounds(true);
+    this.player.setDepth(2);
+    this.facing = new Phaser.Math.Vector2(1, 0);
+  }
+
+  createBullets() {
+    this.bullets = this.physics.add.group({
+      defaultKey: "bullet",
+      maxSize: 40,
+    });
   }
 
   createNpc() {
@@ -111,7 +180,7 @@ class DemoScene extends Phaser.Scene {
 
   createInstructions() {
     this.add
-      .text(16, 16, "NPC patroluje po okraji mapy", {
+      .text(16, 16, "WASD/šipky: pohyb | Mezerník: střelba", {
         fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
         fontSize: "16px",
         color: "#f6f2ee",
@@ -119,6 +188,103 @@ class DemoScene extends Phaser.Scene {
         padding: { x: 8, y: 4 },
       })
       .setDepth(10);
+  }
+
+  setupControls() {
+    this.cursors = this.input.keyboard.createCursorKeys();
+    this.wasd = this.input.keyboard.addKeys({
+      up: Phaser.Input.Keyboard.KeyCodes.W,
+      down: Phaser.Input.Keyboard.KeyCodes.S,
+      left: Phaser.Input.Keyboard.KeyCodes.A,
+      right: Phaser.Input.Keyboard.KeyCodes.D,
+    });
+    this.fireKey = this.input.keyboard.addKey(
+      Phaser.Input.Keyboard.KeyCodes.SPACE
+    );
+  }
+
+  updatePlayerMovement() {
+    if (!this.player?.body) {
+      return;
+    }
+
+    const left = this.cursors.left.isDown || this.wasd.left.isDown;
+    const right = this.cursors.right.isDown || this.wasd.right.isDown;
+    const up = this.cursors.up.isDown || this.wasd.up.isDown;
+    const down = this.cursors.down.isDown || this.wasd.down.isDown;
+
+    let velocityX = 0;
+    let velocityY = 0;
+
+    if (left) {
+      velocityX -= 1;
+    }
+    if (right) {
+      velocityX += 1;
+    }
+    if (up) {
+      velocityY -= 1;
+    }
+    if (down) {
+      velocityY += 1;
+    }
+
+    if (velocityX !== 0 || velocityY !== 0) {
+      const direction = new Phaser.Math.Vector2(velocityX, velocityY).normalize();
+      this.player.body.setVelocity(
+        direction.x * this.playerSpeed,
+        direction.y * this.playerSpeed
+      );
+      this.facing = direction.clone();
+    } else {
+      this.player.body.setVelocity(0, 0);
+    }
+  }
+
+  updateShooting(time) {
+    if (!this.fireKey.isDown || time < this.nextFireTime) {
+      return;
+    }
+
+    const bullet = this.bullets.get(this.player.x, this.player.y);
+    if (!bullet) {
+      return;
+    }
+
+    bullet.setActive(true);
+    bullet.setVisible(true);
+    bullet.setDepth(1);
+    bullet.body.setAllowGravity(false);
+
+    const direction = this.facing.clone().normalize();
+    bullet.body.setVelocity(
+      direction.x * this.bulletSpeed,
+      direction.y * this.bulletSpeed
+    );
+    bullet.lifespan = time + 1200;
+
+    this.nextFireTime = time + this.fireCooldownMs;
+  }
+
+  cleanupBullets(time) {
+    this.bullets.children.each((bullet) => {
+      if (!bullet.active) {
+        return;
+      }
+
+      const outOfBounds =
+        bullet.x < -20 ||
+        bullet.x > MAP_WIDTH * TILE_SIZE + 20 ||
+        bullet.y < -20 ||
+        bullet.y > MAP_HEIGHT * TILE_SIZE + 20;
+      const expired = bullet.lifespan && time > bullet.lifespan;
+
+      if (outOfBounds || expired) {
+        bullet.setActive(false);
+        bullet.setVisible(false);
+        bullet.body.setVelocity(0, 0);
+      }
+    });
   }
 }
 
@@ -128,6 +294,12 @@ const config = {
   width: TILE_SIZE * MAP_WIDTH,
   height: TILE_SIZE * MAP_HEIGHT,
   backgroundColor: "#0f0f14",
+  physics: {
+    default: "arcade",
+    arcade: {
+      debug: false,
+    },
+  },
   scene: [DemoScene],
 };
 
