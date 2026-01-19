@@ -209,6 +209,7 @@ class DemoScene extends Phaser.Scene {
     this.npc.setOrigin(0.5, 0.5);
     this.npc.setImmovable(true);
     this.npc.body.setAllowGravity(false);
+    this.npc.setData("lastHitAt", -Infinity);
 
     this.npcHealthBar = this.add.graphics().setDepth(9);
     this.npcHealthValue = this.add
@@ -354,11 +355,15 @@ class DemoScene extends Phaser.Scene {
       return;
     }
 
+    const now = this.time.now;
+    const lastHitAt = npc.getData("lastHitAt") ?? -Infinity;
+    if (now - lastHitAt < 120) {
+      return;
+    }
+    npc.setData("lastHitAt", now);
+
     bullet.setData("hitNpc", true);
-    bullet.setActive(false);
-    bullet.setVisible(false);
-    bullet.body.setVelocity(0, 0);
-    bullet.body.enable = false;
+    bullet.disableBody(true, true);
 
     this.npcHealth = Math.max(0, this.npcHealth - 1);
     this.updateNpcHealthDisplay();
