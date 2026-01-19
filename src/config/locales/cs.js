@@ -6,5 +6,9 @@ export const cs = {
   menuLanguage: "Jazyk",
   languageName: "Čeština",
   demoInstructions:
-    "WASD/šipky: pohyb | Mezerník: střelba | E: interakce | B: inventář | Dotyk: ovládací tlačítka",
+    "WASD/šipky: pohyb | Mezerník: střelba | E: interakce | B: inventář | Esc/P: pauza | Dotyk: ovládací tlačítka",
+  pauseTitle: "Pauza",
+  pauseResume: "Pokračovat",
+  pauseQuit: "Zpět do menu",
+  pauseHint: "Pokračuj klávesou Esc nebo P",
 };
