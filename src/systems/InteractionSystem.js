@@ -87,7 +87,7 @@ export class InteractionSystem {
       const zone = this.scene.lightZones.find((entry) => entry.id === zoneId);
       if (zone) {
         zone.enabled = !isOn;
-        this.lightingSystem.updateLightingMask();
+        this.lightingSystem.updateLightingMask({ dirtyZoneIds: [zone.id] });
         this.lightingSystem.updateZoneLights();
       }
     }
@@ -107,7 +107,7 @@ export class InteractionSystem {
       this.scene.lightObstacles.remove(collectible);
     }
     collectible.disableBody(true, true);
-    this.lightingSystem.updateLightingMask();
+    this.lightingSystem.updateLightingMask({ collisionsDirty: true });
   }
 
   showFriendlyNpcDialogue() {
