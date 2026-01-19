@@ -14,12 +14,12 @@ export class InventorySystem {
 
     const panelWidth = 280;
     const panelHeight = 190;
-    const panelX = (this.scene.mapWidthPx - panelWidth) / 2;
-    const panelY = (this.scene.mapHeightPx - panelHeight) / 2;
+    const panelX = (this.scene.scale.width - panelWidth) / 2;
+    const panelY = (this.scene.scale.height - panelHeight) / 2;
 
     this.scene.inventoryUi = this.scene.add
       .container(0, 0)
-      .setDepth(20)
+      .setDepth(10000)
       .setScrollFactor(0);
 
     const panel = this.scene.add.graphics().setScrollFactor(0);

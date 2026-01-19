@@ -101,7 +101,6 @@ export class DemoScene extends Phaser.Scene {
     this.cameras.main.startFollow(this.getDisplaySprite(this.player), true, 1, 1);
     this.cameras.main.setZoom(1);
     this.cameras.main.roundPixels = true;
-    this.createInstructions();
     this.createPauseMenu();
     this.combatSystem.setupPlayerHealth();
     this.combatSystem.setupNpcCombat();
