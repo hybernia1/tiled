@@ -106,6 +106,9 @@ export const createMap = (scene) => {
   const floorScale = floorW ? desiredFloorW / floorW : 1;
   const wallW = getFrameWidth(scene, "wall") || 0;
   const wallScale = wallW ? desiredFloorW / wallW : floorScale;
+  const mountainW = getFrameWidth(scene, "mountains", "mountain-0") || 0;
+  const mountainScale = mountainW ? desiredFloorW / mountainW : floorScale;
+  const mountainFrames = ["mountain-0", "mountain-1", "mountain-2"];
 
   for (let y = 0; y < MAP_H; y += 1) {
     for (let x = 0; x < MAP_W; x += 1) {
@@ -151,9 +154,18 @@ export const createMap = (scene) => {
         }
         scene.isoWallsGrid[y][x] = wallTile;
       } else if (data[y][x] === TILE_TYPES.HARD_WALL) {
-        const hardWallTile = scene.add.isoSprite(isoX, isoY, 0, "wall");
+        const mountainFrame =
+          mountainFrames[Math.floor(Math.random() * mountainFrames.length)];
+        const hardWallTile = scene.add.isoSprite(
+          isoX,
+          isoY,
+          0,
+          "mountains",
+          undefined,
+          mountainFrame
+        );
         hardWallTile.setOrigin(0.5, 1);
-        hardWallTile.setScale(wallScale);
+        hardWallTile.setScale(mountainScale);
 
         hardWallTile.isoX = isoX;
         hardWallTile.isoY = isoY;

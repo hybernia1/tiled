@@ -20,6 +20,7 @@ import { createFriendlyNpcTexture } from "../assets/textures/npcFriend.js";
 import { createNpcTexture } from "../assets/textures/npc.js";
 import {
   createCollisionTilesTexture,
+  createMountainTexture,
   createStairsTexture,
   createTilesetTexture,
   createWallTexture,
@@ -66,6 +67,7 @@ export class DemoScene extends Phaser.Scene {
   preload() {
     createTilesetTexture(this);
     createWallTexture(this);
+    createMountainTexture(this);
     createStairsTexture(this);
     createCollisionTilesTexture(this);
     createPlayerTexture(this);
