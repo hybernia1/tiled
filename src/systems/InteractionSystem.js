@@ -22,6 +22,7 @@ export class InteractionSystem {
       return;
     }
 
+    const friendlyNpcDisplay = this.scene.getDisplaySprite(friendlyNpc);
     const distance = Phaser.Math.Distance.Between(
       player.x,
       player.y,
@@ -31,7 +32,7 @@ export class InteractionSystem {
     const isClose = distance < 70;
 
     friendlyNpcPrompt
-      .setPosition(friendlyNpc.x, friendlyNpc.y - 30)
+      .setPosition(friendlyNpcDisplay.x, friendlyNpcDisplay.y - 30)
       .setVisible(isClose);
 
     const interactTriggered =
@@ -74,9 +75,10 @@ export class InteractionSystem {
     const zoneId = closestSwitch.getData("zoneId");
     const isOn = closestSwitch.getData("isOn");
     const actionLabel = isOn ? "zhasni" : "rozsviť";
+    const switchDisplay = this.scene.getDisplaySprite(closestSwitch);
     this.scene.switchPrompt
       .setText(`Stiskni E pro ${actionLabel} světlo`)
-      .setPosition(closestSwitch.x, closestSwitch.y - 18)
+      .setPosition(switchDisplay.x, switchDisplay.y - 18)
       .setVisible(true);
 
     const interactTriggered =
@@ -112,10 +114,11 @@ export class InteractionSystem {
       "Potkal jsem bug. Chtěl autogram, ale zmizel po jedné ráně.",
     ];
     const joke = Phaser.Utils.Array.GetRandom(jokes);
+    const friendlyNpcDisplay = this.scene.getDisplaySprite(this.scene.friendlyNpc);
 
     this.scene.friendlyNpcBubble
       .setText(joke)
-      .setPosition(this.scene.friendlyNpc.x, this.scene.friendlyNpc.y - 52)
+      .setPosition(friendlyNpcDisplay.x, friendlyNpcDisplay.y - 52)
       .setVisible(true);
 
     if (this.scene.friendlyNpcBubbleTimer) {

@@ -20,5 +20,10 @@ export const createTilesetTexture = (scene) => {
   ctx.fillStyle = "#9e7648";
   ctx.fillRect(TILE_SIZE, TILE_SIZE, TILE_SIZE, TILE_SIZE);
 
+  texture.add("tile-0", 0, 0, 0, TILE_SIZE, TILE_SIZE);
+  texture.add("tile-1", 0, TILE_SIZE, 0, TILE_SIZE, TILE_SIZE);
+  texture.add("tile-2", 0, 0, TILE_SIZE, TILE_SIZE, TILE_SIZE);
+  texture.add("tile-3", 0, TILE_SIZE, TILE_SIZE, TILE_SIZE, TILE_SIZE);
+
   texture.refresh();
 };

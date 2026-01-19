@@ -132,8 +132,9 @@ export class CombatSystem {
     const barWidth = 44;
     const barHeight = 6;
     const fillWidth = (npcHealth / maxHealth) * (barWidth - 2);
-    const barX = npc.x - barWidth / 2;
-    const barY = npc.y - 28;
+    const npcDisplay = this.scene.getDisplaySprite(npc);
+    const barX = npcDisplay.x - barWidth / 2;
+    const barY = npcDisplay.y - 28;
 
     npcHealthBar.clear();
     npcHealthBar.fillStyle(0x0f0f14, 0.8);
@@ -150,7 +151,7 @@ export class CombatSystem {
 
     npcHealthValue
       .setText(`${npcHealth}/${maxHealth}`)
-      .setPosition(npc.x, barY - 2)
+      .setPosition(npcDisplay.x, barY - 2)
       .setVisible(true);
   }
 
@@ -217,6 +218,7 @@ export class CombatSystem {
     if (destroyedTile) {
       destroyedTile.setCollision(false);
       this.scene.mapLayer.removeTileAt(tile.x, tile.y);
+      this.scene.removeIsoTileAt(tile.x, tile.y);
     }
     this.scene.lightingSystem?.updateLightingMask();
   }
