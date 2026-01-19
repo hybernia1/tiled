@@ -46,7 +46,7 @@ export class LightingSystem {
       add: false,
     });
     this.scene.lightMask = this.scene.lightMaskGraphics.createGeometryMask();
-    this.scene.lightMask.invertAlpha = false;
+    this.scene.lightMask.invertAlpha = true;
     this.scene.darknessOverlay.setMask(this.scene.lightMask);
 
     this.scene.lightZones.forEach((zone) => {
