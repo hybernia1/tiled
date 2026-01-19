@@ -7,7 +7,10 @@ import {
   TILE_SIZE,
 } from "../config/constants.js";
 import { createPlayerTexture } from "../assets/textures/player.js";
-import { createTilesetTexture } from "../assets/textures/tiles.js";
+import {
+  createTilesetTexture,
+  createWallTexture,
+} from "../assets/textures/tiles.js";
 import { createMap } from "../entities/map.js";
 import { createPlayer } from "../entities/player.js";
 import { resolveLocale, t } from "../config/localization.js";
@@ -33,6 +36,7 @@ export class DemoScene extends Phaser.Scene {
 
   preload() {
     createTilesetTexture(this);
+    createWallTexture(this);
     createPlayerTexture(this);
   }
 
@@ -45,6 +49,9 @@ export class DemoScene extends Phaser.Scene {
 
     createMap(this);
     createPlayer(this);
+    this.physics.world.setBounds(0, 0, this.mapWidthPx, this.mapHeightPx);
+    this.cameras.main.setBounds(0, 0, this.mapWidthPx, this.mapHeightPx);
+    this.cameras.main.startFollow(this.player, true, 0.2, 0.2);
     this.setupIsometricSprites();
     this.createInstructions();
     this.createPauseMenu();
@@ -92,8 +99,12 @@ export class DemoScene extends Phaser.Scene {
       undefined,
       frame
     );
-    isoSprite.setDepth(sprite.depth ?? 0);
-    isoSprite.setOrigin(sprite.originX, sprite.originY);
+    const isoOrigin = sprite.getData("isoOrigin");
+    isoSprite.setDepth(sprite.x + sprite.y);
+    isoSprite.setOrigin(
+      isoOrigin?.x ?? sprite.originX,
+      isoOrigin?.y ?? sprite.originY
+    );
     isoSprite.setScale(sprite.scaleX, sprite.scaleY);
     isoSprite.setFlip(sprite.flipX, sprite.flipY);
     sprite.setAlpha(0);
@@ -129,10 +140,10 @@ export class DemoScene extends Phaser.Scene {
     }
     isoSprite.isoX = sprite.x;
     isoSprite.isoY = sprite.y;
-    isoSprite.isoZ = 0;
+    isoSprite.isoZ = sprite.getData("isoZ") ?? 0;
     isoSprite.setVisible(sprite.active && sprite.visible);
     isoSprite.setFlip(sprite.flipX, sprite.flipY);
-    isoSprite.setDepth(sprite.depth ?? isoSprite.depth);
+    isoSprite.setDepth(sprite.x + sprite.y + isoSprite.isoZ);
 
     const currentAnim = sprite.anims?.currentAnim;
     if (currentAnim && isoSprite.anims?.currentAnim?.key !== currentAnim.key) {
