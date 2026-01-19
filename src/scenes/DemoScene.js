@@ -53,6 +53,8 @@ export class DemoScene extends Phaser.Scene {
     this.npcAttackCooldownMs = NPC_ATTACK_COOLDOWN_MS;
     this.npcAttackDamage = NPC_ATTACK_DAMAGE;
     this.npcIsAggro = false;
+    this.isometricEnabled = true;
+    this.isometricScaleY = 0.65;
   }
 
   preload() {
@@ -100,6 +102,7 @@ export class DemoScene extends Phaser.Scene {
     this.setupPauseInput();
     this.setupFullscreenInput();
     this.setupColliders();
+    this.applyIsometricView();
   }
 
   update(time) {
@@ -116,6 +119,9 @@ export class DemoScene extends Phaser.Scene {
     this.inventorySystem.updateInventoryToggle((action) =>
       this.interactionSystem.consumeTouchAction(action)
     );
+    if (this.isometricEnabled) {
+      this.updateIsometricDepths();
+    }
   }
 
   createInstructions() {
@@ -278,5 +284,43 @@ export class DemoScene extends Phaser.Scene {
     this.physics.add.collider(this.player, this.friendlyNpc);
     this.physics.add.collider(this.npc, this.mapLayer);
     this.physics.add.collider(this.npc, this.player);
+  }
+
+  applyIsometricView() {
+    if (!this.isometricEnabled) {
+      return;
+    }
+
+    const applyScale = (target) => {
+      if (!target?.setScale) {
+        return;
+      }
+      target.setScale(1, this.isometricScaleY);
+    };
+
+    applyScale(this.mapLayer);
+    applyScale(this.player);
+    applyScale(this.npc);
+    applyScale(this.friendlyNpc);
+
+    this.bullets?.children?.each((bullet) => applyScale(bullet));
+    this.collectibles?.children?.each((collectible) => applyScale(collectible));
+    this.switches?.children?.each((switchSprite) => applyScale(switchSprite));
+  }
+
+  updateIsometricDepths() {
+    const setDepthFromY = (target, offset = 0) => {
+      if (!target?.setDepth) {
+        return;
+      }
+      target.setDepth(Math.round(target.y) + offset);
+    };
+
+    setDepthFromY(this.player, 2);
+    setDepthFromY(this.npc, 1);
+    setDepthFromY(this.friendlyNpc, 1);
+    this.bullets?.children?.each((bullet) => setDepthFromY(bullet, 1));
+    this.collectibles?.children?.each((collectible) => setDepthFromY(collectible, 0));
+    this.switches?.children?.each((switchSprite) => setDepthFromY(switchSprite, 1));
   }
 }
