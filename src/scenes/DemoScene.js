@@ -1,23 +1,39 @@
 import { Phaser } from "../phaserGlobals.js";
 import IsoPlugin from "phaser3-plugin-isometric";
 import {
+  BULLET_SPEED,
+  FIRE_COOLDOWN_MS,
   MAP_H,
   MAP_W,
+  NPC_AGGRO_RANGE_TILES,
+  NPC_ATTACK_COOLDOWN_MS,
+  NPC_ATTACK_DAMAGE,
+  NPC_ATTACK_RANGE_TILES,
+  NPC_CHASE_SPEED,
   PLAYER_SPEED,
   TILE_WIDTH,
 } from "../config/constants.js";
 import { createPlayerTexture } from "../assets/textures/player.js";
+import { createBulletTexture } from "../assets/textures/bullet.js";
+import { createFriendlyNpcTexture } from "../assets/textures/npcFriend.js";
+import { createNpcTexture } from "../assets/textures/npc.js";
 import {
   createCollisionTilesTexture,
   createStairsTexture,
   createTilesetTexture,
   createWallTexture,
 } from "../assets/textures/tiles.js";
+import { createBullets } from "../entities/bullets.js";
+import { createFriendlyNpc } from "../entities/friendlyNpc.js";
 import { createMap } from "../entities/map.js";
+import { createNpc } from "../entities/npc.js";
 import { createPlayer } from "../entities/player.js";
 import { resolveLocale, t } from "../config/localization.js";
+import { CombatSystem } from "../systems/CombatSystem.js";
 import { InputSystem } from "../systems/InputSystem.js";
+import { InteractionSystem } from "../systems/InteractionSystem.js";
 import { MovementSystem } from "../systems/MovementSystem.js";
+import { NpcAggroSystem } from "../systems/NpcAggroSystem.js";
 
 export class DemoScene extends Phaser.Scene {
   constructor() {
@@ -28,6 +44,14 @@ export class DemoScene extends Phaser.Scene {
     this.mobileControls = null;
     this.mapWidthPx = TILE_WIDTH * MAP_W;
     this.mapHeightPx = TILE_WIDTH * MAP_H;
+    this.bulletSpeed = BULLET_SPEED;
+    this.fireCooldownMs = FIRE_COOLDOWN_MS;
+    this.nextFireTime = 0;
+    this.npcAggroRangePx = NPC_AGGRO_RANGE_TILES * TILE_WIDTH;
+    this.npcAttackRangePx = NPC_ATTACK_RANGE_TILES * TILE_WIDTH;
+    this.npcChaseSpeed = NPC_CHASE_SPEED;
+    this.npcAttackCooldownMs = NPC_ATTACK_COOLDOWN_MS;
+    this.npcAttackDamage = NPC_ATTACK_DAMAGE;
   }
 
   init() {
@@ -42,6 +66,9 @@ export class DemoScene extends Phaser.Scene {
     createStairsTexture(this);
     createCollisionTilesTexture(this);
     createPlayerTexture(this);
+    createNpcTexture(this);
+    createFriendlyNpcTexture(this);
+    createBulletTexture(this);
   }
 
   create() {
@@ -51,9 +78,15 @@ export class DemoScene extends Phaser.Scene {
     this.iso.projector.origin.setTo(0.5, 0.2);
     this.movementSystem = new MovementSystem(this);
     this.inputSystem = new InputSystem(this);
+    this.combatSystem = new CombatSystem(this);
+    this.npcAggroSystem = new NpcAggroSystem(this);
+    this.interactionSystem = new InteractionSystem(this, null, null);
 
     createMap(this);
     createPlayer(this);
+    createBullets(this);
+    createNpc(this);
+    createFriendlyNpc(this);
     this.setupIsometricSprites();
     this.physics.world.setBounds(0, 0, this.mapWidthPx, this.mapHeightPx);
     this.cameras.main.setBounds(0, 0, this.mapWidthPx, this.mapHeightPx);
@@ -62,6 +95,8 @@ export class DemoScene extends Phaser.Scene {
     this.cameras.main.roundPixels = true;
     this.createInstructions();
     this.createPauseMenu();
+    this.combatSystem.setupPlayerHealth();
+    this.combatSystem.setupNpcCombat();
     this.inputSystem.setupControls();
     this.inputSystem.setupMobileControls();
     this.setupPauseInput();
@@ -74,11 +109,18 @@ export class DemoScene extends Phaser.Scene {
       return;
     }
     this.movementSystem.updatePlayerMovement();
+    this.npcAggroSystem.updateNpcAggro(time);
+    this.combatSystem.updateShooting(time);
+    this.combatSystem.cleanupBullets(time);
+    this.combatSystem.updateNpcHealthDisplay();
+    this.interactionSystem.updateFriendlyNpcInteraction();
     this.syncIsometricSprites();
   }
 
   setupIsometricSprites() {
     this.attachIsoSprite(this.player);
+    this.attachIsoSprite(this.npc);
+    this.attachIsoSprite(this.friendlyNpc);
   }
 
   attachIsoGroup(group) {
@@ -120,6 +162,9 @@ export class DemoScene extends Phaser.Scene {
 
   syncIsometricSprites() {
     this.syncIsoSprite(this.player);
+    this.syncIsoSprite(this.npc);
+    this.syncIsoSprite(this.friendlyNpc);
+    this.syncIsoGroup(this.bullets, { createIfMissing: true });
   }
 
   syncIsoGroup(group, options = {}) {
@@ -335,5 +380,11 @@ export class DemoScene extends Phaser.Scene {
 
   setupColliders() {
     this.physics.add.collider(this.player, this.mapLayer);
+    if (this.npc) {
+      this.physics.add.collider(this.npc, this.mapLayer);
+    }
+    if (this.friendlyNpc) {
+      this.physics.add.collider(this.friendlyNpc, this.mapLayer);
+    }
   }
 }
