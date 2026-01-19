@@ -51,14 +51,28 @@ export class MenuScene extends Phaser.Scene {
       .setOrigin(0.5)
       .setInteractive({ useHandCursor: true });
 
+    this.fullscreenText = this.add
+      .text(width / 2, height / 2 + 80, "", {
+        fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+        fontSize: "18px",
+        color: "#cfc9c4",
+      })
+      .setOrigin(0.5)
+      .setInteractive({ useHandCursor: true });
+
     this.updateTexts();
 
     this.startText.on("pointerdown", () => this.startGame());
     this.languageText.on("pointerdown", () => this.toggleLanguage());
+    this.fullscreenText.on("pointerdown", () => this.toggleFullscreen());
 
     this.input.keyboard.on("keydown-ENTER", () => this.startGame());
     this.input.keyboard.on("keydown-SPACE", () => this.startGame());
     this.input.keyboard.on("keydown-L", () => this.toggleLanguage());
+    this.input.keyboard.on("keydown-F", () => this.toggleFullscreen());
+
+    this.scale.on("enterfullscreen", () => this.updateFullscreenText());
+    this.scale.on("leavefullscreen", () => this.updateFullscreenText());
   }
 
   updateTexts() {
@@ -67,6 +81,7 @@ export class MenuScene extends Phaser.Scene {
     this.languageText.setText(
       `${t(this.locale, "menuLanguage")}: ${getLanguageName(this.locale)}`
     );
+    this.updateFullscreenText();
   }
 
   toggleLanguage() {
@@ -80,5 +95,22 @@ export class MenuScene extends Phaser.Scene {
 
   startGame() {
     this.scene.start("demo");
+  }
+
+  updateFullscreenText() {
+    const stateLabel = this.scale.isFullscreen
+      ? t(this.locale, "fullscreenOn")
+      : t(this.locale, "fullscreenOff");
+    this.fullscreenText.setText(
+      `${t(this.locale, "menuFullscreen")}: ${stateLabel}`
+    );
+  }
+
+  toggleFullscreen() {
+    if (this.scale.isFullscreen) {
+      this.scale.stopFullscreen();
+      return;
+    }
+    this.scale.startFullscreen();
   }
 }

@@ -1,8 +1,14 @@
 import { MAP_HEIGHT, MAP_WIDTH, TILE_SIZE } from "../config/constants.js";
+import { findNearestOpenTilePosition } from "./spawnUtils.js";
 
 export const createNpc = (scene) => {
   scene.npcMaxHealth = 3;
-  scene.npc = scene.physics.add.sprite(2 * TILE_SIZE, 2 * TILE_SIZE, "npc");
+  const startPosition = findNearestOpenTilePosition(
+    scene,
+    2 * TILE_SIZE,
+    2 * TILE_SIZE
+  );
+  scene.npc = scene.physics.add.sprite(startPosition.x, startPosition.y, "npc");
   scene.npc.setOrigin(0.5, 0.5);
   scene.npc.setImmovable(true);
   scene.npc.body.setAllowGravity(false);
@@ -27,7 +33,18 @@ export const createNpc = (scene) => {
     { x: MAP_WIDTH - 3, y: 2 },
     { x: MAP_WIDTH - 3, y: MAP_HEIGHT - 3 },
     { x: 2, y: MAP_HEIGHT - 3 },
-  ];
+  ]
+    .map((point) =>
+      findNearestOpenTilePosition(
+        scene,
+        point.x * TILE_SIZE,
+        point.y * TILE_SIZE
+      )
+    )
+    .map((point) => ({
+      x: point.x / TILE_SIZE,
+      y: point.y / TILE_SIZE,
+    }));
 
   scene.npcTween = scene.tweens.chain({
     targets: scene.npc,

@@ -1,9 +1,15 @@
 import { TILE_SIZE } from "../config/constants.js";
+import { findNearestOpenTilePosition } from "./spawnUtils.js";
 
 export const createFriendlyNpc = (scene) => {
-  scene.friendlyNpc = scene.physics.add.sprite(
+  const startPosition = findNearestOpenTilePosition(
+    scene,
     15 * TILE_SIZE,
-    6 * TILE_SIZE,
+    6 * TILE_SIZE
+  );
+  scene.friendlyNpc = scene.physics.add.sprite(
+    startPosition.x,
+    startPosition.y,
     "npcFriend"
   );
   scene.friendlyNpc.setImmovable(true);
