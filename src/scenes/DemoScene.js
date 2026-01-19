@@ -237,7 +237,8 @@ export class DemoScene extends Phaser.Scene {
           padding: { x: 8, y: 4 },
         }
       )
-      .setDepth(10);
+      .setDepth(10000)
+      .setScrollFactor(0);
   }
 
   createPauseMenu() {
