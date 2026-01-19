@@ -1,4 +1,4 @@
-import { TILE_WIDTH } from "../config/constants.js";
+import { TILE_HEIGHT, TILE_WIDTH } from "../config/constants.js";
 import { findNearestOpenTilePosition } from "./spawnUtils.js";
 
 export const createFriendlyNpc = (scene) => {
@@ -15,6 +15,8 @@ export const createFriendlyNpc = (scene) => {
   scene.friendlyNpc.setImmovable(true);
   scene.friendlyNpc.body.setAllowGravity(false);
   scene.friendlyNpc.setDepth(2);
+  scene.friendlyNpc.setData("isoOrigin", { x: 0.5, y: 1 });
+  scene.friendlyNpc.setData("isoZ", TILE_HEIGHT);
 
   scene.friendlyNpcPrompt = scene.add
     .text(0, 0, "Stiskni E pro rozhovor", {

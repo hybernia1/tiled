@@ -1,4 +1,4 @@
-import { MAP_H, MAP_W, TILE_WIDTH } from "../config/constants.js";
+import { MAP_H, MAP_W, TILE_HEIGHT, TILE_WIDTH } from "../config/constants.js";
 import { findNearestOpenTilePosition } from "./spawnUtils.js";
 
 export const createNpc = (scene) => {
@@ -12,6 +12,8 @@ export const createNpc = (scene) => {
   scene.npc.setOrigin(0.5, 0.5);
   scene.npc.body.setAllowGravity(false);
   scene.npc.setCollideWorldBounds(true);
+  scene.npc.setData("isoOrigin", { x: 0.5, y: 1 });
+  scene.npc.setData("isoZ", TILE_HEIGHT);
   scene.npc.setData("lastHitAt", -Infinity);
   scene.npc.setData("maxHealth", scene.npcMaxHealth);
   scene.npc.setData("health", scene.npcMaxHealth);
