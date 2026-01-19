@@ -84,6 +84,7 @@ export class DemoScene extends Phaser.Scene {
     this.inputSystem.setupControls();
     this.inputSystem.setupMobileControls();
     this.setupPauseInput();
+    this.setupFullscreenInput();
     this.setupColliders();
   }
 
@@ -155,8 +156,18 @@ export class DemoScene extends Phaser.Scene {
       .setScrollFactor(0)
       .setInteractive({ useHandCursor: true });
 
+    this.pauseFullscreenText = this.add
+      .text(width / 2, height / 2 + 70, "", {
+        fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+        fontSize: "18px",
+        color: "#cfc9c4",
+      })
+      .setOrigin(0.5)
+      .setScrollFactor(0)
+      .setInteractive({ useHandCursor: true });
+
     this.pauseHintText = this.add
-      .text(width / 2, height / 2 + 80, "", {
+      .text(width / 2, height / 2 + 120, "", {
         fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
         fontSize: "14px",
         color: "#b7b2ad",
@@ -170,6 +181,7 @@ export class DemoScene extends Phaser.Scene {
         this.pauseTitleText,
         this.pauseResumeText,
         this.pauseQuitText,
+        this.pauseFullscreenText,
         this.pauseHintText,
       ])
       .setDepth(60)
@@ -179,18 +191,26 @@ export class DemoScene extends Phaser.Scene {
 
     this.pauseResumeText.on("pointerdown", () => this.resumeGame());
     this.pauseQuitText.on("pointerdown", () => this.quitToMenu());
+    this.pauseFullscreenText.on("pointerdown", () => this.toggleFullscreen());
   }
 
   updatePauseTexts() {
     this.pauseTitleText.setText(t(this.locale, "pauseTitle"));
     this.pauseResumeText.setText(t(this.locale, "pauseResume"));
     this.pauseQuitText.setText(t(this.locale, "pauseQuit"));
+    this.updateFullscreenText();
     this.pauseHintText.setText(t(this.locale, "pauseHint"));
   }
 
   setupPauseInput() {
     this.input.keyboard.on("keydown-ESC", () => this.togglePause());
     this.input.keyboard.on("keydown-P", () => this.togglePause());
+  }
+
+  setupFullscreenInput() {
+    this.input.keyboard.on("keydown-F", () => this.toggleFullscreen());
+    this.scale.on("enterfullscreen", () => this.updateFullscreenText());
+    this.scale.on("leavefullscreen", () => this.updateFullscreenText());
   }
 
   togglePause() {
@@ -216,6 +236,26 @@ export class DemoScene extends Phaser.Scene {
   quitToMenu() {
     this.resumeGame();
     this.scene.start("menu");
+  }
+
+  updateFullscreenText() {
+    if (!this.pauseFullscreenText) {
+      return;
+    }
+    const stateLabel = this.scale.isFullscreen
+      ? t(this.locale, "fullscreenOn")
+      : t(this.locale, "fullscreenOff");
+    this.pauseFullscreenText.setText(
+      `${t(this.locale, "pauseFullscreen")}: ${stateLabel}`
+    );
+  }
+
+  toggleFullscreen() {
+    if (this.scale.isFullscreen) {
+      this.scale.stopFullscreen();
+      return;
+    }
+    this.scale.startFullscreen();
   }
 
   setupColliders() {
