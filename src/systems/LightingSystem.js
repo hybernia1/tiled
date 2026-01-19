@@ -9,7 +9,7 @@ export class LightingSystem {
     this.scene.lightZones = [
       {
         id: "north",
-        x: TILE_SIZE * 6,
+        x: TILE_SIZE * 5,
         y: TILE_SIZE * 3,
         radius: TILE_SIZE * 5.2,
         enabled: false,
