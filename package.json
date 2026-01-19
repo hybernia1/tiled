@@ -1,0 +1,18 @@
+{
+  "name": "8bitgame",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "analyze:levels": "node scripts/analyze-levels.js",
+    "test": "node --test",
+    "test:e2e": "playwright test",
+    "import:maps": "node scripts/import-maps.js",
+    "import": "npm run import:maps"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.57.0"
+  },
+  "dependencies": {
+    "phaser": "^3.90.0"
+  }
+}
