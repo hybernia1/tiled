@@ -10,18 +10,9 @@ const TILE_TYPES = {
   WALL: 1,
 };
 
-// ISO krok pro “diamant” (fix mezer)
-function getIsoStep(scene) {
-  const tex = scene.textures.get("tiles");
-  const fallback = TILE_WIDTH / 2;
-
-  if (!tex) return fallback;
-
-  const frame = tex.get("tile-0") || tex.get("tile-1") || tex.get("__BASE");
-  if (!frame) return fallback;
-
-  const w = frame.width || frame.cutWidth || 0;
-  return w ? w / 2 : fallback;
+// ISO krok musí sedět na kolizní grid, jinak jde hráč mimo viditelnou mapu.
+function getIsoStep() {
+  return TILE_WIDTH;
 }
 
 function getFrameWidth(scene, key, preferredFrame = null) {
@@ -88,10 +79,12 @@ export const createMap = (scene) => {
   // iso render
   const ISO_STEP = getIsoStep(scene);
 
-  // srovnat wall “půdorys” na floor (aby se vedle sebe nechovaly divně)
+  // iso dlaždice mají šířku 2× krok, jinak vzniknou optické mezery
   const floorW = getFrameWidth(scene, "tiles", "tile-0") || ISO_STEP * 2;
+  const desiredFloorW = ISO_STEP * 2;
+  const floorScale = floorW ? desiredFloorW / floorW : 1;
   const wallW = getFrameWidth(scene, "wall") || 0;
-  const wallScale = wallW ? floorW / wallW : 1;
+  const wallScale = wallW ? desiredFloorW / wallW : floorScale;
 
   for (let y = 0; y < MAP_H; y += 1) {
     for (let x = 0; x < MAP_W; x += 1) {
@@ -109,6 +102,7 @@ export const createMap = (scene) => {
         floorFrame
       );
       floorTile.setOrigin(0.5, 1);
+      floorTile.setScale(floorScale);
       floorTile.isoX = isoX;
       floorTile.isoY = isoY;
       floorTile.isoZ = 0;
