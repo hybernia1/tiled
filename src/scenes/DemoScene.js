@@ -14,6 +14,7 @@ import {
   TILE_WIDTH,
 } from "../config/constants.js";
 import { createPlayerTexture } from "../assets/textures/player.js";
+import { createAppleTexture, createPearTexture } from "../assets/textures/items.js";
 import { createBulletTexture } from "../assets/textures/bullet.js";
 import { createFriendlyNpcTexture } from "../assets/textures/npcFriend.js";
 import { createNpcTexture } from "../assets/textures/npc.js";
@@ -25,12 +26,14 @@ import {
 } from "../assets/textures/tiles.js";
 import { createBullets } from "../entities/bullets.js";
 import { createFriendlyNpc } from "../entities/friendlyNpc.js";
+import { createCollectibles } from "../entities/collectibles.js";
 import { createMap } from "../entities/map.js";
 import { createNpc } from "../entities/npc.js";
 import { createPlayer } from "../entities/player.js";
 import { resolveLocale, t } from "../config/localization.js";
 import { CombatSystem } from "../systems/CombatSystem.js";
 import { InputSystem } from "../systems/InputSystem.js";
+import { InventorySystem } from "../systems/InventorySystem.js";
 import { InteractionSystem } from "../systems/InteractionSystem.js";
 import { MovementSystem } from "../systems/MovementSystem.js";
 import { NpcAggroSystem } from "../systems/NpcAggroSystem.js";
@@ -69,6 +72,8 @@ export class DemoScene extends Phaser.Scene {
     createNpcTexture(this);
     createFriendlyNpcTexture(this);
     createBulletTexture(this);
+    createAppleTexture(this);
+    createPearTexture(this);
   }
 
   create() {
@@ -80,13 +85,16 @@ export class DemoScene extends Phaser.Scene {
     this.inputSystem = new InputSystem(this);
     this.combatSystem = new CombatSystem(this);
     this.npcAggroSystem = new NpcAggroSystem(this);
-    this.interactionSystem = new InteractionSystem(this, null, null);
+    this.inventorySystem = new InventorySystem(this);
+    this.interactionSystem = new InteractionSystem(this, null, this.inventorySystem);
 
     createMap(this);
     createPlayer(this);
+    createCollectibles(this, this.interactionSystem.handleCollectiblePickup);
     createBullets(this);
     createNpc(this);
     createFriendlyNpc(this);
+    this.inventorySystem.createInventoryUi();
     this.setupIsometricSprites();
     this.physics.world.setBounds(0, 0, this.mapWidthPx, this.mapHeightPx);
     this.cameras.main.setBounds(0, 0, this.mapWidthPx, this.mapHeightPx);
@@ -114,6 +122,9 @@ export class DemoScene extends Phaser.Scene {
     this.combatSystem.cleanupBullets(time);
     this.combatSystem.updateNpcHealthDisplay();
     this.interactionSystem.updateFriendlyNpcInteraction();
+    this.inventorySystem.updateInventoryToggle(
+      this.interactionSystem.consumeTouchAction.bind(this.interactionSystem)
+    );
     this.syncIsometricSprites();
   }
 
@@ -121,6 +132,7 @@ export class DemoScene extends Phaser.Scene {
     this.attachIsoSprite(this.player);
     this.attachIsoSprite(this.npc);
     this.attachIsoSprite(this.friendlyNpc);
+    this.attachIsoGroup(this.collectibles);
   }
 
   attachIsoGroup(group) {
@@ -165,6 +177,7 @@ export class DemoScene extends Phaser.Scene {
     this.syncIsoSprite(this.npc);
     this.syncIsoSprite(this.friendlyNpc);
     this.syncIsoGroup(this.bullets, { createIfMissing: true });
+    this.syncIsoGroup(this.collectibles, { createIfMissing: true });
   }
 
   syncIsoGroup(group, options = {}) {
