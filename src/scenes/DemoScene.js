@@ -56,12 +56,13 @@ export class DemoScene extends Phaser.Scene {
     this.npcIsAggro = false;
   }
 
+  init() {
+    if (!Phaser.Plugins.PluginCache.hasCore("IsoPlugin")) {
+      this.plugins.installScenePlugin("IsoPlugin", IsoPlugin, "iso", this);
+    }
+  }
+
   preload() {
-    this.load.scenePlugin({
-      key: "IsoPlugin",
-      url: IsoPlugin,
-      sceneKey: "iso",
-    });
     createTilesetTexture(this);
     createNpcTexture(this);
     createFriendlyNpcTexture(this);
