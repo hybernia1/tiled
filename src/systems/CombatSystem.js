@@ -244,6 +244,7 @@ export class CombatSystem {
     bullet.body.setAllowGravity(false);
     bullet.body.enable = true;
     bullet.setPosition(this.scene.player.x, this.scene.player.y);
+    bullet.setData("isoZ", this.scene.player.getData("isoZ") ?? 0);
     bullet.setData("hitNpc", false);
 
     const direction = this.scene.facing.clone().normalize();
