@@ -1,7 +1,7 @@
 import * as Phaser from "phaser";
 import { MAP_HEIGHT, MAP_WIDTH, TILE_SIZE } from "./constants.js";
 
-export const createGameConfig = (scene) => ({
+export const createGameConfig = (scenes) => ({
   type: Phaser.AUTO,
   parent: "app",
   width: TILE_SIZE * MAP_WIDTH,
@@ -19,5 +19,5 @@ export const createGameConfig = (scene) => ({
       debug: false,
     },
   },
-  scene: [scene],
+  scene: scenes,
 });

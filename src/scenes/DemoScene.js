@@ -21,6 +21,7 @@ import { createMap } from "../entities/map.js";
 import { createNpc } from "../entities/npc.js";
 import { createPlayer } from "../entities/player.js";
 import { createSwitches } from "../entities/switches.js";
+import { resolveLocale, t } from "../config/localization.js";
 import { CombatSystem } from "../systems/CombatSystem.js";
 import { InputSystem } from "../systems/InputSystem.js";
 import { InteractionSystem } from "../systems/InteractionSystem.js";
@@ -54,6 +55,7 @@ export class DemoScene extends Phaser.Scene {
   }
 
   create() {
+    this.locale = this.registry.get("locale") ?? resolveLocale();
     this.lightingSystem = new LightingSystem(this);
     this.inventorySystem = new InventorySystem(this);
     this.interactionSystem = new InteractionSystem(
@@ -99,7 +101,7 @@ export class DemoScene extends Phaser.Scene {
       .text(
         16,
         16,
-        "WASD/šipky: pohyb | Mezerník: střelba | E: interakce | B: inventář | Dotyk: ovládací tlačítka",
+        t(this.locale, "demoInstructions"),
         {
           fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
           fontSize: "16px",
