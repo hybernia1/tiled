@@ -1,4 +1,4 @@
-import { TILE_SIZE } from "../config/constants.js";
+import { TILE_WIDTH } from "../config/constants.js";
 
 export const createSwitches = (scene) => {
   scene.switches = scene.physics.add.staticGroup();
@@ -9,8 +9,8 @@ export const createSwitches = (scene) => {
 
   switchPositions.forEach((spot) => {
     const switchSprite = scene.switches.create(
-      spot.x * TILE_SIZE,
-      spot.y * TILE_SIZE,
+      spot.x * TILE_WIDTH,
+      spot.y * TILE_WIDTH,
       "switch"
     );
     switchSprite.setData("zoneId", spot.zoneId);

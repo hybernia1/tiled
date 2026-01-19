@@ -1,13 +1,15 @@
 import { Phaser } from "../phaserGlobals.js";
 import IsoPlugin from "phaser3-plugin-isometric";
 import {
-  MAP_HEIGHT,
-  MAP_WIDTH,
+  MAP_H,
+  MAP_W,
   PLAYER_SPEED,
-  TILE_SIZE,
+  TILE_WIDTH,
 } from "../config/constants.js";
 import { createPlayerTexture } from "../assets/textures/player.js";
 import {
+  createCollisionTilesTexture,
+  createStairsTexture,
   createTilesetTexture,
   createWallTexture,
 } from "../assets/textures/tiles.js";
@@ -24,8 +26,8 @@ export class DemoScene extends Phaser.Scene {
     this.touchState = null;
     this.touchActions = null;
     this.mobileControls = null;
-    this.mapWidthPx = TILE_SIZE * MAP_WIDTH;
-    this.mapHeightPx = TILE_SIZE * MAP_HEIGHT;
+    this.mapWidthPx = TILE_WIDTH * MAP_W;
+    this.mapHeightPx = TILE_WIDTH * MAP_H;
   }
 
   init() {
@@ -37,12 +39,15 @@ export class DemoScene extends Phaser.Scene {
   preload() {
     createTilesetTexture(this);
     createWallTexture(this);
+    createStairsTexture(this);
+    createCollisionTilesTexture(this);
     createPlayerTexture(this);
   }
 
   create() {
     this.locale = this.registry.get("locale") ?? resolveLocale();
     this.isPaused = false;
+    this.game.renderer.config.roundPixels = true;
     this.iso.projector.origin.setTo(0.5, 0.2);
     this.movementSystem = new MovementSystem(this);
     this.inputSystem = new InputSystem(this);
@@ -52,6 +57,8 @@ export class DemoScene extends Phaser.Scene {
     this.physics.world.setBounds(0, 0, this.mapWidthPx, this.mapHeightPx);
     this.cameras.main.setBounds(0, 0, this.mapWidthPx, this.mapHeightPx);
     this.cameras.main.startFollow(this.player, true, 0.2, 0.2);
+    this.cameras.main.setZoom(1);
+    this.cameras.main.roundPixels = true;
     this.setupIsometricSprites();
     this.createInstructions();
     this.createPauseMenu();
@@ -138,12 +145,12 @@ export class DemoScene extends Phaser.Scene {
     if (!isoSprite) {
       return;
     }
-    isoSprite.isoX = sprite.x;
-    isoSprite.isoY = sprite.y;
-    isoSprite.isoZ = sprite.getData("isoZ") ?? 0;
+    isoSprite.isoX = Math.round(sprite.x);
+    isoSprite.isoY = Math.round(sprite.y);
+    isoSprite.isoZ = Math.round(sprite.getData("isoZ") ?? 0);
     isoSprite.setVisible(sprite.active && sprite.visible);
     isoSprite.setFlip(sprite.flipX, sprite.flipY);
-    isoSprite.setDepth(sprite.x + sprite.y + isoSprite.isoZ);
+    isoSprite.setDepth(isoSprite.isoX + isoSprite.isoY + isoSprite.isoZ);
 
     const currentAnim = sprite.anims?.currentAnim;
     if (currentAnim && isoSprite.anims?.currentAnim?.key !== currentAnim.key) {
