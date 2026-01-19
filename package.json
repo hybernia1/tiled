@@ -1,18 +1,15 @@
 {
-  "name": "8bitgame",
+  "name": "tiled",
   "version": "1.0.0",
   "type": "module",
-  "scripts": {
-    "analyze:levels": "node scripts/analyze-levels.js",
-    "test": "node --test",
-    "test:e2e": "playwright test",
-    "import:maps": "node scripts/import-maps.js",
-    "import": "npm run import:maps"
-  },
   "devDependencies": {
     "@playwright/test": "^1.57.0"
   },
   "dependencies": {
-    "phaser": "^3.90.0"
+    "phaser": "^3.90.0",
+    "howler": "^2.2.4",
+    "localforage": "^1.10.0",
+    "phaser3-rex-plugins": "^1.80.0",
+    "phaser-navmesh": "^2.1.0"
   }
 }
