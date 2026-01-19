@@ -1,4 +1,5 @@
 import * as Phaser from "phaser";
+import IsoPlugin from "phaser3-plugin-isometric";
 import {
   BULLET_SPEED,
   FIRE_COOLDOWN_MS,
@@ -37,7 +38,7 @@ import { NpcAggroSystem } from "../systems/NpcAggroSystem.js";
 
 export class DemoScene extends Phaser.Scene {
   constructor() {
-    super("demo");
+    super({ key: "demo", mapAdd: { isoPlugin: "iso" } });
     this.playerSpeed = PLAYER_SPEED;
     this.bulletSpeed = BULLET_SPEED;
     this.fireCooldownMs = FIRE_COOLDOWN_MS;
@@ -56,6 +57,11 @@ export class DemoScene extends Phaser.Scene {
   }
 
   preload() {
+    this.load.scenePlugin({
+      key: "IsoPlugin",
+      url: IsoPlugin,
+      sceneKey: "iso",
+    });
     createTilesetTexture(this);
     createNpcTexture(this);
     createFriendlyNpcTexture(this);
@@ -69,6 +75,7 @@ export class DemoScene extends Phaser.Scene {
   create() {
     this.locale = this.registry.get("locale") ?? resolveLocale();
     this.isPaused = false;
+    this.iso.projector.origin.setTo(0.5, 0.2);
     this.lightingSystem = new LightingSystem(this);
     this.inventorySystem = new InventorySystem(this);
     this.interactionSystem = new InteractionSystem(
@@ -91,6 +98,7 @@ export class DemoScene extends Phaser.Scene {
     this.lightingSystem.createLighting();
     createSwitches(this);
     createCollectibles(this, this.interactionSystem.handleCollectiblePickup);
+    this.setupIsometricSprites();
     this.inventorySystem.createInventoryUi();
     this.combatSystem.setupNpcCombat();
     this.createInstructions();
@@ -116,6 +124,112 @@ export class DemoScene extends Phaser.Scene {
     this.inventorySystem.updateInventoryToggle((action) =>
       this.interactionSystem.consumeTouchAction(action)
     );
+    this.syncIsometricSprites();
+  }
+
+  setupIsometricSprites() {
+    this.attachIsoSprite(this.player);
+    this.attachIsoSprite(this.npc);
+    this.attachIsoSprite(this.friendlyNpc);
+    this.attachIsoGroup(this.switches);
+    this.attachIsoGroup(this.collectibles);
+  }
+
+  attachIsoGroup(group) {
+    if (!group) {
+      return;
+    }
+    group.children.iterate((child) => {
+      if (!child) {
+        return;
+      }
+      this.attachIsoSprite(child);
+    });
+  }
+
+  attachIsoSprite(sprite) {
+    if (!sprite || sprite.getData("isoSprite")) {
+      return;
+    }
+    const frame = sprite.frame?.name ?? sprite.frame?.index;
+    const isoSprite = this.add.isoSprite(
+      sprite.x,
+      sprite.y,
+      0,
+      sprite.texture.key,
+      frame
+    );
+    isoSprite.setDepth(sprite.depth ?? 0);
+    isoSprite.setOrigin(sprite.originX, sprite.originY);
+    isoSprite.setScale(sprite.scaleX, sprite.scaleY);
+    isoSprite.setFlip(sprite.flipX, sprite.flipY);
+    sprite.setAlpha(0);
+    sprite.setData("isoSprite", isoSprite);
+  }
+
+  syncIsometricSprites() {
+    this.syncIsoSprite(this.player);
+    this.syncIsoSprite(this.npc);
+    this.syncIsoSprite(this.friendlyNpc);
+    this.syncIsoGroup(this.switches);
+    this.syncIsoGroup(this.collectibles);
+    this.syncIsoGroup(this.bullets, { createIfMissing: true });
+  }
+
+  syncIsoGroup(group, options = {}) {
+    if (!group) {
+      return;
+    }
+    group.children.iterate((child) => {
+      if (!child) {
+        return;
+      }
+      if (options.createIfMissing && !child.getData("isoSprite")) {
+        this.attachIsoSprite(child);
+      }
+      this.syncIsoSprite(child);
+    });
+  }
+
+  syncIsoSprite(sprite) {
+    if (!sprite) {
+      return;
+    }
+    const isoSprite = sprite.getData("isoSprite");
+    if (!isoSprite) {
+      return;
+    }
+    isoSprite.isoX = sprite.x;
+    isoSprite.isoY = sprite.y;
+    isoSprite.isoZ = 0;
+    isoSprite.setVisible(sprite.active && sprite.visible);
+    isoSprite.setFlip(sprite.flipX, sprite.flipY);
+    isoSprite.setDepth(sprite.depth ?? isoSprite.depth);
+
+    const currentAnim = sprite.anims?.currentAnim;
+    if (currentAnim && isoSprite.anims?.currentAnim?.key !== currentAnim.key) {
+      isoSprite.play(currentAnim.key, true);
+    } else if (!currentAnim && sprite.frame) {
+      const targetFrame = sprite.frame?.name ?? sprite.frame?.index;
+      if (targetFrame && isoSprite.frame?.name !== targetFrame) {
+        isoSprite.setFrame(targetFrame);
+      }
+    }
+  }
+
+  getDisplaySprite(sprite) {
+    if (!sprite) {
+      return sprite;
+    }
+    return sprite.getData("isoSprite") ?? sprite;
+  }
+
+  removeIsoTileAt(x, y) {
+    const isoTile = this.isoTiles?.[y]?.[x];
+    if (isoTile) {
+      isoTile.destroy();
+      this.isoTiles[y][x] = null;
+    }
   }
 
   createInstructions() {
