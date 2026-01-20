@@ -11,6 +11,7 @@ import {
   NPC_ATTACK_RANGE_TILES,
   NPC_CHASE_SPEED,
   PLAYER_SPEED,
+  UI_PADDING,
   TILE_WIDTH,
 } from "../config/constants.js";
 import { TextureLoader } from "../assets/textures/TextureLoader.js";
@@ -40,6 +41,7 @@ import { QuestSystem } from "../systems/QuestSystem.js";
 import { QuestLogSystem } from "../systems/QuestLogSystem.js";
 import { DropSystem } from "../systems/DropSystem.js";
 import { getMapDefinition } from "../worlds/registry.js";
+import { getItemDisplayName } from "../data/registries/items.js";
 
 const MAP_NAMES = {
   pinewood: "Pinewood",
@@ -139,6 +141,7 @@ export class BaseMapScene extends Phaser.Scene {
     this.createPauseMenu();
     this.createPortalPrompt();
     this.createNpcQuestTooltip();
+    this.createQuestDialogUi();
     this.combatSystem.setupPlayerHealth();
     this.combatSystem.setupNpcCombat();
     this.inputSystem.setupControls();
@@ -169,6 +172,7 @@ export class BaseMapScene extends Phaser.Scene {
     this.updatePortalInteraction();
     this.syncIsometricSprites();
     this.updateNpcNameplates();
+    this.updateNpcQuestIndicator();
     this.updateNpcQuestTooltip();
     this.updateTargetingInput();
     this.updateTargetRing();
@@ -668,6 +672,212 @@ export class BaseMapScene extends Phaser.Scene {
     this.npcQuestTooltipTarget = null;
   }
 
+  createQuestDialogUi() {
+    const panelWidth = 360;
+    const panelHeight = 240;
+    const padding = UI_PADDING;
+    const buttonHeight = 30;
+    const buttonWidth = 110;
+    const buttonSpacing = 12;
+
+    this.questDialog = this.add
+      .container(0, 0)
+      .setDepth(10003)
+      .setScrollFactor(0)
+      .setVisible(false);
+
+    this.questDialogPanel = this.add.graphics().setScrollFactor(0);
+    this.questDialogPanel.fillStyle(uiTheme.panelBackground, 0.95);
+    this.questDialogPanel.fillRoundedRect(0, 0, panelWidth, panelHeight, 12);
+    this.questDialog.add(this.questDialogPanel);
+
+    this.questDialogTitle = this.add
+      .text(padding, padding, "", {
+        fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+        fontSize: "16px",
+        color: uiTheme.textPrimary,
+      })
+      .setScrollFactor(0);
+    this.questDialog.add(this.questDialogTitle);
+
+    this.questDialogDescription = this.add
+      .text(padding, padding + 26, "", {
+        fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+        fontSize: "12px",
+        color: uiTheme.textMuted,
+        wordWrap: { width: panelWidth - padding * 2 },
+      })
+      .setScrollFactor(0);
+    this.questDialog.add(this.questDialogDescription);
+
+    this.questDialogObjectives = this.add
+      .text(padding, padding + 86, "", {
+        fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+        fontSize: "12px",
+        color: uiTheme.textSecondary,
+        wordWrap: { width: panelWidth - padding * 2 },
+        lineSpacing: 4,
+      })
+      .setScrollFactor(0);
+    this.questDialog.add(this.questDialogObjectives);
+
+    this.questDialogRewards = this.add
+      .text(padding, panelHeight - buttonHeight - padding - 34, "", {
+        fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+        fontSize: "12px",
+        color: uiTheme.textSecondary,
+        wordWrap: { width: panelWidth - padding * 2 },
+        lineSpacing: 4,
+      })
+      .setScrollFactor(0);
+    this.questDialog.add(this.questDialogRewards);
+
+    const createButton = (label, x, y, onClick) => {
+      const button = this.add
+        .rectangle(x + buttonWidth / 2, y + buttonHeight / 2, buttonWidth, buttonHeight, uiTheme.panelBorder, 0.9)
+        .setStrokeStyle(1, uiTheme.textInfo, 0.7)
+        .setScrollFactor(0)
+        .setInteractive({ useHandCursor: true });
+      const buttonText = this.add
+        .text(x + buttonWidth / 2, y + buttonHeight / 2, label, {
+          fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+          fontSize: "12px",
+          color: uiTheme.textPrimary,
+        })
+        .setOrigin(0.5)
+        .setScrollFactor(0);
+      button.on("pointerdown", onClick);
+      this.questDialog.add(button);
+      this.questDialog.add(buttonText);
+      return { button, buttonText };
+    };
+
+    const buttonY = panelHeight - buttonHeight - padding;
+    const primaryX = panelWidth - padding - buttonWidth;
+    const secondaryX = primaryX - buttonWidth - buttonSpacing;
+
+    this.questDialogButtons = {
+      accept: createButton("Accept", secondaryX, buttonY, () => {
+        if (this.activeQuestDialogId) {
+          this.questSystem?.startQuest?.(this.activeQuestDialogId);
+          this.hideQuestDialog();
+        }
+      }),
+      decline: createButton("Decline", primaryX, buttonY, () => {
+        this.hideQuestDialog();
+      }),
+      turnIn: createButton("Turn In", primaryX, buttonY, () => {
+        if (this.activeQuestDialogId) {
+          this.questSystem?.turnInQuest?.(this.activeQuestDialogId);
+          this.hideQuestDialog();
+        }
+      }),
+    };
+
+    this.updateQuestDialogPosition();
+    this.scale.on("resize", this.updateQuestDialogPosition, this);
+  }
+
+  updateQuestDialogPosition() {
+    if (!this.questDialog) {
+      return;
+    }
+    const { width, height } = this.scale;
+    const panelBounds = this.questDialogPanel.getBounds();
+    const panelWidth = panelBounds.width;
+    const panelHeight = panelBounds.height;
+    this.questDialog.setPosition(
+      Math.round((width - panelWidth) / 2),
+      Math.round((height - panelHeight) / 2)
+    );
+  }
+
+  showQuestDialog(questId) {
+    if (!questId || !this.questDialog) {
+      return;
+    }
+    const questSystem = this.questSystem;
+    const quest = questSystem?.getQuest?.(questId);
+    const definition = quest?.definition ?? questSystem?.getQuestDefinition?.(questId);
+    const questName = questSystem?.getQuestDisplayName?.(questId) ?? questId;
+    const questDescription = questSystem?.getQuestDescription?.(questId) ?? "";
+    const objectives = definition?.objectives ?? [];
+    const rewards = definition?.rewards ?? [];
+    const questStatus = questSystem?.getQuestStatus?.(questId) ?? "available";
+
+    this.activeQuestDialogId = questId;
+    this.questDialogTitle.setText(questName);
+    this.questDialogDescription.setText(questDescription);
+
+    if (objectives.length === 0) {
+      this.questDialogObjectives.setText("Objectives:\n • None");
+    } else {
+      const objectiveLines = objectives.map((objective, index) => {
+        const key =
+          objective?.targetId ??
+          objective?.objectiveKey ??
+          `objective_${index}`;
+        const label =
+          questSystem?.getTargetDisplayName?.(objective?.targetId) ??
+          objective?.objectiveKey ??
+          key;
+        const required = Math.max(1, Number(objective?.count ?? 1));
+        const progress = Math.min(
+          required,
+          questSystem?.getObjectiveProgress?.(questId, objective, key) ?? 0
+        );
+        return ` • ${label}: ${progress}/${required}`;
+      });
+      this.questDialogObjectives.setText(`Objectives:\n${objectiveLines.join("\n")}`);
+    }
+
+    if (rewards.length === 0) {
+      this.questDialogRewards.setText("Rewards: None");
+    } else {
+      const rewardLines = rewards
+        .map((reward) => {
+          if (reward?.rewardType === "currency") {
+            const amount = Math.max(0, Number(reward.amount ?? 0));
+            const unit = reward.unit === "gold" ? "Gold" : "Silver";
+            return `${unit} +${amount}`;
+          }
+          if (reward?.rewardType === "xp") {
+            const amount = Math.max(0, Number(reward.amount ?? 0));
+            return `XP +${amount}`;
+          }
+          if (reward?.rewardType === "item") {
+            const amount = Math.max(1, Number(reward.amount ?? 1));
+            const itemLabel = getItemDisplayName(reward.itemId);
+            return `${itemLabel} x${amount}`;
+          }
+          return null;
+        })
+        .filter(Boolean);
+      this.questDialogRewards.setText(
+        `Rewards: ${rewardLines.length ? rewardLines.join(", ") : "None"}`
+      );
+    }
+
+    const isAvailable = questStatus === "available";
+    const isReady = questStatus === "ready_to_turn_in";
+    this.questDialogButtons.accept.button.setVisible(isAvailable);
+    this.questDialogButtons.accept.buttonText.setVisible(isAvailable);
+    this.questDialogButtons.turnIn.button.setVisible(isReady);
+    this.questDialogButtons.turnIn.buttonText.setVisible(isReady);
+    this.questDialogButtons.decline.button.setVisible(!isReady);
+    this.questDialogButtons.decline.buttonText.setVisible(!isReady);
+
+    this.questDialog.setVisible(true);
+  }
+
+  hideQuestDialog() {
+    if (!this.questDialog) {
+      return;
+    }
+    this.activeQuestDialogId = null;
+    this.questDialog.setVisible(false);
+  }
+
   updatePortalInteraction() {
     if (!this.portalSprite || !this.player) {
       return;
@@ -700,7 +910,6 @@ export class BaseMapScene extends Phaser.Scene {
 
   getNpcQuestTooltipData() {
     const questId = "quest_boar_chunks_01";
-    const objectiveId = "boar_chunk";
     const questSystem = this.questSystem;
     if (!questSystem) {
       return null;
@@ -722,17 +931,60 @@ export class BaseMapScene extends Phaser.Scene {
     const quest = questSystem.getQuest?.(questId) ?? {};
     const definition =
       quest.definition ?? questSystem.getQuestDefinition?.(questId);
-    const objective =
-      definition?.objectives?.find((entry) => entry?.targetId === objectiveId) ??
-      definition?.objectives?.find(
-        (entry) => entry?.objectiveKey === objectiveId
-      );
-    const required = Number(objective?.count ?? 5);
-    const progress = Number(quest?.progress?.[objectiveId] ?? 0);
-    const label = "Boar Chunk";
+    const objective = definition?.objectives?.[0];
+    if (!objective) {
+      return null;
+    }
+    const required = Number(objective?.count ?? 1);
+    const progress = questSystem.getObjectiveProgress?.(
+      questId,
+      objective,
+      objective?.targetId ?? objective?.objectiveKey
+    );
+    const label = questSystem.getTargetDisplayName?.(objective?.targetId);
     return {
       text: `${progress}/${required} ${label}`,
     };
+  }
+
+  updateNpcQuestIndicator() {
+    const indicator = this.friendlyNpcIndicator;
+    if (!indicator || !this.friendlyNpc?.active) {
+      return;
+    }
+    const questId = "quest_boar_chunks_01";
+    const questState = this.questSystem?.getQuestStatus?.(questId) ?? "available";
+    let symbol = "";
+    let color = "#f6f2ee";
+
+    if (questState === "available") {
+      symbol = "!";
+      color = "#f2c94c";
+    } else if (questState === "ready_to_turn_in") {
+      symbol = "?";
+      color = "#f2c94c";
+    } else if (questState === "active") {
+      symbol = "?";
+      color = "#9aa2b1";
+    }
+
+    if (!symbol) {
+      indicator.setVisible(false);
+      return;
+    }
+
+    const displaySprite = this.getDisplaySprite(this.friendlyNpc);
+    if (!displaySprite?.visible) {
+      indicator.setVisible(false);
+      return;
+    }
+
+    indicator
+      .setText(symbol)
+      .setColor(color)
+      .setPosition(displaySprite.x, displaySprite.y - 70)
+      .setDepth(displaySprite.depth + 4)
+      .setVisible(true);
   }
 
   updateNpcQuestTooltip() {

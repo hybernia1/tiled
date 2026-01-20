@@ -1,6 +1,6 @@
 import { TILE_HEIGHT } from "../config/constants.js";
 import { getRegistryData } from "../data/registries/baseRegistry.js";
-import { getItemDefinitions } from "../data/registries/items.js";
+import { getItemIndex } from "../data/registries/items.js";
 
 export class DropSystem {
   constructor(scene) {
@@ -28,13 +28,7 @@ export class DropSystem {
   }
 
   buildItemIndex() {
-    const items = getItemDefinitions();
-    return items.reduce((acc, item) => {
-      if (item?.id) {
-        acc[item.id] = item;
-      }
-      return acc;
-    }, {});
+    return getItemIndex();
   }
 
   handleNpcDeath(npc) {

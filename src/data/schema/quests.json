@@ -12,11 +12,13 @@
       "objectives",
       "rewards"
     ],
-    "properties": {
-      "id": { "type": "string" },
-      "type": { "type": "string" },
-      "nameKey": { "type": "string" },
-      "tags": {
+      "properties": {
+        "id": { "type": "string" },
+        "type": { "type": "string" },
+        "nameKey": { "type": "string" },
+        "displayName": { "type": "string" },
+        "description": { "type": "string" },
+        "tags": {
         "type": "array",
         "items": { "type": "string" }
       },

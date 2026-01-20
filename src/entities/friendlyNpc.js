@@ -47,4 +47,16 @@ export const createFriendlyNpc = (scene) => {
     .setOrigin(0.5, 1)
     .setDepth(11)
     .setVisible(false);
+
+  scene.friendlyNpcIndicator = scene.add
+    .text(0, 0, "", {
+      fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+      fontSize: "18px",
+      color: "#f6f2ee",
+      stroke: "#0b0c10",
+      strokeThickness: 3,
+    })
+    .setOrigin(0.5, 1)
+    .setDepth(12)
+    .setVisible(false);
 };
