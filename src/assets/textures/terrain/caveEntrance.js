@@ -34,19 +34,19 @@ export const createCaveEntranceTexture = (scene) => {
   ctx.save();
   ctx.fillStyle = ENTRANCE_SHADOW;
   ctx.beginPath();
-  ctx.moveTo(TILE_WIDTH * 0.18, TILE_HEIGHT * 0.55);
-  ctx.lineTo(TILE_WIDTH * 0.5, TILE_HEIGHT * 0.35);
-  ctx.lineTo(TILE_WIDTH * 0.82, TILE_HEIGHT * 0.55);
-  ctx.lineTo(TILE_WIDTH * 0.5, TILE_HEIGHT * 0.78);
+  ctx.moveTo(TILE_WIDTH * 0.18, TILE_HEIGHT * 0.6);
+  ctx.lineTo(TILE_WIDTH * 0.5, TILE_HEIGHT * 0.25);
+  ctx.lineTo(TILE_WIDTH * 0.82, TILE_HEIGHT * 0.6);
+  ctx.lineTo(TILE_WIDTH * 0.5, TILE_HEIGHT * 0.88);
   ctx.closePath();
   ctx.fill();
 
   ctx.fillStyle = ENTRANCE_CORE;
   ctx.beginPath();
-  ctx.moveTo(TILE_WIDTH * 0.28, TILE_HEIGHT * 0.57);
-  ctx.lineTo(TILE_WIDTH * 0.5, TILE_HEIGHT * 0.43);
-  ctx.lineTo(TILE_WIDTH * 0.72, TILE_HEIGHT * 0.57);
-  ctx.lineTo(TILE_WIDTH * 0.5, TILE_HEIGHT * 0.7);
+  ctx.moveTo(TILE_WIDTH * 0.28, TILE_HEIGHT * 0.62);
+  ctx.lineTo(TILE_WIDTH * 0.5, TILE_HEIGHT * 0.32);
+  ctx.lineTo(TILE_WIDTH * 0.72, TILE_HEIGHT * 0.62);
+  ctx.lineTo(TILE_WIDTH * 0.5, TILE_HEIGHT * 0.82);
   ctx.closePath();
   ctx.fill();
   ctx.restore();
