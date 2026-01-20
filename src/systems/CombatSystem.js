@@ -997,11 +997,7 @@ export class CombatSystem {
     }
 
     if (newHealth === 0) {
-      player.setActive(false);
-      player.setVisible(false);
-      player.body.enable = false;
-      player.body.setVelocity(0, 0);
-      this.showCombatMessage("You have fallen!");
+      this.scene.handlePlayerDeath?.();
     }
   }
 

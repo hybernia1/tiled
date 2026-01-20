@@ -22,6 +22,7 @@ import { createCollectibles } from "../entities/collectibles.js";
 import { createMap } from "../entities/map.js";
 import { createPigNpc } from "../entities/pigNpc.js";
 import { createPlayer } from "../entities/player.js";
+import { findNearestOpenTilePosition } from "../entities/spawnUtils.js";
 import { getMaxHealthForLevel } from "../config/playerProgression.js";
 import { uiTheme } from "../config/uiTheme.js";
 import {
@@ -72,6 +73,7 @@ export class BaseMapScene extends Phaser.Scene {
     this.targetedNpc = null;
     this.targetRing = null;
     this.targetRingTween = null;
+    this.isPlayerDead = false;
   }
 
   init(data) {
@@ -79,6 +81,7 @@ export class BaseMapScene extends Phaser.Scene {
       this.plugins.installScenePlugin("IsoPlugin", IsoPlugin, "iso", this, true);
     }
     this.spawnPoint = data?.spawnPoint ?? null;
+    this.pendingDeath = Boolean(data?.pendingDeath);
   }
 
   preload() {
@@ -142,6 +145,7 @@ export class BaseMapScene extends Phaser.Scene {
     this.createPortalPrompt();
     this.createNpcQuestTooltip();
     this.createQuestDialogUi();
+    this.createDeathDialogUi();
     this.combatSystem.setupPlayerHealth();
     this.combatSystem.setupNpcCombat();
     this.inputSystem.setupControls();
@@ -149,6 +153,12 @@ export class BaseMapScene extends Phaser.Scene {
     this.setupFullscreenInput();
     this.setupTargetingInput();
     this.setupColliders();
+
+    if (this.pendingDeath) {
+      this.isPlayerDead = true;
+      this.applyPlayerDeathState();
+      this.showDeathDialog();
+    }
   }
 
   update(time) {
@@ -779,6 +789,211 @@ export class BaseMapScene extends Phaser.Scene {
 
     this.updateQuestDialogPosition();
     this.scale.on("resize", this.updateQuestDialogPosition, this);
+  }
+
+  createDeathDialogUi() {
+    const panelWidth = 360;
+    const panelHeight = 170;
+    const padding = UI_PADDING;
+    const buttonHeight = 30;
+    const buttonWidth = 120;
+
+    this.deathDialog = this.add
+      .container(0, 0)
+      .setDepth(10004)
+      .setScrollFactor(0)
+      .setVisible(false);
+
+    this.deathDialogWidth = panelWidth;
+    this.deathDialogHeight = panelHeight;
+
+    this.deathDialogPanel = this.add.graphics().setScrollFactor(0);
+    this.deathDialogPanel.fillStyle(uiTheme.panelBackground, 0.95);
+    this.deathDialogPanel.fillRoundedRect(0, 0, panelWidth, panelHeight, 12);
+    this.deathDialog.add(this.deathDialogPanel);
+
+    this.deathDialogTitle = this.add
+      .text(padding, padding, "You have died", {
+        fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+        fontSize: "16px",
+        color: uiTheme.textPrimary,
+      })
+      .setScrollFactor(0);
+    this.deathDialog.add(this.deathDialogTitle);
+
+    this.deathDialogMessage = this.add
+      .text(padding, padding + 30, "", {
+        fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+        fontSize: "12px",
+        color: uiTheme.textMuted,
+        wordWrap: { width: panelWidth - padding * 2 },
+        lineSpacing: 4,
+      })
+      .setScrollFactor(0);
+    this.deathDialog.add(this.deathDialogMessage);
+
+    const buttonX = Math.round((panelWidth - buttonWidth) / 2);
+    const buttonY = panelHeight - buttonHeight - padding;
+    this.deathDialogButton = this.add
+      .rectangle(
+        buttonX + buttonWidth / 2,
+        buttonY + buttonHeight / 2,
+        buttonWidth,
+        buttonHeight,
+        uiTheme.panelBorder,
+        0.9
+      )
+      .setStrokeStyle(1, uiTheme.textInfo, 0.7)
+      .setScrollFactor(0)
+      .setInteractive({ useHandCursor: true });
+    this.deathDialogButton.on("pointerdown", () => this.revivePlayer());
+    this.deathDialog.add(this.deathDialogButton);
+
+    this.deathDialogButtonText = this.add
+      .text(buttonX + buttonWidth / 2, buttonY + buttonHeight / 2, "Revive", {
+        fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+        fontSize: "12px",
+        color: uiTheme.textPrimary,
+      })
+      .setOrigin(0.5)
+      .setScrollFactor(0);
+    this.deathDialog.add(this.deathDialogButtonText);
+
+    this.deathDialogHitArea = this.add
+      .rectangle(panelWidth / 2, panelHeight / 2, panelWidth, panelHeight, 0, 0)
+      .setScrollFactor(0)
+      .setInteractive({ useHandCursor: true });
+    this.deathDialogHitArea.on("pointerdown", () => this.revivePlayer());
+    this.deathDialog.add(this.deathDialogHitArea);
+    this.deathDialog.bringToTop(this.deathDialogHitArea);
+
+    this.updateDeathDialogPosition();
+    this.scale.on("resize", this.updateDeathDialogPosition, this);
+  }
+
+  updateDeathDialogPosition() {
+    if (!this.deathDialog) {
+      return;
+    }
+    const panelWidth = this.deathDialogWidth;
+    const panelHeight = this.deathDialogHeight;
+    if (!panelWidth || !panelHeight) {
+      return;
+    }
+    const { width, height } = this.scale;
+    this.deathDialog.setPosition(
+      Math.round((width - panelWidth) / 2),
+      Math.round((height - panelHeight) / 2)
+    );
+  }
+
+  getGraveyardDefinition() {
+    return getMapDefinition("pinewood")?.graveyard ?? null;
+  }
+
+  getGraveyardSpawnPoint({ resolveOpenTile = true } = {}) {
+    const graveyard = this.getGraveyardDefinition();
+    if (!graveyard) {
+      return { x: this.player?.x ?? 0, y: this.player?.y ?? 0 };
+    }
+    const centerX = graveyard.x + Math.floor(graveyard.width / 2);
+    const centerY = graveyard.y + Math.floor(graveyard.height / 2);
+    const worldX = centerX * TILE_WIDTH;
+    const worldY = centerY * TILE_WIDTH;
+    if (!resolveOpenTile) {
+      return { x: worldX, y: worldY };
+    }
+    return findNearestOpenTilePosition(this, worldX, worldY, 3);
+  }
+
+  teleportPlayerTo(point) {
+    if (!this.player || !point) {
+      return;
+    }
+    this.player.setPosition(point.x, point.y);
+    this.syncIsoSprite(this.player);
+  }
+
+  applyPlayerDeathState() {
+    if (!this.player) {
+      return;
+    }
+    this.player.setActive(false);
+    this.player.setVisible(false);
+    if (this.player.body) {
+      this.player.body.enable = false;
+      this.player.body.setVelocity(0, 0);
+    }
+    this.syncIsoSprite(this.player);
+  }
+
+  showDeathDialog() {
+    if (!this.deathDialog) {
+      return;
+    }
+    this.deathDialogMessage.setText(
+      "Your character has died and will be resurrected at the graveyard.\nClick this window to revive."
+    );
+    this.deathDialog.setVisible(true);
+    this.isPaused = true;
+  }
+
+  hideDeathDialog() {
+    if (!this.deathDialog) {
+      return;
+    }
+    this.deathDialog.setVisible(false);
+    this.isPaused = false;
+  }
+
+  revivePlayer() {
+    if (!this.player || !this.isPlayerDead) {
+      return;
+    }
+    const level = Number(this.player.getData("level")) || 1;
+    const maxHealth =
+      Number(this.player.getData("maxHealth")) || getMaxHealthForLevel(level);
+
+    this.player.setData("health", maxHealth);
+    this.player.setActive(true);
+    this.player.setVisible(true);
+    if (this.player.body) {
+      this.player.body.enable = true;
+      this.player.body.setVelocity(0, 0);
+    }
+    this.syncIsoSprite(this.player);
+    this.isPlayerDead = false;
+
+    if (this.gameState?.player) {
+      this.gameState.player.health = maxHealth;
+      this.gameState.player.maxHealth = maxHealth;
+      this.persistGameState?.();
+    }
+
+    this.combatSystem?.updatePlayerHealthDisplay?.();
+    this.hideDeathDialog();
+  }
+
+  handlePlayerDeath() {
+    if (this.isPlayerDead) {
+      return;
+    }
+    this.isPlayerDead = true;
+    const graveyardSpawn = this.getGraveyardSpawnPoint({ resolveOpenTile: false });
+    const graveyardMapId = "pinewood";
+
+    if (this.mapId !== graveyardMapId) {
+      this.syncPlayerState();
+      this.scene.start("world", {
+        spawnPoint: graveyardSpawn,
+        pendingDeath: true,
+      });
+      return;
+    }
+
+    this.applyPlayerDeathState();
+    this.teleportPlayerTo(this.getGraveyardSpawnPoint({ resolveOpenTile: true }));
+    this.showDeathDialog();
   }
 
   updateQuestDialogPosition() {

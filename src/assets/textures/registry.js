@@ -12,6 +12,7 @@ import { createPlayerTexture } from "./player.js";
 import { createSpellShieldTexture, createSpellShotTexture } from "./spells.js";
 import { createCollisionTilesTexture } from "./terrain/collision.js";
 import { createGrassTexture } from "./terrain/grass.js";
+import { createGraveyardTexture } from "./terrain/graveyard.js";
 import { createMountainTexture } from "./terrain/mountain.js";
 import { createPondTexture } from "./terrain/pond.js";
 import { createRockTexture } from "./terrain/rock.js";
@@ -59,6 +60,22 @@ export const textureRegistry = [
     lightEmission: 0,
     version: 1,
     create: createGrassTexture,
+  },
+  {
+    id: "graveyard",
+    type: "terrain",
+    size: { width: TILE_WIDTH * 2, height: TILE_HEIGHT },
+    palette: ["#5b5f65", "#4f5359", "#3a3d41", "#9ba1a7"],
+    rarity: "uncommon",
+    isAnimated: false,
+    tags: ["ground", "tile", "graveyard"],
+    effectTag: "terrain",
+    materialType: "stone",
+    impactVFX: "rock-dust",
+    soundId: "step-stone",
+    lightEmission: 0,
+    version: 1,
+    create: createGraveyardTexture,
   },
   {
     id: "rock",
