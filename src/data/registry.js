@@ -12,14 +12,33 @@ import questsSchema from "./schema/quests.json";
 import dropsSchema from "./schema/drops.json";
 import texturesSchema from "./schema/textures.json";
 
-const createIndex = (records) =>
-  records.reduce((acc, record) => {
-    acc[record.id] = record;
-    return acc;
-  }, {});
-
 const isPlainObject = (value) =>
   value !== null && typeof value === "object" && !Array.isArray(value);
+
+const createIndex = (records) => {
+  if (Array.isArray(records)) {
+    return records.reduce((acc, record) => {
+      if (record?.id) {
+        acc[record.id] = record;
+      }
+      return acc;
+    }, {});
+  }
+
+  if (isPlainObject(records)) {
+    return Object.entries(records).reduce((acc, [key, record]) => {
+      if (record && typeof record === "object") {
+        const recordId = record.id ?? record.spellId ?? key;
+        if (recordId) {
+          acc[recordId] = record;
+        }
+      }
+      return acc;
+    }, {});
+  }
+
+  return {};
+};
 
 const schemaTypeMatches = (value, expectedType) => {
   switch (expectedType) {

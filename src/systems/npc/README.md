@@ -30,7 +30,7 @@ This directory contains helpers used by NPC entities, focused on combat stats, b
 NPC definitions live in `src/data/npc.json` and are expected to include `id`, `type`, and `stats.maxHealth` at minimum.
 
 ```js
-import { NPC_IDS } from "../../data/npcRegistry.js";
+import { NPC_IDS } from "../../data/registries/npcs.js";
 
 export const NPC_DEFINITIONS = {
   [NPC_IDS.hostileWanderer]: {
