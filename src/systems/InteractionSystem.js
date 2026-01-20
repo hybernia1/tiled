@@ -1,10 +1,5 @@
 import * as Phaser from "phaser";
 
-const ITEM_LABELS = {
-  apple: "apple",
-  pear: "pear",
-};
-
 export class InteractionSystem {
   constructor(scene, lightingSystem, inventorySystem) {
     this.scene = scene;
@@ -57,20 +52,24 @@ export class InteractionSystem {
       return;
     }
 
-    const itemType = collectible.getData("itemType");
+    const itemId = collectible.getData("itemId");
     const collectibleId = collectible.getData("collectibleId");
     if (collectibleId && this.scene?.mapState) {
       const collectedItems = this.scene.mapState.collectedItems ?? [];
-      if (!collectedItems.includes(collectibleId)) {
-        collectedItems.push(collectibleId);
+      const alreadyCollected = collectedItems.some((entry) =>
+        typeof entry === "string"
+          ? entry === collectibleId
+          : entry?.collectibleId === collectibleId || entry?.id === collectibleId
+      );
+      if (!alreadyCollected) {
+        collectedItems.push({ collectibleId, itemId: itemId ?? null });
       }
       this.scene.mapState.collectedItems = collectedItems;
       this.scene.persistGameState?.();
     }
-    if (itemType) {
-      this.inventorySystem.addItem(itemType);
-      const itemName = ITEM_LABELS[itemType] ?? itemType;
-      this.scene.gameLogSystem?.addEntry("logItemPicked", { item: itemName });
+    if (itemId) {
+      this.inventorySystem.addItem(itemId);
+      this.scene.gameLogSystem?.addEntry("logItemPicked", { item: itemId });
     }
 
     collectible.disableBody(true, true);
