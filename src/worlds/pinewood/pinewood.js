@@ -15,16 +15,39 @@ const buildPinewoodTiles = () => {
     data[y][MAP_W - 1] = TILE_TYPES.HARD_WALL;
   }
 
-  const pondTiles = [
-    { x: 26, y: 27 },
-    { x: 27, y: 27 },
-    { x: 26, y: 28 },
-    { x: 27, y: 28 },
+  const pondTiles = [];
+  for (let y = 25; y <= 29; y += 1) {
+    for (let x = 24; x <= 28; x += 1) {
+      pondTiles.push({ x, y });
+    }
+  }
+
+  const pondRocks = [
+    { x: 23, y: 26 },
+    { x: 23, y: 27 },
+    { x: 23, y: 28 },
+    { x: 24, y: 24 },
+    { x: 25, y: 24 },
+    { x: 27, y: 24 },
+    { x: 28, y: 24 },
+    { x: 29, y: 25 },
+    { x: 29, y: 26 },
+    { x: 29, y: 28 },
+    { x: 24, y: 30 },
+    { x: 26, y: 30 },
+    { x: 27, y: 30 },
+    { x: 28, y: 30 },
   ];
 
   pondTiles.forEach(({ x, y }) => {
     if (data[y]?.[x] !== undefined) {
       data[y][x] = TILE_TYPES.POND;
+    }
+  });
+
+  pondRocks.forEach(({ x, y }) => {
+    if (data[y]?.[x] !== undefined) {
+      data[y][x] = TILE_TYPES.ROCK;
     }
   });
 
@@ -50,7 +73,7 @@ const buildPinewoodTiles = () => {
     { x: 35, y: 15 },
   ];
 
-  const graveyard = { x: 29, y: 29, width: 3, height: 3 };
+  const graveyard = { x: 32, y: 31, width: 4, height: 4 };
   const graveyardTiles = [];
   for (let y = graveyard.y; y < graveyard.y + graveyard.height; y += 1) {
     for (let x = graveyard.x; x < graveyard.x + graveyard.width; x += 1) {
@@ -79,5 +102,5 @@ export const pinewoodMap = {
   floorFramePrefix: "grass",
   portal: { x: 12, y: 44, targetMapId: "pinewood:cave" },
   tiles: buildPinewoodTiles(),
-  graveyard: { x: 29, y: 29, width: 3, height: 3 },
+  graveyard: { x: 32, y: 31, width: 4, height: 4 },
 };

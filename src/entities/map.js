@@ -50,6 +50,7 @@ export const createMap = (scene, options = {}) => {
   textureLoader?.ensureTexture("wall");
   textureLoader?.ensureTexture("mountains");
   textureLoader?.ensureTexture("pond");
+  textureLoader?.ensureTexture("rock");
   textureLoader?.ensureTexture("cave-entrance");
   textureLoader?.ensureTexture("tree-conifer");
   textureLoader?.ensureTexture("tree-deciduous");
@@ -113,10 +114,17 @@ export const createMap = (scene, options = {}) => {
 
       // podlaha všude
       const isGraveyardTile = data[y][x] === TILE_TYPES.GRAVEYARD;
+      const isRockTile = data[y][x] === TILE_TYPES.ROCK;
       const tileFloorFramePrefix = isGraveyardTile
         ? "graveyard"
+        : isRockTile
+        ? "rock"
         : defaultFloorFramePrefix;
-      const tileTextureKey = isGraveyardTile ? "graveyard" : floorTextureKey;
+      const tileTextureKey = isGraveyardTile
+        ? "graveyard"
+        : isRockTile
+        ? "rock"
+        : floorTextureKey;
       const floorFrame =
         (x + y) % 2 === 0
           ? `${tileFloorFramePrefix}-0`
