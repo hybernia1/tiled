@@ -739,6 +739,41 @@ export class CombatSystem {
       return;
     }
 
+    const targetedNpc = this.isKillableNpc(this.scene.targetedNpc)
+      ? this.scene.targetedNpc
+      : null;
+    let direction = null;
+    if (targetedNpc) {
+      const distance = Phaser.Math.Distance.Between(
+        this.scene.player.x,
+        this.scene.player.y,
+        targetedNpc.x,
+        targetedNpc.y
+      );
+      if (distance > this.bulletRangePx) {
+        if (usingSpellbar) {
+          this.scene.pointerFireActive = false;
+          this.scene.spellbarShotQueued = false;
+        }
+        return;
+      }
+      direction = this.getSpellbarDirection(targetedNpc);
+    } else if (usingSpellbar) {
+      direction = this.getSpellbarDirection(spellbarTarget);
+    } else {
+      const autoAimTarget = this.getAutoAimTarget();
+      direction =
+        (autoAimTarget ? this.getAutoAimDirection() : null) ??
+        this.scene.facing.clone().normalize();
+    }
+    if (!direction) {
+      if (usingSpellbar) {
+        this.scene.pointerFireActive = false;
+        this.scene.spellbarShotQueued = false;
+      }
+      return;
+    }
+
     const bullet = this.scene.bullets.get(this.scene.player.x, this.scene.player.y);
     if (!bullet) {
       return;
@@ -752,20 +787,6 @@ export class CombatSystem {
     bullet.setPosition(this.scene.player.x, this.scene.player.y);
     bullet.setData("isoZ", this.scene.player.getData("isoZ") ?? 0);
     bullet.setData("hitNpc", false);
-
-    const autoAimTarget = this.getAutoAimTarget();
-    const direction = usingSpellbar
-      ? this.getSpellbarDirection(spellbarTarget)
-      : (autoAimTarget
-          ? this.getAutoAimDirection()
-          : null) ?? this.scene.facing.clone().normalize();
-    if (!direction) {
-      if (usingSpellbar) {
-        this.scene.pointerFireActive = false;
-        this.scene.spellbarShotQueued = false;
-      }
-      return;
-    }
     bullet.body.setVelocity(
       direction.x * this.scene.bulletSpeed,
       direction.y * this.scene.bulletSpeed
