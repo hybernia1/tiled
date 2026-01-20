@@ -2,7 +2,8 @@
 
 ## Overview
 
-Spells are defined in `src/data/spells.json`, hydrated in `registry.js`,
+Spells are defined in `src/data/spells.json`, hydrated in
+`src/data/registries/spells.js`,
 instantiated via `createSpell`, and consumed by `CombatSystem`. Each definition
 uses consistent naming conventions like `spellId`, `iconKey`, and `cooldownMs`.
 
@@ -25,7 +26,7 @@ A spell definition object supports the following fields:
 - `description` (string | function): Tooltip description of the spell's purpose.
 - `damage` (number | string | function): Tooltip damage value or range.
 - `onExpire` (function): Handler when a timed spell expires (assigned in
-  `registry.js` if needed).
+  `src/data/registries/spells.js` if needed).
 
 ## Validation
 
