@@ -1,0 +1,34 @@
+[
+  {
+    "id": "drop_goblin_common_01",
+    "type": "drop",
+    "nameKey": "drop.goblin.common.01",
+    "tags": ["enemy", "goblin"],
+    "version": 1,
+    "sourceId": "npc_goblin_01",
+    "dropTable": [
+      {
+        "itemId": "item_iron_sword_01",
+        "chance": 0.05
+      },
+      {
+        "itemId": "item_health_potion_01",
+        "chance": 0.2
+      }
+    ]
+  },
+  {
+    "id": "drop_bat_common_01",
+    "type": "drop",
+    "nameKey": "drop.bat.common.01",
+    "tags": ["enemy", "bat"],
+    "version": 1,
+    "sourceId": "npc_bat_01",
+    "dropTable": [
+      {
+        "itemId": "item_health_potion_01",
+        "chance": 0.15
+      }
+    ]
+  }
+]

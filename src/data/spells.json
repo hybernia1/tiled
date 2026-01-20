@@ -1,0 +1,36 @@
+[
+  {
+    "id": "spell_firebolt_01",
+    "type": "spell",
+    "nameKey": "spell.firebolt.01",
+    "tags": ["fire", "ranged"],
+    "version": 1,
+    "manaCost": 12,
+    "cooldown": 3,
+    "effects": [
+      {
+        "effectKey": "burn",
+        "magnitude": 6,
+        "duration": 4
+      }
+    ],
+    "iconKey": "icon.spell.firebolt"
+  },
+  {
+    "id": "spell_frost_nova_01",
+    "type": "spell",
+    "nameKey": "spell.frostnova.01",
+    "tags": ["ice", "aoe"],
+    "version": 1,
+    "manaCost": 18,
+    "cooldown": 6,
+    "effects": [
+      {
+        "effectKey": "slow",
+        "magnitude": 0.35,
+        "duration": 5
+      }
+    ],
+    "iconKey": "icon.spell.frostnova"
+  }
+]

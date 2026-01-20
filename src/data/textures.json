@@ -1,0 +1,28 @@
+[
+  {
+    "id": "texture_player_01",
+    "type": "texture",
+    "nameKey": "texture.player.01",
+    "tags": ["character", "hero"],
+    "version": 1,
+    "atlasKey": "atlas.characters",
+    "frameKey": "player_idle_01",
+    "resolution": {
+      "width": 48,
+      "height": 48
+    }
+  },
+  {
+    "id": "texture_slime_01",
+    "type": "texture",
+    "nameKey": "texture.slime.01",
+    "tags": ["enemy", "slime"],
+    "version": 1,
+    "atlasKey": "atlas.enemies",
+    "frameKey": "slime_idle_01",
+    "resolution": {
+      "width": 32,
+      "height": 32
+    }
+  }
+]
