@@ -109,6 +109,31 @@ export class NpcAggroSystem {
       Number(npc.getData("aggroRange")) || this.scene.npcAggroRangePx;
     const attackRange =
       Number(npc.getData("attackRange")) || this.scene.npcAttackRangePx;
+    const combatLeashRange = Number(npc.getData("combatLeashRangePx"));
+    const resetHealthOnDisengage = Boolean(
+      npc.getData("resetHealthOnDisengage")
+    );
+
+    if (isProvoked && Number.isFinite(combatLeashRange)) {
+      if (distance > combatLeashRange) {
+        this.resetNpcCombatState(npc, { resetHealthOnDisengage });
+        return;
+      }
+      this.setSpriteAggro(npc, true);
+      const direction = new Phaser.Math.Vector2(
+        player.x - npc.x,
+        player.y - npc.y
+      ).normalize();
+      npc.body.setVelocity(
+        direction.x * this.scene.npcChaseSpeed,
+        direction.y * this.scene.npcChaseSpeed
+      );
+
+      if (distance <= attackRange) {
+        this.handleNpcAttackForSprite(time, npc);
+      }
+      return;
+    }
 
     if (distance <= aggroRange) {
       this.setSpriteAggro(npc, true);
@@ -158,6 +183,26 @@ export class NpcAggroSystem {
       patrolTween?.pause();
     } else {
       patrolTween?.resume();
+    }
+  }
+
+  resetNpcCombatState(npc, { resetHealthOnDisengage }) {
+    if (!npc) {
+      return;
+    }
+    npc.body?.setVelocity(0, 0);
+    this.setSpriteAggro(npc, false);
+    npc.setData("isProvoked", false);
+    npc.setData("nextAttackAt", 0);
+    if (resetHealthOnDisengage) {
+      const maxHealth =
+        Number(npc.getData("maxHealth")) ||
+        Number(npc.getData("definition")?.maxHealth) ||
+        1;
+      npc.setData("health", maxHealth);
+      if (npc === this.scene.targetedNpc) {
+        this.scene.combatSystem?.updateTargetHud?.();
+      }
     }
   }
 
