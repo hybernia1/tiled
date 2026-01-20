@@ -1,10 +1,12 @@
+const createNpcLevelId = (key, level) => `${key}_level_${level}`;
+
 export const NPC_IDS = {
   hostileWanderer: "hostileWanderer",
   neutralWanderer: "neutralWanderer",
   friendlyGuide: "friendlyGuide",
-  pigLevel1: "pig_level_1",
-  pigLevel2: "pig_level_2",
-  pigLevel3: "pig_level_3",
+  piglet: "pig",
+  withLevel: createNpcLevelId,
+  pigLevel: (level) => createNpcLevelId("pig", level),
 };
 
 const DEFAULT_RESPAWN_RULES = {
@@ -13,6 +15,17 @@ const DEFAULT_RESPAWN_RULES = {
   resetAggro: true,
 };
 const PIG_RESPAWN_DELAY_MS = 60_000;
+
+const createMultiLevelNpc = ({ idBase, ...base }, levels) =>
+  levels.reduce((definitions, levelConfig) => {
+    const id = NPC_IDS.withLevel(idBase, levelConfig.level);
+    definitions[id] = {
+      id,
+      ...base,
+      ...levelConfig,
+    };
+    return definitions;
+  }, {});
 
 export const NPC_DEFINITIONS = {
   [NPC_IDS.hostileWanderer]: {
@@ -48,54 +61,38 @@ export const NPC_DEFINITIONS = {
     maxHealth: 3,
     respawnRules: { ...DEFAULT_RESPAWN_RULES },
   },
-  [NPC_IDS.pigLevel1]: {
-    id: NPC_IDS.pigLevel1,
-    displayName: "Piglet",
-    type: "neutral",
-    behaviorProfile: "neutral",
-    level: 1,
-    maxHealth: 4,
-    attackDamage: 1,
-    aggroRange: 3,
-    attackRange: 1,
-    xpReward: 10,
-    respawnRules: {
-      ...DEFAULT_RESPAWN_RULES,
-      delay: PIG_RESPAWN_DELAY_MS,
+  ...createMultiLevelNpc(
+    {
+      idBase: NPC_IDS.piglet,
+      displayName: "Piglet",
+      type: "neutral",
+      behaviorProfile: "neutral",
+      attackDamage: 1,
+      aggroRange: 3,
+      attackRange: 1,
+      respawnRules: {
+        ...DEFAULT_RESPAWN_RULES,
+        delay: PIG_RESPAWN_DELAY_MS,
+      },
     },
-  },
-  [NPC_IDS.pigLevel2]: {
-    id: NPC_IDS.pigLevel2,
-    displayName: "Piglet",
-    type: "neutral",
-    behaviorProfile: "neutral",
-    level: 2,
-    maxHealth: 6,
-    attackDamage: 1,
-    aggroRange: 3,
-    attackRange: 1,
-    xpReward: 12,
-    respawnRules: {
-      ...DEFAULT_RESPAWN_RULES,
-      delay: PIG_RESPAWN_DELAY_MS,
-    },
-  },
-  [NPC_IDS.pigLevel3]: {
-    id: NPC_IDS.pigLevel3,
-    displayName: "Piglet",
-    type: "neutral",
-    behaviorProfile: "neutral",
-    level: 3,
-    maxHealth: 8,
-    attackDamage: 1,
-    aggroRange: 3,
-    attackRange: 1,
-    xpReward: 15,
-    respawnRules: {
-      ...DEFAULT_RESPAWN_RULES,
-      delay: PIG_RESPAWN_DELAY_MS,
-    },
-  },
+    [
+      {
+        level: 1,
+        maxHealth: 4,
+        xpReward: 10,
+      },
+      {
+        level: 2,
+        maxHealth: 6,
+        xpReward: 12,
+      },
+      {
+        level: 3,
+        maxHealth: 8,
+        xpReward: 15,
+      },
+    ],
+  ),
 };
 
 export const validateNpcDefinitions = () => {

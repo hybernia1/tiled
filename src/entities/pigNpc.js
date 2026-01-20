@@ -5,17 +5,17 @@ import { findNearestOpenTilePosition } from "./spawnUtils.js";
 
 const PIG_SPAWNS = {
   pinewood: [
-    { x: 8, y: 12, id: NPC_IDS.pigLevel1 },
-    { x: 14, y: 18, id: NPC_IDS.pigLevel2 },
-    { x: 10, y: 22, id: NPC_IDS.pigLevel1 },
-    { x: 18, y: 14, id: NPC_IDS.pigLevel2 },
-    { x: 20, y: 20, id: NPC_IDS.pigLevel3 },
-    { x: 6, y: 16, id: NPC_IDS.pigLevel1 },
+    { x: 8, y: 12, id: NPC_IDS.pigLevel(1) },
+    { x: 14, y: 18, id: NPC_IDS.pigLevel(2) },
+    { x: 10, y: 22, id: NPC_IDS.pigLevel(1) },
+    { x: 18, y: 14, id: NPC_IDS.pigLevel(2) },
+    { x: 20, y: 20, id: NPC_IDS.pigLevel(3) },
+    { x: 6, y: 16, id: NPC_IDS.pigLevel(1) },
   ],
   "pinewood:cave": [
-    { x: 26, y: 26, id: NPC_IDS.pigLevel1 },
-    { x: 24, y: 30, id: NPC_IDS.pigLevel2 },
-    { x: 28, y: 24, id: NPC_IDS.pigLevel3 },
+    { x: 26, y: 26, id: NPC_IDS.pigLevel(1) },
+    { x: 24, y: 30, id: NPC_IDS.pigLevel(2) },
+    { x: 28, y: 24, id: NPC_IDS.pigLevel(3) },
   ],
 };
 
