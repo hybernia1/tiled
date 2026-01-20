@@ -23,6 +23,7 @@ import { createNpc } from "../entities/npc.js";
 import { createPigNpc } from "../entities/pigNpc.js";
 import { createPlayer } from "../entities/player.js";
 import { getMaxHealthForLevel } from "../config/playerProgression.js";
+import { uiTheme } from "../config/uiTheme.js";
 import {
   getMapState,
   loadGameState,
@@ -65,6 +66,8 @@ export class BaseMapScene extends Phaser.Scene {
     this.npcAttackCooldownMs = NPC_ATTACK_COOLDOWN_MS;
     this.npcAttackDamage = NPC_ATTACK_DAMAGE;
     this.targetedNpc = null;
+    this.targetRing = null;
+    this.targetRingTween = null;
   }
 
   init(data) {
@@ -160,6 +163,7 @@ export class BaseMapScene extends Phaser.Scene {
     this.syncIsometricSprites();
     this.updateNpcNameplates();
     this.updateTargetingInput();
+    this.updateTargetRing();
   }
 
   setupIsometricSprites() {
@@ -441,8 +445,52 @@ export class BaseMapScene extends Phaser.Scene {
     if (this.targetedNpc) {
       const displaySprite = this.getDisplaySprite(this.targetedNpc);
       displaySprite?.setTint?.(0xffd54f);
+      this.createTargetRing();
+      this.targetRing?.setVisible(true);
+      this.updateTargetRing();
+    } else if (this.targetRing) {
+      this.targetRing.setVisible(false);
     }
     this.combatSystem?.updateTargetHud();
+  }
+
+  createTargetRing() {
+    if (this.targetRing) {
+      return;
+    }
+    this.targetRing = this.add.graphics();
+    this.targetRing.lineStyle(2, uiTheme.manaFill, 0.9);
+    this.targetRing.strokeCircle(0, 0, 18);
+    this.targetRing.setVisible(false);
+    this.targetRingTween = this.tweens.add({
+      targets: this.targetRing,
+      scale: { from: 0.95, to: 1.05 },
+      alpha: { from: 0.5, to: 0.9 },
+      duration: 900,
+      yoyo: true,
+      repeat: -1,
+      ease: "Sine.easeInOut",
+    });
+  }
+
+  updateTargetRing() {
+    if (!this.targetRing) {
+      return;
+    }
+    if (!this.targetedNpc || !this.targetedNpc.active) {
+      this.targetRing.setVisible(false);
+      return;
+    }
+    const displaySprite = this.getDisplaySprite(this.targetedNpc);
+    if (!displaySprite) {
+      this.targetRing.setVisible(false);
+      return;
+    }
+    const ringOffsetY = 10;
+    this.targetRing
+      .setVisible(displaySprite.visible)
+      .setPosition(displaySprite.x, displaySprite.y + ringOffsetY)
+      .setDepth(displaySprite.depth - 1);
   }
 
   syncIsoGroup(group, options = {}) {
