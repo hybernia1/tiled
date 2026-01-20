@@ -6,6 +6,10 @@ import {
   getXpNeededForNextLevel,
   MAX_LEVEL,
 } from "../config/playerProgression.js";
+import {
+  getTextureIdByEffectTag,
+  getTextureProperties,
+} from "../assets/textures/registry.js";
 import { createSpell, spellRegistry } from "./spells/registry.js";
 import { getMaxHealth } from "./npc/stats.js";
 import { NpcStateMachine } from "./npc/stateMachine.js";
@@ -90,8 +94,10 @@ export class CombatSystem {
       })
       .setDepth(10001)
       .setScrollFactor(0);
+    const shieldIconKey =
+      this.getSpellIconKey("shield") ?? getTextureIdByEffectTag("spell");
     this.scene.playerShieldIcon = this.scene.add
-      .image(0, 0, "spell-shield")
+      .image(0, 0, shieldIconKey)
       .setDepth(10002)
       .setScrollFactor(0)
       .setScale(0.7)
@@ -149,6 +155,45 @@ export class CombatSystem {
     return value ?? fallback;
   }
 
+  getTextureMetadata(textureKey) {
+    if (!textureKey) {
+      return null;
+    }
+    const registryProperties = this.scene.registry?.get("textureProperties");
+    if (registryProperties instanceof Map) {
+      return registryProperties.get(textureKey) ?? getTextureProperties(textureKey);
+    }
+    return getTextureProperties(textureKey);
+  }
+
+  isTextureEffectTag(textureKey, effectTag) {
+    const metadata = this.getTextureMetadata(textureKey);
+    return Boolean(metadata && metadata.effectTag === effectTag);
+  }
+
+  formatTextureMetadata(metadata) {
+    if (!metadata) {
+      return [];
+    }
+    const lines = [];
+    if (metadata.effectTag) {
+      lines.push(`Effect: ${metadata.effectTag}`);
+    }
+    if (metadata.materialType) {
+      lines.push(`Material: ${metadata.materialType}`);
+    }
+    if (metadata.impactVFX) {
+      lines.push(`Impact VFX: ${metadata.impactVFX}`);
+    }
+    if (metadata.soundId) {
+      lines.push(`Sound: ${metadata.soundId}`);
+    }
+    if (Number.isFinite(metadata.lightEmission)) {
+      lines.push(`Light: ${metadata.lightEmission}`);
+    }
+    return lines;
+  }
+
   getSpellTooltipText(spellId) {
     const spell = this.getSpell(spellId);
     const definition = spellRegistry.get(spellId);
@@ -165,12 +210,16 @@ export class CombatSystem {
     const resource = this.resolveResourceCost(spell.resourceCost);
     const manaCost = resource?.type === "mana" ? resource.amount : 0;
     const cooldownText = this.formatCooldownMs(spell.cooldownMs);
+    const iconKey = this.getSpellIconKey(spellId);
+    const textureMetadata = this.getTextureMetadata(iconKey);
+    const textureLines = this.formatTextureMetadata(textureMetadata);
     return [
       spell.name,
       description,
       `Cooldown: ${cooldownText}s`,
       `Mana: ${manaCost}`,
       `Damage: ${damage}`,
+      ...textureLines,
     ]
       .filter(Boolean)
       .join("\n");
@@ -314,7 +363,8 @@ export class CombatSystem {
   activateShield(time) {
     this.effectSystem?.applyEffect({
       id: "shield",
-      iconKey: this.getSpellIconKey("shield") ?? "spell-shield",
+      iconKey:
+        this.getSpellIconKey("shield") ?? getTextureIdByEffectTag("spell"),
       durationMs: this.shieldDurationMs,
       stacks: 1,
       maxStacks: 3,
@@ -539,8 +589,10 @@ export class CombatSystem {
         .setOrigin(0.5, 0.5);
       scene.spellbarSlotNames.push(slotName);
 
+      const defaultSpellIcon =
+        this.getSpellIconKey(spellId) ?? getTextureIdByEffectTag("spell");
       const slotIcon = scene.add
-        .image(0, 0, "spell-shot")
+        .image(0, 0, defaultSpellIcon)
         .setDepth(10001)
         .setScrollFactor(0)
         .setScale(0.8)
@@ -1001,10 +1053,20 @@ export class CombatSystem {
   }
 
   handleNpcHit(bullet, npc) {
-    if (bullet?.texture?.key !== "bullet" && npc?.texture?.key === "bullet") {
+    const bulletTextureKey = bullet?.texture?.key ?? null;
+    const npcTextureKey = npc?.texture?.key ?? null;
+    const bulletIsProjectile = this.isTextureEffectTag(
+      bulletTextureKey,
+      "projectile"
+    );
+    const npcIsProjectile = this.isTextureEffectTag(
+      npcTextureKey,
+      "projectile"
+    );
+    if (!bulletIsProjectile && npcIsProjectile) {
       [bullet, npc] = [npc, bullet];
     }
-    if (bullet?.texture?.key !== "bullet" || !npc?.getData("isNpc")) {
+    if (!bulletIsProjectile || !npc?.getData("isNpc")) {
       return;
     }
     if (!npc.active || !bullet.active || bullet.getData("hitNpc")) {

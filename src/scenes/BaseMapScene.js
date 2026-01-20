@@ -14,6 +14,7 @@ import {
   TILE_WIDTH,
 } from "../config/constants.js";
 import { TextureLoader } from "../assets/textures/TextureLoader.js";
+import { textureProperties } from "../assets/textures/registry.js";
 import { createBullets } from "../entities/bullets.js";
 import { createFriendlyNpc } from "../entities/friendlyNpc.js";
 import { createCollectibles } from "../entities/collectibles.js";
@@ -78,6 +79,7 @@ export class BaseMapScene extends Phaser.Scene {
     this.gameState = loadGameState();
     this.mapState = getMapState(this.gameState, this.mapId);
     this.persistGameState = () => saveGameState(this.gameState);
+    this.registry.set("textureProperties", textureProperties);
     const playerState = this.gameState.player;
     this.isPaused = false;
     this.game.renderer.config.roundPixels = true;
