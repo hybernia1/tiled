@@ -1,4 +1,5 @@
 import * as Phaser from "phaser";
+import { uiTheme } from "../config/uiTheme.js";
 
 export class InventorySystem {
   constructor(scene) {
@@ -25,7 +26,7 @@ export class InventorySystem {
       .setScrollFactor(0);
 
     this.panel = this.scene.add.graphics().setScrollFactor(0);
-    this.panel.fillStyle(0x0f0f14, 0.92);
+    this.panel.fillStyle(uiTheme.panelBackground, 0.92);
     this.panel.fillRoundedRect(
       panelX,
       panelY,
@@ -39,7 +40,7 @@ export class InventorySystem {
       .text(panelX + 18, panelY + 14, "Inventory", {
         fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
         fontSize: "16px",
-        color: "#f6f2ee",
+        color: uiTheme.textPrimary,
       })
       .setScrollFactor(0);
     this.scene.inventoryUi.add(this.title);
@@ -48,7 +49,7 @@ export class InventorySystem {
     const slotPadding = 12;
     const gridX = panelX + 20;
     const gridY = panelY + 48;
-    const slotStroke = 0x2e2f36;
+    const slotStroke = uiTheme.panelBorder;
 
     this.scene.inventorySlots = {};
 
@@ -61,7 +62,7 @@ export class InventorySystem {
           slotY + slotSize / 2,
           slotSize,
           slotSize,
-          0x1c2433,
+          uiTheme.slotBackground,
           0.9
         )
         .setStrokeStyle(2, slotStroke, 0.8)
@@ -91,7 +92,7 @@ export class InventorySystem {
         .text(slotX + slotSize - 6, slotY + slotSize - 6, "0", {
           fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
           fontSize: "12px",
-          color: "#f6f2ee",
+          color: uiTheme.textPrimary,
         })
         .setOrigin(1, 1)
         .setScrollFactor(0);

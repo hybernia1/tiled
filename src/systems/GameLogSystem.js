@@ -1,3 +1,5 @@
+import { uiTheme } from "../config/uiTheme.js";
+
 const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
 
 export class GameLogSystem {
@@ -35,7 +37,7 @@ export class GameLogSystem {
       .setScrollFactor(0);
 
     this.panel = this.scene.add.graphics().setScrollFactor(0);
-    this.panel.fillStyle(0x0f0f14, 0.8);
+    this.panel.fillStyle(uiTheme.panelBackground, 0.8);
     this.panel.fillRoundedRect(
       this.panelBounds.x,
       this.panelBounds.y,
@@ -53,7 +55,7 @@ export class GameLogSystem {
         {
           fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
           fontSize: "14px",
-          color: "#f6f2ee",
+          color: uiTheme.textPrimary,
         }
       )
       .setScrollFactor(0);
@@ -67,7 +69,7 @@ export class GameLogSystem {
         {
           fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
           fontSize: "12px",
-          color: "#d6dbe8",
+          color: uiTheme.textMuted,
           lineSpacing: 2,
           wordWrap: { width: this.panelWidth - this.padding * 2 },
         }
@@ -139,7 +141,7 @@ export class GameLogSystem {
     };
 
     this.panel.clear();
-    this.panel.fillStyle(0x0f0f14, 0.8);
+    this.panel.fillStyle(uiTheme.panelBackground, 0.8);
     this.panel.fillRoundedRect(
       this.panelBounds.x,
       this.panelBounds.y,

@@ -1,0 +1,16 @@
+export const uiTheme = {
+  panelBackground: 0x0f0f14,
+  panelBorder: 0x2e2f36,
+  barTrack: 0x0b0c10,
+  slotBackground: 0x1c2433,
+  healthBarFill: 0x58d68d,
+  manaFill: 0x5dade2,
+  dangerFill: 0xf65a5a,
+  textPrimary: "#f6f2ee",
+  textMuted: "#d6dbe8",
+  textSecondary: "#e7e2dc",
+  textInfo: "#9fd7ff",
+  textDanger: "#f65a5a",
+  textOutline: "#0b0c10",
+  transparent: 0x000000,
+};
