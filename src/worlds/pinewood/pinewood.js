@@ -1,4 +1,4 @@
-import { MAP_H, MAP_W } from "../../config/constants.js";
+import { MAP_H, MAP_W, TILE_HEIGHT } from "../../config/constants.js";
 import { TILE_TYPES } from "../tiles.js";
 
 const buildPinewoodTiles = () => {
@@ -64,6 +64,13 @@ export const pinewoodMap = {
   roomId: null,
   floorTextureKey: "grass",
   floorFramePrefix: "grass",
+  tileHeights: {
+    floor: 0,
+    pond: 1,
+    portal: 1,
+    wall: TILE_HEIGHT,
+    hardWall: TILE_HEIGHT,
+  },
   portal: { x: 12, y: 44, targetMapId: "pinewood:cave" },
   tiles: buildPinewoodTiles(),
 };

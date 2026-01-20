@@ -13,6 +13,7 @@ import {
   PLAYER_SPEED,
   TILE_WIDTH,
 } from "../config/constants.js";
+import { TILE_TYPES } from "../worlds/tiles.js";
 import { TextureLoader } from "../assets/textures/TextureLoader.js";
 import { textureProperties } from "../assets/textures/registry.js";
 import { createBullets } from "../entities/bullets.js";
@@ -568,6 +569,58 @@ export class BaseMapScene extends Phaser.Scene {
     });
   }
 
+  getIsoHeightForTile(tileX, tileY) {
+    if (!Number.isFinite(tileX) || !Number.isFinite(tileY)) {
+      return 0;
+    }
+    return this.isoHeightsGrid?.[tileY]?.[tileX] ?? 0;
+  }
+
+  isWallTile(tileType) {
+    return (
+      tileType === TILE_TYPES.WALL || tileType === TILE_TYPES.HARD_WALL
+    );
+  }
+
+  updateIsoHeightForSprite(sprite) {
+    if (!sprite) {
+      return;
+    }
+    const tileX = Math.floor(sprite.x / TILE_WIDTH);
+    const tileY = Math.floor(sprite.y / TILE_WIDTH);
+    if (
+      !Number.isFinite(tileX) ||
+      !Number.isFinite(tileY) ||
+      tileX < 0 ||
+      tileY < 0 ||
+      tileX >= MAP_W ||
+      tileY >= MAP_H
+    ) {
+      return;
+    }
+
+    const previousTileX = sprite.getData("isoTileX");
+    const previousTileY = sprite.getData("isoTileY");
+    if (previousTileX === tileX && previousTileY === tileY) {
+      return;
+    }
+
+    const tileType = this.tileTypeGrid?.[tileY]?.[tileX];
+    if (this.isWallTile(tileType)) {
+      const fallbackHeight = this.getIsoHeightForTile(
+        previousTileX,
+        previousTileY
+      );
+      sprite.setData("isoZ", fallbackHeight);
+      return;
+    }
+
+    sprite.setData("isoTileX", tileX);
+    sprite.setData("isoTileY", tileY);
+    const heightForTile = this.getIsoHeightForTile(tileX, tileY);
+    sprite.setData("isoZ", heightForTile);
+  }
+
   syncIsoSprite(sprite) {
     if (!sprite) {
       return;
@@ -576,6 +629,7 @@ export class BaseMapScene extends Phaser.Scene {
     if (!isoSprite) {
       return;
     }
+    this.updateIsoHeightForSprite(sprite);
     isoSprite.isoX = Math.round(sprite.x);
     isoSprite.isoY = Math.round(sprite.y);
     isoSprite.isoZ = Math.round(sprite.getData("isoZ") ?? 0);
