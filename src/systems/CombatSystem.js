@@ -16,7 +16,7 @@ export class CombatSystem {
 
     this.scene.playerHealthBar = this.scene.add
       .graphics()
-      .setDepth(11)
+      .setDepth(10000)
       .setScrollFactor(0);
     this.scene.playerHealthValue = this.scene.add
       .text(16, 44, "", {
@@ -26,7 +26,7 @@ export class CombatSystem {
         backgroundColor: "rgba(0, 0, 0, 0.35)",
         padding: { x: 6, y: 4 },
       })
-      .setDepth(12)
+      .setDepth(10001)
       .setScrollFactor(0);
 
     this.updatePlayerHealthDisplay();
@@ -84,16 +84,7 @@ export class CombatSystem {
       player.setVisible(false);
       player.body.enable = false;
       player.body.setVelocity(0, 0);
-      this.scene.add
-        .text(16, 80, "Postava padla!", {
-          fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
-          fontSize: "16px",
-          color: "#f6f2ee",
-          backgroundColor: "rgba(0, 0, 0, 0.35)",
-          padding: { x: 8, y: 4 },
-        })
-        .setDepth(12)
-        .setScrollFactor(0);
+      this.showCombatMessage("Postava padla!");
     }
   }
 
@@ -192,16 +183,23 @@ export class CombatSystem {
       }
       this.scene.npcHealthBar.setVisible(false);
       this.scene.npcHealthValue.setVisible(false);
-      this.scene.add
-        .text(16, 80, "NPC poražen!", {
-          fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
-          fontSize: "16px",
-          color: "#f6f2ee",
-          backgroundColor: "rgba(0, 0, 0, 0.35)",
-          padding: { x: 8, y: 4 },
-        })
-        .setDepth(10);
+      this.showCombatMessage("NPC poražen!");
     }
+  }
+
+  showCombatMessage(message) {
+    const { height } = this.scene.scale;
+    this.scene.add
+      .text(16, height - 44, message, {
+        fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+        fontSize: "16px",
+        color: "#f6f2ee",
+        backgroundColor: "rgba(0, 0, 0, 0.35)",
+        padding: { x: 8, y: 4 },
+      })
+      .setDepth(10002)
+      .setScrollFactor(0)
+      .setOrigin(0, 1);
   }
 
   handleWallHit(bullet, tile) {
