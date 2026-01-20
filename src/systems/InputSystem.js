@@ -25,5 +25,8 @@ export class InputSystem {
     this.scene.inventoryKey = this.scene.input.keyboard.addKey(
       Phaser.Input.Keyboard.KeyCodes.B
     );
+    this.scene.questLogKey = this.scene.input.keyboard.addKey(
+      Phaser.Input.Keyboard.KeyCodes.L
+    );
   }
 }
