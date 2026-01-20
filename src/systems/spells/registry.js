@@ -20,8 +20,13 @@ export const createSpell = (definition, context = {}) => {
   const cooldownMs = resolveNumber(definition.cooldownMs, context, 0);
   const durationMs = resolveNumber(definition.durationMs, context, 0);
   const iconKey = resolveValue(definition.iconKey, context, null);
-  const resourceCost = resolveValue(definition.resourceCost, context, 0);
-  const castTime = resolveNumber(definition.castTime, context, 0);
+  const resourceCost = resolveValue(definition.resourceCost, context, null);
+  const castTimeMs = resolveNumber(definition.castTimeMs, context, 0);
+  const globalCooldownMs = resolveNumber(
+    definition.globalCooldownMs,
+    context,
+    0
+  );
 
   return new Spell({
     id: definition.id,
@@ -30,7 +35,8 @@ export const createSpell = (definition, context = {}) => {
     durationMs,
     iconKey,
     resourceCost,
-    castTime,
+    castTimeMs,
+    globalCooldownMs,
     onCast: definition.onCast,
     onExpire: definition.onExpire,
   });
@@ -44,6 +50,9 @@ export const spellRegistry = new Map([
       name: "Shot",
       iconKey: "spell-shot",
       cooldownMs: ({ scene }) => scene.fireCooldownMs,
+      globalCooldownMs: 350,
+      castTimeMs: 0,
+      resourceCost: { type: "energy", amount: 5 },
       onCast: (context, payload) => {
         const sceneTime = payload?.sceneTime ?? context.time;
         context.combatSystem.performShot(payload, sceneTime);
@@ -58,6 +67,9 @@ export const spellRegistry = new Map([
       iconKey: "spell-shield",
       cooldownMs: ({ combatSystem }) => combatSystem.shieldCooldownMs,
       durationMs: ({ combatSystem }) => combatSystem.shieldDurationMs,
+      globalCooldownMs: 800,
+      castTimeMs: 400,
+      resourceCost: { type: "mana", amount: 20 },
       onCast: (context) => {
         context.combatSystem.activateShield(context.time);
       },

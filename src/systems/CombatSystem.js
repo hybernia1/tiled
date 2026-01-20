@@ -24,6 +24,7 @@ export class CombatSystem {
     this.spellUiTicker = null;
     this.hasSpellUiListeners = false;
     this.effectSystem = scene.effectSystem ?? null;
+    this.lastGlobalCastAt = -Infinity;
   }
 
   getSpellTime() {
@@ -104,8 +105,37 @@ export class CombatSystem {
       .setScrollFactor(0)
       .setOrigin(0, 0.5)
       .setVisible(false);
+    this.scene.playerManaBar = this.scene.add
+      .graphics()
+      .setDepth(10000)
+      .setScrollFactor(0);
+    this.scene.playerManaValue = this.scene.add
+      .text(16, 0, "", {
+        fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+        fontSize: "11px",
+        color: "#e7e2dc",
+        backgroundColor: "rgba(0, 0, 0, 0.45)",
+        padding: { x: 6, y: 3 },
+      })
+      .setDepth(10001)
+      .setScrollFactor(0);
+    this.scene.playerEnergyBar = this.scene.add
+      .graphics()
+      .setDepth(10000)
+      .setScrollFactor(0);
+    this.scene.playerEnergyValue = this.scene.add
+      .text(16, 0, "", {
+        fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+        fontSize: "11px",
+        color: "#e7e2dc",
+        backgroundColor: "rgba(0, 0, 0, 0.45)",
+        padding: { x: 6, y: 3 },
+      })
+      .setDepth(10001)
+      .setScrollFactor(0);
 
     this.updatePlayerHealthDisplay();
+    this.updatePlayerResourceDisplay();
     this.setupSpellbarDisplay();
     this.setupPlayerProgressDisplay();
     this.setupTargetHud();
@@ -174,10 +204,7 @@ export class CombatSystem {
         time: spellTime,
         input: { source: "keyboard", key: "shield" },
       });
-      const casted = shieldSpell.cast(context, { sceneTime: time });
-      if (casted) {
-        this.recordSpellCooldown(shieldSpell, spellTime);
-      }
+      shieldSpell.cast(context, { sceneTime: time });
     }
   }
 
@@ -242,6 +269,7 @@ export class CombatSystem {
       .setText(`HP ${currentHealth}/${maxHealth}`)
       .setPosition(barX, barY + barHeight + 6);
 
+    this.updatePlayerResourceDisplay();
     this.updateActiveEffectsDisplay(this.getSpellTime());
   }
 
@@ -344,6 +372,7 @@ export class CombatSystem {
       .setText(xpText)
       .setPosition(barX + barWidth / 2, barY - 6);
 
+    this.updatePlayerResourceDisplay();
     this.updateSpellbarDisplay();
   }
 
@@ -445,10 +474,7 @@ export class CombatSystem {
       time: spellTime,
       input: { source: "spellbar", index },
     });
-    const casted = spell.cast(context, { sceneTime });
-    if (casted) {
-      this.recordSpellCooldown(spell, spellTime);
-    }
+    spell.cast(context, { sceneTime });
   }
 
   handleSpellbarPointerUp(index) {
@@ -557,6 +583,7 @@ export class CombatSystem {
       cooldownText.setText(seconds.toString());
       cooldownText.setVisible(true);
     });
+    this.updatePlayerResourceDisplay();
   }
 
   setupTargetHud() {
@@ -1068,14 +1095,11 @@ export class CombatSystem {
       time: spellTime,
       input: { source: usingSpellbar ? "spellbar" : "keyboard" },
     });
-    const casted = shotSpell.cast(context, {
+    shotSpell.cast(context, {
       direction,
       usingSpellbar,
       sceneTime: time,
     });
-    if (casted) {
-      this.recordSpellCooldown(shotSpell, spellTime);
-    }
   }
 
   setupSpellUiListeners() {
@@ -1085,6 +1109,7 @@ export class CombatSystem {
     this.hasSpellUiListeners = true;
     this.onSpellEvent("spell:cast", () => {
       this.updateSpellbarCooldowns();
+      this.updatePlayerResourceDisplay();
       this.updateActiveEffectsDisplay(this.getSpellTime());
     });
     this.onSpellEvent("spell:expire", () => {
@@ -1105,9 +1130,179 @@ export class CombatSystem {
       callback: () => {
         const spellTime = this.getSpellTime();
         this.updateSpellbarCooldowns();
+        this.updatePlayerResourceDisplay();
         this.updateActiveEffectsDisplay(spellTime);
       },
     });
+  }
+
+  getResourceDefinition(resourceType) {
+    if (resourceType === "mana") {
+      return {
+        currentKey: "mana",
+        maxKey: "maxMana",
+        label: "MP",
+        fillColor: 0x5dade2,
+      };
+    }
+    if (resourceType === "energy") {
+      return {
+        currentKey: "energy",
+        maxKey: "maxEnergy",
+        label: "EN",
+        fillColor: 0xf5b041,
+      };
+    }
+    return null;
+  }
+
+  resolveResourceCost(resourceCost) {
+    if (!resourceCost) {
+      return null;
+    }
+    if (resourceCost.type && Number.isFinite(Number(resourceCost.amount))) {
+      return {
+        type: resourceCost.type,
+        amount: Number(resourceCost.amount),
+      };
+    }
+    if (Number.isFinite(Number(resourceCost.mana))) {
+      return { type: "mana", amount: Number(resourceCost.mana) };
+    }
+    if (Number.isFinite(Number(resourceCost.energy))) {
+      return { type: "energy", amount: Number(resourceCost.energy) };
+    }
+    return null;
+  }
+
+  canAffordResource(resourceCost) {
+    const resolved = this.resolveResourceCost(resourceCost);
+    if (!resolved || resolved.amount <= 0) {
+      return true;
+    }
+    const definition = this.getResourceDefinition(resolved.type);
+    if (!definition) {
+      return false;
+    }
+    const { player } = this.scene;
+    if (!player) {
+      return false;
+    }
+    const current = Number(player.getData(definition.currentKey));
+    return Number.isFinite(current) && current >= resolved.amount;
+  }
+
+  spendResource(resourceCost) {
+    const resolved = this.resolveResourceCost(resourceCost);
+    if (!resolved || resolved.amount <= 0) {
+      return;
+    }
+    const definition = this.getResourceDefinition(resolved.type);
+    if (!definition) {
+      return;
+    }
+    const { player } = this.scene;
+    if (!player) {
+      return;
+    }
+    const current = Number(player.getData(definition.currentKey));
+    const max = Number(player.getData(definition.maxKey));
+    if (!Number.isFinite(current) || !Number.isFinite(max)) {
+      return;
+    }
+    const nextValue = Math.max(0, current - resolved.amount);
+    player.setData(definition.currentKey, nextValue);
+    if (this.scene.gameState?.player) {
+      this.scene.gameState.player[definition.currentKey] = nextValue;
+      this.scene.gameState.player[definition.maxKey] = max;
+      this.scene.persistGameState?.();
+    }
+    this.updatePlayerResourceDisplay();
+  }
+
+  recordGlobalCooldown(spell, time) {
+    if (!spell || !spell.globalCooldownMs || !Number.isFinite(time)) {
+      return;
+    }
+    this.lastGlobalCastAt = time;
+  }
+
+  isGlobalCooldownReady(spell, time) {
+    if (!spell?.globalCooldownMs || !Number.isFinite(time)) {
+      return true;
+    }
+    return time >= this.lastGlobalCastAt + spell.globalCooldownMs;
+  }
+
+  updatePlayerResourceDisplay() {
+    const {
+      player,
+      playerLevelValue,
+      playerHealthValue,
+      playerManaBar,
+      playerManaValue,
+      playerEnergyBar,
+      playerEnergyValue,
+    } = this.scene;
+    if (
+      !player ||
+      !playerLevelValue ||
+      !playerHealthValue ||
+      !playerManaBar ||
+      !playerManaValue ||
+      !playerEnergyBar ||
+      !playerEnergyValue
+    ) {
+      return;
+    }
+    const baseX = 16;
+    const barWidth = 180;
+    const barHeight = 10;
+    const barX = baseX + playerLevelValue.width + 10;
+    const startY = playerHealthValue.y + playerHealthValue.height + 6;
+    const barGap = 10;
+
+    const drawResource = (definition, bar, label, y) => {
+      if (!definition) {
+        return;
+      }
+      const current = Number(player.getData(definition.currentKey));
+      const max = Number(player.getData(definition.maxKey));
+      const safeMax = Number.isFinite(max) && max > 0 ? max : 1;
+      const safeCurrent = Number.isFinite(current) ? current : safeMax;
+      const fillWidth = (safeCurrent / safeMax) * (barWidth - 2);
+
+      bar.clear();
+      bar.fillStyle(0x0b0c10, 0.9);
+      bar.fillRoundedRect(barX, y, barWidth, barHeight, 3);
+      bar.lineStyle(1, 0x2e2f36, 0.9);
+      bar.strokeRoundedRect(barX, y, barWidth, barHeight, 3);
+      bar.fillStyle(definition.fillColor, 0.95);
+      bar.fillRoundedRect(
+        barX + 1,
+        y + 1,
+        Math.max(0, fillWidth),
+        barHeight - 2,
+        3
+      );
+
+      label
+        .setText(`${definition.label} ${safeCurrent}/${safeMax}`)
+        .setPosition(barX, y + barHeight + 4);
+    };
+
+    drawResource(
+      this.getResourceDefinition("mana"),
+      playerManaBar,
+      playerManaValue,
+      startY
+    );
+    drawResource(
+      this.getResourceDefinition("energy"),
+      playerEnergyBar,
+      playerEnergyValue,
+      startY + barHeight + barGap + playerManaValue.height
+    );
   }
 
   performShot(payload, time) {
