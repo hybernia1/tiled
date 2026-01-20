@@ -24,6 +24,10 @@ const DEFAULT_STATE = {
     health: getMaxHealthForLevel(1),
     maxMana: 100,
     mana: 100,
+    currency: {
+      silver: 0,
+      gold: 0,
+    },
     spellCooldowns: {},
     spellbarSlots: DEFAULT_SPELLBAR_SLOTS.map((slot) => ({ ...slot })),
     effects: [],
@@ -62,6 +66,21 @@ const clampNumber = (value, min, max, fallback) => {
     return fallback;
   }
   return Math.min(max, Math.max(min, parsed));
+};
+
+const normalizeCurrency = (rawCurrency) => {
+  let totalSilver = 0;
+  if (typeof rawCurrency === "number") {
+    totalSilver = safeNumber(rawCurrency);
+  } else if (rawCurrency && typeof rawCurrency === "object") {
+    totalSilver =
+      safeNumber(rawCurrency.silver) + safeNumber(rawCurrency.gold) * 100;
+  }
+  const safeTotal = Math.max(0, Math.floor(totalSilver));
+  return {
+    gold: Math.floor(safeTotal / 100),
+    silver: safeTotal % 100,
+  };
 };
 
 const normalizeSpellbarSlots = (slots) => {
@@ -103,6 +122,7 @@ const normalizeState = (state) => {
     DEFAULT_STATE.player.maxMana
   );
   const mana = clampNumber(rawPlayer.mana, 0, maxMana, maxMana);
+  const currency = normalizeCurrency(rawPlayer.currency);
   const rawSpellCooldowns =
     rawPlayer.spellCooldowns && typeof rawPlayer.spellCooldowns === "object"
       ? rawPlayer.spellCooldowns
@@ -165,6 +185,7 @@ const normalizeState = (state) => {
       health,
       maxMana,
       mana,
+      currency,
       spellCooldowns,
       spellbarSlots: normalizeSpellbarSlots(rawPlayer.spellbarSlots),
       effects,

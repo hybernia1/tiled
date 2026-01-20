@@ -14,6 +14,26 @@ const resolveQuestDefinition = (questId) => {
   return null;
 };
 
+const safeNumber = (value, fallback = 0) => {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : fallback;
+};
+
+const normalizeCurrency = (rawCurrency) => {
+  let totalSilver = 0;
+  if (typeof rawCurrency === "number") {
+    totalSilver = safeNumber(rawCurrency);
+  } else if (rawCurrency && typeof rawCurrency === "object") {
+    totalSilver =
+      safeNumber(rawCurrency.silver) + safeNumber(rawCurrency.gold) * 100;
+  }
+  const safeTotal = Math.max(0, Math.floor(totalSilver));
+  return {
+    gold: Math.floor(safeTotal / 100),
+    silver: safeTotal % 100,
+  };
+};
+
 const ensureQuestState = (state) => {
   if (!state.quests || typeof state.quests !== "object") {
     state.quests = { active: {}, completed: {}, progress: {} };
@@ -197,16 +217,38 @@ export class QuestSystem {
         }
       }
 
+      if (reward?.rewardType === "xp") {
+        const amount = Math.max(0, Number(reward.amount ?? 0));
+        if (amount > 0) {
+          if (this.scene?.combatSystem?.addPlayerXp) {
+            this.scene.combatSystem.addPlayerXp(amount);
+          } else if (this.scene?.gameState?.player) {
+            const currentXp = safeNumber(this.scene.gameState.player.xp);
+            this.scene.gameState.player.xp = currentXp + amount;
+          }
+        }
+      }
+
       if (reward?.rewardType === "currency") {
         const amount = Math.max(0, Number(reward.amount ?? 0));
         if (this.scene?.gameState?.player) {
-          const current = Number(this.scene.gameState.player.currency ?? 0);
-          this.scene.gameState.player.currency = current + amount;
+          const unit = reward?.unit === "gold" ? "gold" : "silver";
+          const rewardSilver = unit === "gold" ? amount * 100 : amount;
+          const currentCurrency = normalizeCurrency(
+            this.scene.gameState.player.currency
+          );
+          const totalSilver =
+            currentCurrency.silver + currentCurrency.gold * 100 + rewardSilver;
+          this.scene.gameState.player.currency = normalizeCurrency({
+            silver: totalSilver,
+            gold: 0,
+          });
         }
       }
     });
 
     this.scene.persistGameState?.();
+    this.scene.combatSystem?.updatePlayerResourceDisplay?.();
     return definition.rewards;
   }
 }

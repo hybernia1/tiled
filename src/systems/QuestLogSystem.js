@@ -8,7 +8,12 @@ const formatReward = (reward) => {
   }
   if (reward.rewardType === "currency") {
     const amount = Math.max(0, Number(reward.amount ?? 0));
-    return `Gold +${amount}`;
+    const unit = reward.unit === "gold" ? "Gold" : "Silver";
+    return `${unit} +${amount}`;
+  }
+  if (reward.rewardType === "xp") {
+    const amount = Math.max(0, Number(reward.amount ?? 0));
+    return `XP +${amount}`;
   }
   if (reward.rewardType === "item") {
     const amount = Math.max(1, Number(reward.amount ?? 1));
