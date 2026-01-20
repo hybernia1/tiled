@@ -14,6 +14,7 @@ const DEFAULT_STATE = {
     maxHealth: getMaxHealthForLevel(1),
     health: getMaxHealthForLevel(1),
     spellCooldowns: {},
+    effects: [],
     shieldedUntil: 0,
   },
   inventory: {
@@ -43,6 +44,7 @@ const clampNumber = (value, min, max, fallback) => {
 };
 
 const normalizeState = (state) => {
+  const now = Date.now();
   const rawPlayer = state?.player ?? {};
   const level = clampNumber(
     rawPlayer.level,
@@ -73,6 +75,22 @@ const normalizeState = (state) => {
     }
   });
   const shieldedUntil = Math.max(0, safeNumber(rawPlayer.shieldedUntil, 0));
+  const rawEffects = Array.isArray(rawPlayer.effects) ? rawPlayer.effects : [];
+  const effects = rawEffects
+    .map((effect) => ({
+      id: typeof effect?.id === "string" ? effect.id : null,
+      expiresAt: safeNumber(effect?.expiresAt, 0),
+      stacks: Math.max(1, Math.floor(safeNumber(effect?.stacks, 1))),
+    }))
+    .filter(
+      (effect) =>
+        effect.id &&
+        (effect.expiresAt === 0 || (effect.expiresAt > 0 && effect.expiresAt > now))
+    );
+
+  if (shieldedUntil > now && !effects.some((effect) => effect.id === "shield")) {
+    effects.push({ id: "shield", expiresAt: shieldedUntil, stacks: 1 });
+  }
 
   const normalized = {
     ...DEFAULT_STATE,
@@ -83,6 +101,7 @@ const normalizeState = (state) => {
       maxHealth,
       health,
       spellCooldowns,
+      effects,
       shieldedUntil,
     },
     inventory: {

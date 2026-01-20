@@ -23,6 +23,7 @@ export class CombatSystem {
     this.spellEventEmitter = new Phaser.Events.EventEmitter();
     this.spellUiTicker = null;
     this.hasSpellUiListeners = false;
+    this.effectSystem = scene.effectSystem ?? null;
   }
 
   getSpellTime() {
@@ -161,7 +162,7 @@ export class CombatSystem {
 
   updateSpells(time) {
     const spellTime = this.getSpellTime();
-    this.updateShieldStatus(spellTime);
+    this.effectSystem?.update(spellTime);
     const shieldKey = this.scene.shieldKey;
     const shieldSpell = this.getSpell("shield");
     if (!shieldKey || !shieldSpell) {
@@ -181,60 +182,23 @@ export class CombatSystem {
   }
 
   activateShield(time) {
-    const { player } = this.scene;
-    if (!player?.active) {
-      return;
-    }
-    const shieldUntil = time + this.shieldDurationMs;
-    player.setData("shieldedUntil", shieldUntil);
-    player.setData("isShielded", true);
-    if (this.scene.gameState?.player) {
-      this.scene.gameState.player.shieldedUntil = shieldUntil;
-      this.scene.persistGameState?.();
-    }
+    this.effectSystem?.applyEffect({
+      id: "shield",
+      iconKey: this.getSpellIconKey("shield") ?? "spell-shield",
+      durationMs: this.shieldDurationMs,
+      stacks: 1,
+      maxStacks: 3,
+      refreshDuration: true,
+      time,
+    });
   }
 
   deactivateShield() {
-    const { player } = this.scene;
-    if (!player) {
-      return;
-    }
-    player.setData("isShielded", false);
-    if (this.scene.gameState?.player) {
-      this.scene.gameState.player.shieldedUntil = 0;
-      this.scene.persistGameState?.();
-    }
-  }
-
-  updateShieldStatus(time) {
-    const { player } = this.scene;
-    if (!player) {
-      return;
-    }
-    const shieldUntil = Number(player.getData("shieldedUntil"));
-    if (Number.isFinite(shieldUntil) && time >= shieldUntil) {
-      player.setData("isShielded", false);
-      player.setData("shieldedUntil", 0);
-      if (this.scene.gameState?.player) {
-        this.scene.gameState.player.shieldedUntil = 0;
-        this.scene.persistGameState?.();
-      }
-    }
+    this.effectSystem?.removeEffect("shield");
   }
 
   isPlayerShielded(time) {
-    const { player } = this.scene;
-    if (!player) {
-      return false;
-    }
-    const shieldUntil = Number(player.getData("shieldedUntil"));
-    if (Number.isFinite(shieldUntil) && shieldUntil > time) {
-      return true;
-    }
-    if (player.getData("isShielded")) {
-      player.setData("isShielded", false);
-    }
-    return false;
+    return this.effectSystem?.isEffectActive("shield", time) ?? false;
   }
 
   updatePlayerHealthDisplay() {
@@ -287,20 +251,29 @@ export class CombatSystem {
     if (!player || !playerShieldIcon || !playerShieldTimer || !playerHealthValue) {
       return;
     }
-    const shieldUntil = Number(player.getData("shieldedUntil"));
-    const remainingMs = Number.isFinite(shieldUntil) ? shieldUntil - time : 0;
-    if (remainingMs <= 0) {
+    const effects = this.effectSystem?.getActiveEffects(time) ?? [];
+    const activeEffect = effects[0] ?? null;
+    if (!activeEffect) {
       playerShieldIcon.setVisible(false);
       playerShieldTimer.setVisible(false);
       return;
     }
-    const seconds = Math.ceil(remainingMs / 1000);
+    const remainingMs =
+      activeEffect.expiresAt > 0 ? activeEffect.expiresAt - time : 0;
+    const seconds = remainingMs > 0 ? Math.ceil(remainingMs / 1000) : 0;
+    const stacks = Math.max(1, activeEffect.stacks ?? 1);
     const iconX = playerHealthValue.x + playerHealthValue.width + 10;
     const iconY = playerHealthValue.y + playerHealthValue.height / 2;
+    if (activeEffect.iconKey) {
+      playerShieldIcon.setTexture(activeEffect.iconKey);
+    }
     playerShieldIcon.setPosition(iconX, iconY);
-    playerShieldTimer
-      .setText(`${seconds}s`)
-      .setPosition(iconX + 12, iconY);
+    const timerText = seconds > 0 ? `${seconds}s` : "";
+    const stackText = stacks > 1 ? ` x${stacks}` : "";
+    playerShieldTimer.setText(`${timerText}${stackText}`).setPosition(
+      iconX + 12,
+      iconY
+    );
     playerShieldIcon.setVisible(true);
     playerShieldTimer.setVisible(true);
   }

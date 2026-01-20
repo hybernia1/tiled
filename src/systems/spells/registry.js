@@ -61,9 +61,6 @@ export const spellRegistry = new Map([
       onCast: (context) => {
         context.combatSystem.activateShield(context.time);
       },
-      onExpire: (context) => {
-        context.combatSystem.deactivateShield();
-      },
     },
   ],
 ]);
