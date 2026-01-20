@@ -18,6 +18,7 @@ import { createAppleTexture, createPearTexture } from "../assets/textures/items.
 import { createBulletTexture } from "../assets/textures/bullet.js";
 import { createFriendlyNpcTexture } from "../assets/textures/npcFriend.js";
 import { createNpcTexture } from "../assets/textures/npc.js";
+import { createPigTexture } from "../assets/textures/pig.js";
 import { createCollisionTilesTexture } from "../assets/textures/terrain/collision.js";
 import { createGrassTexture } from "../assets/textures/terrain/grass.js";
 import { createMountainTexture } from "../assets/textures/terrain/mountain.js";
@@ -31,6 +32,7 @@ import { createFriendlyNpc } from "../entities/friendlyNpc.js";
 import { createCollectibles } from "../entities/collectibles.js";
 import { createMap, MAP_PORTALS } from "../entities/map.js";
 import { createNpc } from "../entities/npc.js";
+import { createPigNpc } from "../entities/pigNpc.js";
 import { createPlayer } from "../entities/player.js";
 import { resolveLocale, t } from "../config/localization.js";
 import { getMaxHealthForLevel } from "../config/playerProgression.js";
@@ -90,6 +92,7 @@ export class BaseMapScene extends Phaser.Scene {
     createPlayerTexture(this);
     createNpcTexture(this);
     createFriendlyNpcTexture(this);
+    createPigTexture(this);
     createBulletTexture(this);
     createAppleTexture(this);
     createPearTexture(this);
@@ -123,6 +126,7 @@ export class BaseMapScene extends Phaser.Scene {
     createBullets(this);
     createNpc(this);
     createFriendlyNpc(this);
+    createPigNpc(this);
     this.inventorySystem.createInventoryUi();
     this.gameLogSystem.createLogUi();
     this.gameLogSystem.addEntry("logMapEntered", {
@@ -164,6 +168,7 @@ export class BaseMapScene extends Phaser.Scene {
     this.attachIsoSprite(this.npc);
     this.attachIsoSprite(this.friendlyNpc);
     this.attachIsoGroup(this.collectibles);
+    this.attachIsoGroup(this.pigNpcGroup);
   }
 
   configureIsometricCameraBounds() {
@@ -557,6 +562,9 @@ export class BaseMapScene extends Phaser.Scene {
     }
     if (this.friendlyNpc) {
       this.physics.add.collider(this.friendlyNpc, this.mapLayer);
+    }
+    if (this.pigNpcGroup) {
+      this.physics.add.collider(this.pigNpcGroup, this.mapLayer);
     }
   }
 }

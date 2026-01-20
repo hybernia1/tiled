@@ -2,6 +2,8 @@ export const NPC_IDS = {
   hostileWanderer: "hostileWanderer",
   neutralWanderer: "neutralWanderer",
   friendlyGuide: "friendlyGuide",
+  pigLevel1: "pig_level_1",
+  pigLevel2: "pig_level_2",
 };
 
 export const NPC_DEFINITIONS = {
@@ -34,6 +36,20 @@ export const NPC_DEFINITIONS = {
     type: "friendly",
     level: 1,
     maxHealth: 3,
+  },
+  [NPC_IDS.pigLevel1]: {
+    id: NPC_IDS.pigLevel1,
+    displayName: "Prasátko",
+    type: "neutral",
+    level: 1,
+    maxHealth: 4,
+  },
+  [NPC_IDS.pigLevel2]: {
+    id: NPC_IDS.pigLevel2,
+    displayName: "Prasátko",
+    type: "neutral",
+    level: 2,
+    maxHealth: 6,
   },
 };
 
