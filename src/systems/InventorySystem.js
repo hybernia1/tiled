@@ -15,8 +15,10 @@ export class InventorySystem {
 
     const panelWidth = 280;
     const panelHeight = 190;
-    const panelX = (this.scene.scale.width - panelWidth) / 2;
-    const panelY = (this.scene.scale.height - panelHeight) / 2;
+    const offsetX = 40;
+    const offsetY = 30;
+    const panelX = (this.scene.scale.width - panelWidth) / 2 + offsetX;
+    const panelY = (this.scene.scale.height - panelHeight) / 2 + offsetY;
 
     this.scene.inventoryUi = this.scene.add
       .container(0, 0)
@@ -24,10 +26,8 @@ export class InventorySystem {
       .setScrollFactor(0);
 
     const panel = this.scene.add.graphics().setScrollFactor(0);
-    panel.fillStyle(0x101522, 0.95);
+    panel.fillStyle(0x0f0f14, 0.92);
     panel.fillRoundedRect(panelX, panelY, panelWidth, panelHeight, 12);
-    panel.lineStyle(2, 0x6fd3ff, 0.8);
-    panel.strokeRoundedRect(panelX, panelY, panelWidth, panelHeight, 12);
     this.scene.inventoryUi.add(panel);
 
     const title = this.scene.add
@@ -43,7 +43,7 @@ export class InventorySystem {
     const slotPadding = 12;
     const gridX = panelX + 20;
     const gridY = panelY + 48;
-    const slotStroke = 0x6fd3ff;
+    const slotStroke = 0x2e2f36;
 
     this.scene.inventorySlots = {};
 
