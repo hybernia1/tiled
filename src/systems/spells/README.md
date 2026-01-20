@@ -2,9 +2,9 @@
 
 ## Overview
 
-Spells are defined in `registry.js`, instantiated via `createSpell`, and consumed by
-`CombatSystem`. Each definition uses consistent naming conventions like
-`spellId`, `iconKey`, and `cooldownMs`.
+Spells are defined in `src/data/spells.json`, hydrated in `registry.js`,
+instantiated via `createSpell`, and consumed by `CombatSystem`. Each definition
+uses consistent naming conventions like `spellId`, `iconKey`, and `cooldownMs`.
 
 ## Spell definition API
 
@@ -13,7 +13,7 @@ A spell definition object supports the following fields:
 **Required**
 - `spellId` (string): Unique identifier used in spellbars and cooldowns.
 - `name` (string): Display name for UI labels.
-- `onCast` (function): Handler that executes when the spell is cast.
+- `handler` (string): Handler key that maps to a function in `handlers.js`.
 
 **Optional**
 - `iconKey` (string | function): Texture key or resolver for the spell icon.
@@ -24,7 +24,8 @@ A spell definition object supports the following fields:
 - `resourceCost` (object | function): Mana cost payload.
 - `description` (string | function): Tooltip description of the spell's purpose.
 - `damage` (number | string | function): Tooltip damage value or range.
-- `onExpire` (function): Handler when a timed spell expires.
+- `onExpire` (function): Handler when a timed spell expires (assigned in
+  `registry.js` if needed).
 
 ## Validation
 
@@ -33,51 +34,43 @@ an error if required fields are missing.
 
 ## Adding a new spell
 
-1. Add a definition to `spellDefinitions` in `registry.js`.
-2. Ensure `spellId`, `name`, and `onCast` are present.
-3. Add a texture for `iconKey` if the UI should show an icon.
+1. Add a definition to `src/data/spells.json`.
+2. Ensure `spellId`, `name`, and `handler` are present.
+3. Add a handler function to `handlers.js` and reference it with `handler`.
+4. Add a texture for `iconKey` if the UI should show an icon.
 
 ### Example: "Blink" spell
 
 ```js
-[
-  "blink",
-  {
-    spellId: "blink",
-    name: "Blink",
-    iconKey: "spell-blink",
-    description: "Teleport a short distance ahead.",
-    damage: 0,
-    cooldownMs: 2000,
-    castTimeMs: 150,
-    globalCooldownMs: 200,
-    resourceCost: { type: "mana", amount: 15 },
-    onCast: (context) => {
-      context.combatSystem.teleportPlayer(context.time);
-    },
-  },
-]
+{
+  "blink": {
+    "spellId": "blink",
+    "name": "Blink",
+    "iconKey": "spell-blink",
+    "description": "Teleport a short distance ahead.",
+    "damage": 0,
+    "cooldownMs": 2000,
+    "castTimeMs": 150,
+    "globalCooldownMs": 200,
+    "resourceCost": { "type": "mana", "amount": 15 },
+    "handler": "blink"
+  }
+}
 ```
 
 ### Example: "Barrier" timed spell
 
 ```js
-[
-  "barrier",
-  {
-    spellId: "barrier",
-    name: "Barrier",
-    iconKey: "spell-barrier",
-    description: "Raise a temporary protective barrier.",
-    damage: 0,
-    cooldownMs: 6000,
-    durationMs: 3000,
-    onCast: (context) => {
-      context.combatSystem.activateBarrier(context.time);
-    },
-    onExpire: (context) => {
-      context.combatSystem.deactivateBarrier(context.time);
-    },
-  },
-]
+{
+  "barrier": {
+    "spellId": "barrier",
+    "name": "Barrier",
+    "iconKey": "spell-barrier",
+    "description": "Raise a temporary protective barrier.",
+    "damage": 0,
+    "cooldownMs": 6000,
+    "durationMs": 3000,
+    "handler": "barrier"
+  }
+}
 ```
