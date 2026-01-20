@@ -39,14 +39,29 @@ export class MovementSystem {
         direction.y * this.scene.playerSpeed
       );
       this.scene.facing = direction.clone();
+      const absX = Math.abs(direction.x);
+      const absY = Math.abs(direction.y);
+      const axis =
+        absX > absY ? "x" : absY > absX ? "y" : "diagonal";
+      this.scene.facingAxis = axis;
       player.setFlipX(direction.x < 0);
-      const walkAnim = direction.y < 0 ? "player-walk-back" : "player-walk-front";
+      let walkAnim = "player-walk-front";
+      if (axis === "x" || axis === "diagonal") {
+        walkAnim = "player-walk-side";
+      } else {
+        walkAnim = direction.y < 0 ? "player-walk-back" : "player-walk-front";
+      }
       player.anims.play(walkAnim, true);
     } else {
       player.body.setVelocity(0, 0);
       player.setFlipX(this.scene.facing?.x < 0);
-      const idleAnim =
-        this.scene.facing?.y < 0 ? "player-idle-back" : "player-idle-front";
+      let idleAnim = "player-idle-front";
+      if (this.scene.facingAxis === "x" || this.scene.facingAxis === "diagonal") {
+        idleAnim = "player-idle-side";
+      } else {
+        idleAnim =
+          this.scene.facing?.y < 0 ? "player-idle-back" : "player-idle-front";
+      }
       player.anims.play(idleAnim, true);
     }
   }

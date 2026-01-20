@@ -9,6 +9,8 @@ const IDLE_FRAMES = 4;
 const WALK_FRAMES = 4;
 const BACK_IDLE_FRAMES = 4;
 const BACK_WALK_FRAMES = 4;
+const SIDE_IDLE_FRAMES = 4;
+const SIDE_WALK_FRAMES = 4;
 
 export const createPlayer = (scene, startPosition = null, playerState = null) => {
   const startX = startPosition?.x ?? 4 * TILE_WIDTH;
@@ -51,6 +53,7 @@ export const createPlayer = (scene, startPosition = null, playerState = null) =>
   scene.player.setData("shieldedUntil", 0);
   scene.player.setData("isShielded", false);
   scene.facing = new Phaser.Math.Vector2(1, 0);
+  scene.facingAxis = "y";
 
   if (!scene.anims.exists("player-idle-front")) {
     scene.anims.create({
@@ -99,6 +102,34 @@ export const createPlayer = (scene, startPosition = null, playerState = null) =>
           BACK_IDLE_FRAMES +
           BACK_WALK_FRAMES -
           1,
+      }),
+      frameRate: 8,
+      repeat: -1,
+    });
+  }
+
+  const sideIdleStart =
+    IDLE_FRAMES + WALK_FRAMES + BACK_IDLE_FRAMES + BACK_WALK_FRAMES;
+  const sideWalkStart = sideIdleStart + SIDE_IDLE_FRAMES;
+
+  if (!scene.anims.exists("player-idle-side")) {
+    scene.anims.create({
+      key: "player-idle-side",
+      frames: scene.anims.generateFrameNumbers("player", {
+        start: sideIdleStart,
+        end: sideIdleStart + SIDE_IDLE_FRAMES - 1,
+      }),
+      frameRate: 3,
+      repeat: -1,
+    });
+  }
+
+  if (!scene.anims.exists("player-walk-side")) {
+    scene.anims.create({
+      key: "player-walk-side",
+      frames: scene.anims.generateFrameNumbers("player", {
+        start: sideWalkStart,
+        end: sideWalkStart + SIDE_WALK_FRAMES - 1,
       }),
       frameRate: 8,
       repeat: -1,
