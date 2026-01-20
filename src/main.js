@@ -1,6 +1,6 @@
 import * as Phaser from "phaser";
 import { createGameConfig } from "./config/gameConfig.js";
-import { loadRegistry } from "./data/registry.js";
+import { loadRegistries } from "./data/registryLoader.js";
 import { CaveScene } from "./scenes/CaveScene.js";
 import { WorldScene } from "./scenes/WorldScene.js";
 import { LoadingScene } from "./scenes/LoadingScene.js";
@@ -13,7 +13,14 @@ const config = createGameConfig([
   CaveScene,
 ]);
 
-const registry = loadRegistry();
-globalThis.gameRegistry = registry;
+const startGame = async () => {
+  try {
+    const registry = await loadRegistries();
+    globalThis.gameRegistry = registry;
+    new Phaser.Game(config);
+  } catch (error) {
+    console.error("Failed to load registry data.", error);
+  }
+};
 
-new Phaser.Game(config);
+startGame();

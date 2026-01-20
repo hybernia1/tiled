@@ -1,9 +1,10 @@
 import { TILE_HEIGHT, TILE_WIDTH } from "../config/constants.js";
-import itemsData from "../data/items.json";
+import { getRegistryData } from "../data/registries/baseRegistry.js";
 
 export const createCollectibles = (scene, onPickup, mapState) => {
   scene.collectibles = scene.physics.add.group({ allowGravity: false });
-  const inventoryItems = Array.isArray(itemsData) ? itemsData : [];
+  const registryItems = getRegistryData("items");
+  const inventoryItems = Array.isArray(registryItems) ? registryItems : [];
   const itemIndex = inventoryItems.reduce((acc, item) => {
     if (item?.id) {
       acc[item.id] = item;

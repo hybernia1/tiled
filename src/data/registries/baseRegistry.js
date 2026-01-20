@@ -1,15 +1,18 @@
-import { loadRegistry } from "../registry.js";
-
 let cachedRegistry = null;
+let hasWarned = false;
 
 const resolveRegistry = () => {
   if (globalThis.gameRegistry) {
     return globalThis.gameRegistry;
   }
-  if (!cachedRegistry) {
-    cachedRegistry = loadRegistry();
+  if (cachedRegistry) {
+    return cachedRegistry;
   }
-  return cachedRegistry;
+  if (!hasWarned) {
+    console.warn("[registry] Registry data has not been loaded yet.");
+    hasWarned = true;
+  }
+  return null;
 };
 
 export const getRegistryData = (key) => {

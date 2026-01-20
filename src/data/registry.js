@@ -1,17 +1,3 @@
-import npcData from "./npc.json";
-import spellsData from "./spells.json";
-import itemsData from "./items.json";
-import mapsData from "./maps.json";
-import questsData from "./quests.json";
-import dropsData from "./drops.json";
-import texturesData from "./textures.json";
-import npcSchema from "./schema/npc.json";
-import spellsSchema from "./schema/spells.json";
-import itemsSchema from "./schema/items.json";
-import questsSchema from "./schema/quests.json";
-import dropsSchema from "./schema/drops.json";
-import texturesSchema from "./schema/textures.json";
-
 const isPlainObject = (value) =>
   value !== null && typeof value === "object" && !Array.isArray(value);
 
@@ -186,14 +172,14 @@ const validateSchemaValue = (value, schema, pathSegments = []) => {
   return errors;
 };
 
-const validateRegistryData = () => {
+const validateRegistryData = (registryData, schemaData) => {
   const validationTargets = [
-    { name: "npcs", data: npcData, schema: npcSchema },
-    { name: "spells", data: spellsData, schema: spellsSchema },
-    { name: "items", data: itemsData, schema: itemsSchema },
-    { name: "quests", data: questsData, schema: questsSchema },
-    { name: "drops", data: dropsData, schema: dropsSchema },
-    { name: "textures", data: texturesData, schema: texturesSchema },
+    { name: "npcs", data: registryData.npcs, schema: schemaData.npcs },
+    { name: "spells", data: registryData.spells, schema: schemaData.spells },
+    { name: "items", data: registryData.items, schema: schemaData.items },
+    { name: "quests", data: registryData.quests, schema: schemaData.quests },
+    { name: "drops", data: registryData.drops, schema: schemaData.drops },
+    { name: "textures", data: registryData.textures, schema: schemaData.textures },
   ];
 
   const issues = validationTargets.flatMap(({ name, data, schema }) =>
@@ -215,29 +201,19 @@ const validateRegistryData = () => {
   }
 };
 
-export const loadRegistry = () => {
-  validateRegistryData();
-
-  const registry = {
-    npcs: npcData,
-    spells: spellsData,
-    items: itemsData,
-    maps: mapsData,
-    quests: questsData,
-    drops: dropsData,
-    textures: texturesData,
-  };
+export const createRegistry = (registryData, schemaData) => {
+  validateRegistryData(registryData, schemaData);
 
   return {
-    ...registry,
+    ...registryData,
     index: {
-      npcs: createIndex(npcData),
-      spells: createIndex(spellsData),
-      items: createIndex(itemsData),
-      maps: createIndex(mapsData),
-      quests: createIndex(questsData),
-      drops: createIndex(dropsData),
-      textures: createIndex(texturesData),
+      npcs: createIndex(registryData.npcs),
+      spells: createIndex(registryData.spells),
+      items: createIndex(registryData.items),
+      maps: createIndex(registryData.maps),
+      quests: createIndex(registryData.quests),
+      drops: createIndex(registryData.drops),
+      textures: createIndex(registryData.textures),
     },
   };
 };
