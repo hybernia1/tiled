@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "required": [
+      "id",
+      "type",
+      "nameKey",
+      "tags",
+      "version",
+      "sourceId",
+      "dropTable"
+    ],
+    "properties": {
+      "id": { "type": "string" },
+      "type": { "type": "string" },
+      "nameKey": { "type": "string" },
+      "tags": {
+        "type": "array",
+        "items": { "type": "string" }
+      },
+      "version": { "type": "number" },
+      "sourceId": { "type": "string" },
+      "dropTable": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "required": ["itemId", "chance"],
+          "properties": {
+            "itemId": { "type": "string" },
+            "chance": { "type": "number" }
+          },
+          "additionalProperties": false
+        }
+      }
+    },
+    "additionalProperties": false
+  }
+}

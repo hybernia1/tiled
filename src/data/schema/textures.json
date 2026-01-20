@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "required": [
+      "id",
+      "type",
+      "nameKey",
+      "tags",
+      "version",
+      "atlasKey",
+      "frameKey",
+      "resolution"
+    ],
+    "properties": {
+      "id": { "type": "string" },
+      "type": { "type": "string" },
+      "nameKey": { "type": "string" },
+      "tags": {
+        "type": "array",
+        "items": { "type": "string" }
+      },
+      "version": { "type": "number" },
+      "atlasKey": { "type": "string" },
+      "frameKey": { "type": "string" },
+      "resolution": {
+        "type": "object",
+        "required": ["width", "height"],
+        "properties": {
+          "width": { "type": "number" },
+          "height": { "type": "number" }
+        },
+        "additionalProperties": false
+      }
+    },
+    "additionalProperties": false
+  }
+}

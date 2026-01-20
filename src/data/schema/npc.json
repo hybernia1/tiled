@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "patternProperties": {
+    "^[A-Za-z0-9_]+$": {
+      "type": "object",
+      "required": [
+        "id",
+        "displayName",
+        "type",
+        "behaviorProfile",
+        "stats",
+        "respawnRules"
+      ],
+      "properties": {
+        "id": { "type": "string" },
+        "displayName": { "type": "string" },
+        "type": { "type": "string" },
+        "behaviorProfile": { "type": "string" },
+        "stats": {
+          "type": "object",
+          "required": ["level", "maxHealth"],
+          "properties": {
+            "level": { "type": "number" },
+            "maxHealth": { "type": "number" },
+            "attackDamage": { "type": "number" },
+            "xpReward": { "type": "number" }
+          },
+          "additionalProperties": false
+        },
+        "ranges": {
+          "type": "object",
+          "properties": {
+            "aggroRange": { "type": "number" },
+            "attackRange": { "type": "number" }
+          },
+          "additionalProperties": false
+        },
+        "respawnRules": {
+          "type": "object",
+          "required": ["delay", "resetHealth", "resetAggro"],
+          "properties": {
+            "delay": { "type": "number" },
+            "resetHealth": { "type": "boolean" },
+            "resetAggro": { "type": "boolean" }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

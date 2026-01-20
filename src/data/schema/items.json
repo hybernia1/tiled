@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "required": ["id", "iconKey", "stackSize", "rarity", "tags"],
+    "properties": {
+      "id": { "type": "string" },
+      "iconKey": { "type": "string" },
+      "stackSize": { "type": "number" },
+      "rarity": { "type": "string" },
+      "tags": {
+        "type": "array",
+        "items": { "type": "string" }
+      }
+    },
+    "additionalProperties": false
+  }
+}

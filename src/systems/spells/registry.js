@@ -15,30 +15,6 @@ const resolveNumber = (value, context, fallback) => {
   return Number.isFinite(parsed) ? parsed : fallback;
 };
 
-const REQUIRED_SPELL_FIELDS = ["spellId", "name", "onCast"];
-
-const validateSpellDefinition = (definition, registryKey) => {
-  if (!definition || typeof definition !== "object") {
-    console.error("[spells] Invalid spell definition:", registryKey);
-    return false;
-  }
-
-  const missingFields = REQUIRED_SPELL_FIELDS.filter(
-    (field) => !definition[field]
-  );
-
-  if (missingFields.length) {
-    console.error(
-      `[spells] Spell definition "${registryKey}" is missing required fields: ${missingFields.join(
-        ", "
-      )}`
-    );
-    return false;
-  }
-
-  return true;
-};
-
 export const createSpell = (definition, context = {}) => {
   if (!definition) {
     return null;
@@ -114,9 +90,5 @@ const spellDefinitions = Object.entries(spellData).map(([key, definition]) => [
   key,
   hydrateDefinition(definition, key),
 ]);
-
-spellDefinitions.forEach(([key, definition]) =>
-  validateSpellDefinition(definition, key)
-);
 
 export const spellRegistry = new Map(spellDefinitions);
