@@ -15,7 +15,8 @@ export class CombatSystem {
     this.handleWallHit = this.handleWallHit.bind(this);
     this.bulletRangePx = BULLET_RANGE_TILES * TILE_WIDTH;
     this.lastCombatAt = -Infinity;
-    this.lastRegenAt = null;
+    this.lastHealthRegenAt = null;
+    this.lastManaRegenAt = null;
     this.spells = [];
     this.spellMap = new Map();
     this.shieldDurationMs = 5000;
@@ -1619,45 +1620,76 @@ export class CombatSystem {
       return;
     }
 
-    const maxHealth = Number(player.getData("maxHealth")) || 1;
-    const storedHealth = Number(player.getData("health"));
-    const currentHealth = Number.isFinite(storedHealth)
-      ? storedHealth
-      : maxHealth;
-    if (currentHealth >= maxHealth) {
-      this.lastRegenAt = time;
-      return;
-    }
-
     if (this.isInCombat(time)) {
-      this.lastRegenAt = time;
+      this.lastHealthRegenAt = time;
+      this.lastManaRegenAt = time;
       return;
     }
 
-    if (!Number.isFinite(this.lastRegenAt)) {
-      this.lastRegenAt = time;
-    }
     const regenIntervalMs = 1000;
-    const elapsed = time - this.lastRegenAt;
-    if (elapsed < regenIntervalMs) {
-      return;
-    }
+    const regenerateResource = ({
+      currentKey,
+      maxKey,
+      lastKey,
+      onRegen,
+    }) => {
+      const maxValue = Number(player.getData(maxKey));
+      if (!Number.isFinite(maxValue) || maxValue <= 0) {
+        return;
+      }
+      const storedValue = Number(player.getData(currentKey));
+      const currentValue = Number.isFinite(storedValue)
+        ? storedValue
+        : maxValue;
+      if (currentValue >= maxValue) {
+        this[lastKey] = time;
+        return;
+      }
+      if (!Number.isFinite(this[lastKey])) {
+        this[lastKey] = time;
+      }
+      const elapsed = time - this[lastKey];
+      if (elapsed < regenIntervalMs) {
+        return;
+      }
+      const ticks = Math.floor(elapsed / regenIntervalMs);
+      const newValue = Math.min(maxValue, currentValue + ticks);
+      if (newValue === currentValue) {
+        this[lastKey] = time;
+        return;
+      }
+      player.setData(currentKey, newValue);
+      onRegen(newValue, maxValue);
+      this[lastKey] += ticks * regenIntervalMs;
+    };
 
-    const ticks = Math.floor(elapsed / regenIntervalMs);
-    const newHealth = Math.min(maxHealth, currentHealth + ticks);
-    if (newHealth === currentHealth) {
-      this.lastRegenAt = time;
-      return;
-    }
+    regenerateResource({
+      currentKey: "health",
+      maxKey: "maxHealth",
+      lastKey: "lastHealthRegenAt",
+      onRegen: (newHealth, maxHealth) => {
+        this.updatePlayerHealthDisplay();
+        if (this.scene.gameState?.player) {
+          this.scene.gameState.player.health = newHealth;
+          this.scene.gameState.player.maxHealth = maxHealth;
+          this.scene.persistGameState?.();
+        }
+      },
+    });
 
-    player.setData("health", newHealth);
-    this.updatePlayerHealthDisplay();
-    if (this.scene.gameState?.player) {
-      this.scene.gameState.player.health = newHealth;
-      this.scene.gameState.player.maxHealth = maxHealth;
-      this.scene.persistGameState?.();
-    }
-    this.lastRegenAt += ticks * regenIntervalMs;
+    regenerateResource({
+      currentKey: "mana",
+      maxKey: "maxMana",
+      lastKey: "lastManaRegenAt",
+      onRegen: (newMana, maxMana) => {
+        this.updatePlayerResourceDisplay();
+        if (this.scene.gameState?.player) {
+          this.scene.gameState.player.mana = newMana;
+          this.scene.gameState.player.maxMana = maxMana;
+          this.scene.persistGameState?.();
+        }
+      },
+    });
   }
 
   recordCombatActivity(time) {
