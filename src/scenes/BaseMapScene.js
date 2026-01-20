@@ -11,6 +11,7 @@ import {
   NPC_ATTACK_RANGE_TILES,
   NPC_CHASE_SPEED,
   PLAYER_SPEED,
+  TILE_HEIGHT,
   TILE_WIDTH,
 } from "../config/constants.js";
 import { TextureLoader } from "../assets/textures/TextureLoader.js";
@@ -156,6 +157,7 @@ export class BaseMapScene extends Phaser.Scene {
     this.combatSystem.updateTargetHud();
     this.interactionSystem.updateFriendlyNpcInteraction();
     this.inventorySystem.updateInventoryToggle();
+    this.handleNpcJumpInput();
     this.updatePortalInteraction();
     this.syncIsometricSprites();
     this.updateNpcNameplates();
@@ -286,6 +288,42 @@ export class BaseMapScene extends Phaser.Scene {
       }
       this.selectTargetByPointer(pointer);
     });
+  }
+
+  handleNpcJumpInput() {
+    if (!this.jumpKey || !Phaser.Input.Keyboard.JustDown(this.jumpKey)) {
+      return;
+    }
+    const candidateNpc =
+      this.targetedNpc?.active ? this.targetedNpc : this.npc;
+    if (!candidateNpc?.active || !candidateNpc.getData("isNpc")) {
+      return;
+    }
+    this.triggerNpcJump(candidateNpc);
+  }
+
+  triggerNpcJump(npc) {
+    if (!npc || npc.getData("jumpTween")) {
+      return;
+    }
+    const baseIsoZ = Number(npc.getData("isoZ")) || 0;
+    const jumpHeight = TILE_HEIGHT * 0.75;
+    const jumpTween = this.tweens.addCounter({
+      from: 0,
+      to: 1,
+      duration: 220,
+      yoyo: true,
+      ease: "Sine.easeOut",
+      onUpdate: (tween) => {
+        const value = tween.getValue();
+        npc.setData("isoZ", baseIsoZ + jumpHeight * value);
+      },
+      onComplete: () => {
+        npc.setData("isoZ", baseIsoZ);
+        npc.setData("jumpTween", null);
+      },
+    });
+    npc.setData("jumpTween", jumpTween);
   }
 
   updateTargetingInput() {
