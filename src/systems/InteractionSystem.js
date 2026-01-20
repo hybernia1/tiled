@@ -1,9 +1,8 @@
 import * as Phaser from "phaser";
-import { en } from "../config/locales/en.js";
 
 const ITEM_LABELS = {
-  apple: en.itemApple,
-  pear: en.itemPear,
+  apple: "apple",
+  pear: "pear",
 };
 
 export class InteractionSystem {

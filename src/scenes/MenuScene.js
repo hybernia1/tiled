@@ -1,5 +1,4 @@
 import * as Phaser from "phaser";
-import { en } from "../config/locales/en.js";
 
 export class MenuScene extends Phaser.Scene {
   constructor() {
@@ -53,8 +52,8 @@ export class MenuScene extends Phaser.Scene {
   }
 
   updateTexts() {
-    this.titleText.setText(en.menuTitle);
-    this.startText.setText(en.menuStart);
+    this.titleText.setText("Main Menu");
+    this.startText.setText("Start Game");
     this.updateFullscreenText();
   }
 
@@ -64,10 +63,10 @@ export class MenuScene extends Phaser.Scene {
 
   updateFullscreenText() {
     const stateLabel = this.scale.isFullscreen
-      ? en.fullscreenOn
-      : en.fullscreenOff;
+      ? "On"
+      : "Off";
     this.fullscreenText.setText(
-      `${en.menuFullscreen}: ${stateLabel}`
+      `Fullscreen: ${stateLabel}`
     );
   }
 

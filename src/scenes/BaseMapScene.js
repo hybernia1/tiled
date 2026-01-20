@@ -22,7 +22,6 @@ import { createMap } from "../entities/map.js";
 import { createNpc } from "../entities/npc.js";
 import { createPigNpc } from "../entities/pigNpc.js";
 import { createPlayer } from "../entities/player.js";
-import { en } from "../config/locales/en.js";
 import { getMaxHealthForLevel } from "../config/playerProgression.js";
 import {
   getMapState,
@@ -40,13 +39,13 @@ import { EffectSystem } from "../systems/effects/EffectSystem.js";
 import { getMapDefinition } from "../worlds/registry.js";
 
 const MAP_NAMES = {
-  pinewood: en.mapNamePinewood,
-  "pinewood:cave": en.mapNamePinewoodCave,
+  pinewood: "Pinewood",
+  "pinewood:cave": "Spider cave",
 };
 
 const PORTAL_PROMPTS = {
-  enterCave: en.enterCave,
-  exitCave: en.exitCave,
+  enterCave: "Click to enter the cave",
+  exitCave: "Click to go back outside",
 };
 
 export class BaseMapScene extends Phaser.Scene {
@@ -507,7 +506,7 @@ export class BaseMapScene extends Phaser.Scene {
       .text(
         16,
         16,
-        en.demoInstructions,
+        "WASD/Arrow keys: move | 1: shot | 2: shield | Mouse/Tab: target | Click: interact | F: fullscreen | Esc/P: pause",
         {
           fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
           fontSize: "16px",
@@ -675,11 +674,11 @@ export class BaseMapScene extends Phaser.Scene {
   }
 
   updatePauseTexts() {
-    this.pauseTitleText.setText(en.pauseTitle);
-    this.pauseResumeText.setText(en.pauseResume);
-    this.pauseQuitText.setText(en.pauseQuit);
+    this.pauseTitleText.setText("Paused");
+    this.pauseResumeText.setText("Resume");
+    this.pauseQuitText.setText("Exit to Menu");
     this.updateFullscreenText();
-    this.pauseHintText.setText(en.pauseHint);
+    this.pauseHintText.setText("Press Esc or P to continue");
   }
 
   setupPauseInput() {
@@ -728,10 +727,10 @@ export class BaseMapScene extends Phaser.Scene {
       return;
     }
     const stateLabel = this.scale.isFullscreen
-      ? en.fullscreenOn
-      : en.fullscreenOff;
+      ? "On"
+      : "Off";
     this.pauseFullscreenText.setText(
-      `${en.pauseFullscreen}: ${stateLabel}`
+      `Fullscreen: ${stateLabel}`
     );
   }
 

@@ -1,5 +1,4 @@
 import * as Phaser from "phaser";
-import { en } from "../config/locales/en.js";
 import { BULLET_RANGE_TILES, TILE_WIDTH } from "../config/constants.js";
 import {
   getMaxHealthForLevel,
@@ -985,7 +984,7 @@ export class CombatSystem {
       player.setVisible(false);
       player.body.enable = false;
       player.body.setVelocity(0, 0);
-      this.showCombatMessage(en.combatPlayerDown);
+      this.showCombatMessage("You have fallen!");
     }
   }
 
@@ -1145,7 +1144,7 @@ export class CombatSystem {
       if (npc === this.scene.targetedNpc) {
         this.scene.setTargetedNpc?.(null);
       }
-      const npcName = npc.getData("displayName") ?? en.npcName;
+      const npcName = npc.getData("displayName") ?? "NPC";
       this.scene.gameLogSystem?.addEntry("logNpcDefeated", { npc: npcName });
       const xpReward = Number(npcDefinition?.xpReward);
       if (Number.isFinite(xpReward) && xpReward > 0) {
