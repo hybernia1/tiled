@@ -51,6 +51,8 @@ export class CombatSystem {
 
     this.updatePlayerHealthDisplay();
     this.setupPlayerProgressDisplay();
+    this.setupSpellbarDisplay();
+    this.setupTargetHud();
   }
 
   updatePlayerHealthDisplay() {
@@ -160,6 +162,220 @@ export class CombatSystem {
     playerXpValue
       .setText(xpText)
       .setPosition(barX + barWidth / 2, barY - 6);
+
+    this.updateSpellbarDisplay();
+  }
+
+  setupSpellbarDisplay() {
+    const { scene } = this;
+    scene.spellbarSlots = scene.add
+      .graphics()
+      .setDepth(10000)
+      .setScrollFactor(0);
+    scene.spellbarSlotLabels = [];
+    scene.spellbarSlotNames = [];
+    scene.pointerFireActive = false;
+    scene.spellbarShotQueued = false;
+
+    for (let index = 0; index < 6; index += 1) {
+      const slotLabel = scene.add
+        .text(0, 0, `${index + 1}`, {
+          fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+          fontSize: "10px",
+          color: "#f6f2ee",
+          backgroundColor: "rgba(0, 0, 0, 0.35)",
+          padding: { x: 4, y: 2 },
+        })
+        .setDepth(10001)
+        .setScrollFactor(0)
+        .setOrigin(0, 0);
+      scene.spellbarSlotLabels.push(slotLabel);
+
+      const slotName = scene.add
+        .text(0, 0, index === 0 ? "Shot" : "", {
+          fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+          fontSize: "9px",
+          color: "#f6f2ee",
+        })
+        .setDepth(10001)
+        .setScrollFactor(0)
+        .setOrigin(0.5, 0.5);
+      scene.spellbarSlotNames.push(slotName);
+
+      if (index === 0) {
+        scene.spellbarShotZone = scene.add
+          .rectangle(0, 0, 1, 1, 0x000000, 0.001)
+          .setDepth(10002)
+          .setScrollFactor(0)
+          .setInteractive({ useHandCursor: true });
+        scene.spellbarShotZone.on("pointerdown", () => {
+          scene.pointerFireActive = true;
+          scene.spellbarShotQueued = true;
+        });
+        scene.spellbarShotZone.on("pointerup", () => {
+          scene.pointerFireActive = false;
+        });
+        scene.spellbarShotZone.on("pointerout", () => {
+          scene.pointerFireActive = false;
+        });
+      }
+    }
+
+    this.updateSpellbarDisplay();
+  }
+
+  updateSpellbarDisplay() {
+    const { scene } = this;
+    const { spellbarSlots, spellbarSlotLabels, spellbarSlotNames } = scene;
+    if (!spellbarSlots || !spellbarSlotLabels || !spellbarSlotNames) {
+      return;
+    }
+
+    const { width, height } = scene.scale;
+    const slotSize = 36;
+    const slotGap = 6;
+    const slotCount = 6;
+    const totalWidth = slotCount * slotSize + (slotCount - 1) * slotGap;
+    const startX = Math.round((width - totalWidth) / 2);
+    const barY = height - 60;
+
+    spellbarSlots.clear();
+    spellbarSlots.fillStyle(0x0b0c10, 0.75);
+    spellbarSlots.lineStyle(1, 0x2e2f36, 0.9);
+
+    for (let index = 0; index < slotCount; index += 1) {
+      const slotX = startX + index * (slotSize + slotGap);
+      spellbarSlots.fillRoundedRect(slotX, barY, slotSize, slotSize, 4);
+      spellbarSlots.strokeRoundedRect(slotX, barY, slotSize, slotSize, 4);
+
+      const label = spellbarSlotLabels[index];
+      if (label) {
+        label.setPosition(slotX + 4, barY + 4);
+      }
+      const name = spellbarSlotNames[index];
+      if (name) {
+        name.setPosition(slotX + slotSize / 2, barY + slotSize / 2 + 6);
+      }
+
+      if (index === 0 && scene.spellbarShotZone) {
+        scene.spellbarShotZone
+          .setPosition(slotX + slotSize / 2, barY + slotSize / 2)
+          .setSize(slotSize, slotSize);
+      }
+    }
+  }
+
+  setupTargetHud() {
+    const { scene } = this;
+    scene.targetHealthBar = scene.add
+      .graphics()
+      .setDepth(10000)
+      .setScrollFactor(0);
+    scene.targetNameValue = scene.add
+      .text(0, 0, "", {
+        fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+        fontSize: "11px",
+        color: "#f6f2ee",
+        backgroundColor: "rgba(0, 0, 0, 0.35)",
+        padding: { x: 6, y: 3 },
+      })
+      .setDepth(10001)
+      .setScrollFactor(0)
+      .setOrigin(0, 0.5)
+      .setVisible(false);
+    scene.targetHealthValue = scene.add
+      .text(0, 0, "", {
+        fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+        fontSize: "12px",
+        color: "#f6f2ee",
+        backgroundColor: "rgba(0, 0, 0, 0.45)",
+        padding: { x: 6, y: 3 },
+      })
+      .setDepth(10001)
+      .setScrollFactor(0)
+      .setOrigin(0, 0.5)
+      .setVisible(false);
+
+    this.updateTargetHud();
+  }
+
+  updateTargetHud() {
+    const { scene } = this;
+    const {
+      playerLevelValue,
+      targetHealthBar,
+      targetHealthValue,
+      targetNameValue,
+    } = scene;
+    if (!targetHealthBar || !targetHealthValue || !targetNameValue) {
+      return;
+    }
+
+    const target = scene.targetedNpc;
+    if (!target?.active) {
+      targetHealthBar.setVisible(false);
+      targetHealthValue.setVisible(false);
+      targetNameValue.setVisible(false);
+      return;
+    }
+
+    const level = Number(target.getData("level")) || 1;
+    const displayName = target.getData("displayName") ?? "NPC";
+    const maxHealth =
+      Number(target.getData("maxHealth")) ||
+      Number(target.getData("definition")?.maxHealth) ||
+      1;
+    const storedHealth = Number(target.getData("health"));
+    const currentHealth = Number.isFinite(storedHealth)
+      ? storedHealth
+      : maxHealth;
+
+    const baseX = 16;
+    const barWidth = 180;
+    const barHeight = 12;
+    const barX = baseX + (playerLevelValue?.width ?? 0) + 10;
+    const barY = 18;
+    const targetBarWidth = 150;
+    const targetBarHeight = 10;
+    const targetBarX = barX + barWidth + 24;
+    const targetBarY = barY;
+    const fillWidth = (currentHealth / maxHealth) * (targetBarWidth - 2);
+
+    targetHealthBar.clear();
+    targetHealthBar.fillStyle(0x0b0c10, 0.9);
+    targetHealthBar.fillRoundedRect(
+      targetBarX,
+      targetBarY,
+      targetBarWidth,
+      targetBarHeight,
+      3
+    );
+    targetHealthBar.lineStyle(1, 0x2e2f36, 0.9);
+    targetHealthBar.strokeRoundedRect(
+      targetBarX,
+      targetBarY,
+      targetBarWidth,
+      targetBarHeight,
+      3
+    );
+    targetHealthBar.fillStyle(0xf65a5a, 0.95);
+    targetHealthBar.fillRoundedRect(
+      targetBarX + 1,
+      targetBarY + 1,
+      Math.max(0, fillWidth),
+      targetBarHeight - 2,
+      3
+    );
+    targetHealthBar.setVisible(true);
+
+    targetNameValue
+      .setText(`${displayName} Lv.${level}`)
+      .setPosition(targetBarX, targetBarY - 6)
+      .setVisible(true);
+    targetHealthValue
+      .setText(`HP ${currentHealth}/${maxHealth}`)
+      .setPosition(targetBarX, targetBarY + targetBarHeight + 6)
+      .setVisible(true);
   }
 
   addPlayerXp(amount) {
@@ -390,6 +606,9 @@ export class CombatSystem {
           this.scene.persistGameState?.();
         }
       }
+      if (npc === this.scene.targetedNpc) {
+        this.scene.setTargetedNpc?.(null);
+      }
       const npcName =
         npc.getData("displayName") ?? t(this.scene.locale, "npcName");
       this.scene.gameLogSystem?.addEntry("logNpcDefeated", { npc: npcName });
@@ -493,7 +712,10 @@ export class CombatSystem {
       return;
     }
     const { fireKey, nextFireTime } = this.scene;
-    const isFiring = fireKey.isDown;
+    const isFiring =
+      fireKey.isDown ||
+      this.scene.pointerFireActive ||
+      this.scene.spellbarShotQueued;
     if (!isFiring || time < nextFireTime) {
       return;
     }
@@ -520,6 +742,9 @@ export class CombatSystem {
     bullet.lifespan = time + 1200;
 
     this.scene.nextFireTime = time + this.scene.fireCooldownMs;
+    if (this.scene.spellbarShotQueued) {
+      this.scene.spellbarShotQueued = false;
+    }
   }
 
   cleanupBullets(time) {

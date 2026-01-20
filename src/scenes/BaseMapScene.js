@@ -71,6 +71,7 @@ export class BaseMapScene extends Phaser.Scene {
     this.npcChaseSpeed = NPC_CHASE_SPEED;
     this.npcAttackCooldownMs = NPC_ATTACK_COOLDOWN_MS;
     this.npcAttackDamage = NPC_ATTACK_DAMAGE;
+    this.targetedNpc = null;
   }
 
   init(data) {
@@ -145,6 +146,7 @@ export class BaseMapScene extends Phaser.Scene {
     this.inputSystem.setupControls();
     this.setupPauseInput();
     this.setupFullscreenInput();
+    this.setupTargetingInput();
     this.setupColliders();
   }
 
@@ -158,11 +160,13 @@ export class BaseMapScene extends Phaser.Scene {
     this.combatSystem.updateShooting(time);
     this.combatSystem.cleanupBullets(time);
     this.combatSystem.updateNpcHealthDisplay();
+    this.combatSystem.updateTargetHud();
     this.interactionSystem.updateFriendlyNpcInteraction();
     this.inventorySystem.updateInventoryToggle();
     this.updatePortalInteraction();
     this.syncIsometricSprites();
     this.updateNpcNameplates();
+    this.updateTargetingInput();
   }
 
   setupIsometricSprites() {
@@ -278,6 +282,117 @@ export class BaseMapScene extends Phaser.Scene {
     if (this.pigNpcGroup) {
       this.pigNpcGroup.children.iterate((child) => updateForSprite(child));
     }
+  }
+
+  setupTargetingInput() {
+    this.input.on("pointerdown", (pointer) => {
+      this.selectTargetByPointer(pointer);
+    });
+  }
+
+  updateTargetingInput() {
+    if (this.targetedNpc && !this.targetedNpc.active) {
+      this.setTargetedNpc(null);
+    }
+    if (this.tabKey && Phaser.Input.Keyboard.JustDown(this.tabKey)) {
+      this.cycleTarget();
+    }
+  }
+
+  getTargetableNpcs() {
+    const targets = [];
+    const collectTarget = (sprite) => {
+      if (!sprite?.active || !sprite.getData("isNpc")) {
+        return;
+      }
+      targets.push(sprite);
+    };
+
+    collectTarget(this.npc);
+    collectTarget(this.friendlyNpc);
+    if (this.pigNpcGroup) {
+      this.pigNpcGroup.children.iterate((child) => collectTarget(child));
+    }
+
+    return targets;
+  }
+
+  selectTargetByPointer(pointer) {
+    if (!pointer) {
+      return;
+    }
+    const worldPoint = this.cameras.main.getWorldPoint(pointer.x, pointer.y);
+    const targets = this.getTargetableNpcs();
+    let closestTarget = null;
+    let closestDistance = Infinity;
+    targets.forEach((npc) => {
+      const displaySprite = this.getDisplaySprite(npc);
+      if (!displaySprite) {
+        return;
+      }
+      const distance = Phaser.Math.Distance.Between(
+        worldPoint.x,
+        worldPoint.y,
+        displaySprite.x,
+        displaySprite.y
+      );
+      if (distance < 28 && distance < closestDistance) {
+        closestDistance = distance;
+        closestTarget = npc;
+      }
+    });
+
+    if (closestTarget) {
+      this.setTargetedNpc(closestTarget);
+    } else {
+      this.setTargetedNpc(null);
+    }
+  }
+
+  cycleTarget() {
+    const targets = this.getTargetableNpcs();
+    if (!targets.length) {
+      this.setTargetedNpc(null);
+      return;
+    }
+
+    targets.sort((a, b) => {
+      const distanceA = Phaser.Math.Distance.Between(
+        this.player?.x ?? 0,
+        this.player?.y ?? 0,
+        a.x,
+        a.y
+      );
+      const distanceB = Phaser.Math.Distance.Between(
+        this.player?.x ?? 0,
+        this.player?.y ?? 0,
+        b.x,
+        b.y
+      );
+      return distanceA - distanceB;
+    });
+
+    const currentIndex = targets.indexOf(this.targetedNpc);
+    const nextIndex =
+      currentIndex >= 0 ? (currentIndex + 1) % targets.length : 0;
+    this.setTargetedNpc(targets[nextIndex]);
+  }
+
+  setTargetedNpc(npc) {
+    if (this.targetedNpc === npc) {
+      return;
+    }
+    if (this.targetedNpc) {
+      const previousDisplay = this.getDisplaySprite(this.targetedNpc);
+      previousDisplay?.clearTint?.();
+    }
+
+    this.targetedNpc = npc;
+    if (this.targetedNpc) {
+      const displaySprite = this.getDisplaySprite(this.targetedNpc);
+      displaySprite?.setTint?.(0xffd54f);
+    }
+    this.combatSystem?.updateTargetHud();
   }
 
   syncIsoGroup(group, options = {}) {
