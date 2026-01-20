@@ -5,7 +5,9 @@ const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
 export class GameLogSystem {
   constructor(scene) {
     this.scene = scene;
-    this.entries = [];
+    this.registryKey = "gameLogEntries";
+    const storedEntries = this.scene.registry.get(this.registryKey);
+    this.entries = Array.isArray(storedEntries) ? [...storedEntries] : [];
     this.scrollOffset = 0;
     this.maxEntries = 80;
     this.panelBounds = { x: 0, y: 0, width: 0, height: 0 };
@@ -21,8 +23,8 @@ export class GameLogSystem {
     this.titleHeight = 20;
 
     this.panelBounds = {
-      x: width - this.panelWidth - 16,
-      y: 16,
+      x: 16,
+      y: height - this.panelHeight - 16,
       width: this.panelWidth,
       height: this.panelHeight,
     };
@@ -111,8 +113,8 @@ export class GameLogSystem {
 
     this.panelWidth = Math.min(360, Math.max(220, gameSize.width - 32));
     this.panelBounds = {
-      x: gameSize.width - this.panelWidth - 16,
-      y: 16,
+      x: 16,
+      y: gameSize.height - this.panelHeight - 16,
       width: this.panelWidth,
       height: this.panelHeight,
     };
@@ -166,6 +168,7 @@ export class GameLogSystem {
     if (this.entries.length > this.maxEntries) {
       this.entries.shift();
     }
+    this.saveEntries();
     this.scrollOffset = 0;
     this.updateVisibleEntries();
   }
@@ -196,5 +199,9 @@ export class GameLogSystem {
     );
     const visibleEntries = this.entries.slice(startIndex, endIndex);
     this.logText.setText(visibleEntries.join("\n"));
+  }
+
+  saveEntries() {
+    this.scene.registry.set(this.registryKey, [...this.entries]);
   }
 }

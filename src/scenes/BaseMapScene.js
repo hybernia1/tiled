@@ -41,6 +41,11 @@ import { GameLogSystem } from "../systems/GameLogSystem.js";
 import { MovementSystem } from "../systems/MovementSystem.js";
 import { NpcAggroSystem } from "../systems/NpcAggroSystem.js";
 
+const MAP_NAME_KEYS = {
+  world: "mapNameWorld",
+  cave: "mapNameCave",
+};
+
 export class BaseMapScene extends Phaser.Scene {
   constructor({ key, mapType, portalTargetKey, portalPromptKey }) {
     super({ key, mapAdd: { isoPlugin: "iso" } });
@@ -108,6 +113,9 @@ export class BaseMapScene extends Phaser.Scene {
     createFriendlyNpc(this);
     this.inventorySystem.createInventoryUi();
     this.gameLogSystem.createLogUi();
+    this.gameLogSystem.addEntry("logMapEntered", {
+      map: t(this.locale, MAP_NAME_KEYS[this.mapType] ?? this.mapType),
+    });
     this.setupIsometricSprites();
     this.physics.world.setBounds(0, 0, this.mapWidthPx, this.mapHeightPx);
     this.configureIsometricCameraBounds();
