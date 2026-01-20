@@ -138,6 +138,7 @@ export class BaseMapScene extends Phaser.Scene {
     this.cameras.main.roundPixels = true;
     this.createPauseMenu();
     this.createPortalPrompt();
+    this.createNpcQuestTooltip();
     this.combatSystem.setupPlayerHealth();
     this.combatSystem.setupNpcCombat();
     this.inputSystem.setupControls();
@@ -168,6 +169,7 @@ export class BaseMapScene extends Phaser.Scene {
     this.updatePortalInteraction();
     this.syncIsometricSprites();
     this.updateNpcNameplates();
+    this.updateNpcQuestTooltip();
     this.updateTargetingInput();
     this.updateTargetRing();
   }
@@ -535,10 +537,12 @@ export class BaseMapScene extends Phaser.Scene {
       }
       sprite.setData("isHovered", true);
       this.updateNpcHighlight(sprite);
+      this.showNpcQuestTooltip(sprite);
     });
     targetSprite.on("pointerout", () => {
       sprite.setData("isHovered", false);
       this.updateNpcHighlight(sprite);
+      this.hideNpcQuestTooltip(sprite);
     });
   }
 
@@ -649,6 +653,21 @@ export class BaseMapScene extends Phaser.Scene {
       .setVisible(false);
   }
 
+  createNpcQuestTooltip() {
+    this.npcQuestTooltip = this.add
+      .text(0, 0, "", {
+        fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+        fontSize: "12px",
+        color: "#f6f2ee",
+        backgroundColor: "rgba(0, 0, 0, 0.35)",
+        padding: { x: 6, y: 3 },
+      })
+      .setOrigin(0.5, 1)
+      .setDepth(10)
+      .setVisible(false);
+    this.npcQuestTooltipTarget = null;
+  }
+
   updatePortalInteraction() {
     if (!this.portalSprite || !this.player) {
       return;
@@ -677,6 +696,102 @@ export class BaseMapScene extends Phaser.Scene {
       return;
     }
 
+  }
+
+  getNpcQuestTooltipData() {
+    const questId = "quest_boar_chunks_01";
+    const objectiveId = "boar_chunk";
+    const questSystem = this.questSystem;
+    if (!questSystem) {
+      return null;
+    }
+    const questState =
+      questSystem.getQuestStatus?.(questId) ??
+      questSystem.getQuestState?.(questId) ??
+      questSystem.getQuest?.(questId)?.status ??
+      "available";
+    const activeStates = new Set([
+      "active",
+      "in_progress",
+      "accepted",
+      "ready_to_turn_in",
+    ]);
+    if (!activeStates.has(questState)) {
+      return null;
+    }
+    const quest = questSystem.getQuest?.(questId) ?? {};
+    const definition =
+      quest.definition ?? questSystem.getQuestDefinition?.(questId);
+    const objective =
+      definition?.objectives?.find((entry) => entry?.targetId === objectiveId) ??
+      definition?.objectives?.find(
+        (entry) => entry?.objectiveKey === objectiveId
+      );
+    const required = Number(objective?.count ?? 5);
+    const progress = Number(quest?.progress?.[objectiveId] ?? 0);
+    const label = "Boar Chunk";
+    return {
+      text: `${progress}/${required} ${label}`,
+    };
+  }
+
+  updateNpcQuestTooltip() {
+    const tooltip = this.npcQuestTooltip;
+    if (!tooltip?.visible) {
+      return;
+    }
+    const data = this.getNpcQuestTooltipData();
+    if (!data) {
+      this.hideNpcQuestTooltip();
+      return;
+    }
+    if (tooltip.text !== data.text) {
+      tooltip.setText(data.text);
+    }
+    const target = this.npcQuestTooltipTarget;
+    if (!target?.active) {
+      this.hideNpcQuestTooltip();
+      return;
+    }
+    const displaySprite = this.getDisplaySprite(target);
+    if (!displaySprite?.visible) {
+      tooltip.setVisible(false);
+      return;
+    }
+    tooltip
+      .setPosition(displaySprite.x, displaySprite.y - 32)
+      .setDepth(displaySprite.depth + 2)
+      .setVisible(true);
+  }
+
+  showNpcQuestTooltip(sprite) {
+    const tooltip = this.npcQuestTooltip;
+    if (!tooltip) {
+      this.createNpcQuestTooltip();
+    }
+    const data = this.getNpcQuestTooltipData();
+    if (!data) {
+      this.hideNpcQuestTooltip();
+      return;
+    }
+    const targetSprite = sprite ?? this.npcQuestTooltipTarget;
+    if (!targetSprite) {
+      return;
+    }
+    this.npcQuestTooltipTarget = targetSprite;
+    this.npcQuestTooltip.setText(data.text);
+    this.updateNpcQuestTooltip();
+  }
+
+  hideNpcQuestTooltip(sprite) {
+    if (!this.npcQuestTooltip) {
+      return;
+    }
+    if (sprite && this.npcQuestTooltipTarget !== sprite) {
+      return;
+    }
+    this.npcQuestTooltipTarget = null;
+    this.npcQuestTooltip.setVisible(false);
   }
 
   syncPlayerState() {
