@@ -14,7 +14,7 @@ import {
   getTextureIdByEffectTag,
   getTextureProperties,
 } from "../assets/textures/registry.js";
-import { createSpell, spellRegistry } from "./spells/registry.js";
+import { createSpell, spellRegistry } from "../data/registries/spells.js";
 import { getMaxHealth } from "./npc/stats.js";
 import { NpcStateMachine } from "./npc/stateMachine.js";
 import { uiTheme } from "../config/uiTheme.js";

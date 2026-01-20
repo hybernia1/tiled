@@ -1,7 +1,7 @@
 import * as Phaser from "phaser";
 import { UI_MARGIN, UI_PADDING } from "../config/constants.js";
 import { uiTheme } from "../config/uiTheme.js";
-import itemsData from "../data/items.json";
+import { getItemDefinitions } from "../data/registries/items.js";
 
 export class InventorySystem {
   constructor(scene) {
@@ -11,7 +11,7 @@ export class InventorySystem {
 
   createInventoryUi() {
     const existingInventory = this.scene?.gameState?.inventory ?? {};
-    const inventoryItems = Array.isArray(itemsData) ? itemsData : [];
+    const inventoryItems = getItemDefinitions();
     this.inventory = {
       ...inventoryItems.reduce((acc, item) => {
         if (item?.id) {
