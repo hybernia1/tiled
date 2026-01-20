@@ -17,4 +17,11 @@ export const en = {
   pauseHint: "Press Esc or P to continue",
   enterCave: "Press E to enter the cave",
   exitCave: "Press E to go back outside",
+  logTitle: "Game log",
+  logNpcDefeated: "NPC defeated.",
+  logItemPicked: "Item picked up: \"{item}\".",
+  itemApple: "apple",
+  itemPear: "pear",
+  combatNpcDefeated: "NPC defeated!",
+  combatPlayerDown: "You have fallen!",
 };

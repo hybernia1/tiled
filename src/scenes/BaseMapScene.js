@@ -37,6 +37,7 @@ import { CombatSystem } from "../systems/CombatSystem.js";
 import { InputSystem } from "../systems/InputSystem.js";
 import { InventorySystem } from "../systems/InventorySystem.js";
 import { InteractionSystem } from "../systems/InteractionSystem.js";
+import { GameLogSystem } from "../systems/GameLogSystem.js";
 import { MovementSystem } from "../systems/MovementSystem.js";
 import { NpcAggroSystem } from "../systems/NpcAggroSystem.js";
 
@@ -97,6 +98,7 @@ export class BaseMapScene extends Phaser.Scene {
     this.npcAggroSystem = new NpcAggroSystem(this);
     this.inventorySystem = new InventorySystem(this);
     this.interactionSystem = new InteractionSystem(this, null, this.inventorySystem);
+    this.gameLogSystem = new GameLogSystem(this);
 
     createMap(this, { type: this.mapType });
     createPlayer(this, this.spawnPoint);
@@ -105,6 +107,7 @@ export class BaseMapScene extends Phaser.Scene {
     createNpc(this);
     createFriendlyNpc(this);
     this.inventorySystem.createInventoryUi();
+    this.gameLogSystem.createLogUi();
     this.setupIsometricSprites();
     this.physics.world.setBounds(0, 0, this.mapWidthPx, this.mapHeightPx);
     this.configureIsometricCameraBounds();
