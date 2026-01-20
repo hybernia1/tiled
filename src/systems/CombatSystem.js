@@ -1,4 +1,6 @@
+import * as Phaser from "phaser";
 import { t } from "../config/localization.js";
+import { BULLET_RANGE_TILES, TILE_WIDTH } from "../config/constants.js";
 import {
   getMaxHealthForLevel,
   getXpNeededForNextLevel,
@@ -10,6 +12,7 @@ export class CombatSystem {
     this.scene = scene;
     this.handleNpcHit = this.handleNpcHit.bind(this);
     this.handleWallHit = this.handleWallHit.bind(this);
+    this.bulletRangePx = BULLET_RANGE_TILES * TILE_WIDTH;
   }
 
   setupPlayerHealth() {
@@ -734,12 +737,15 @@ export class CombatSystem {
     bullet.setData("isoZ", this.scene.player.getData("isoZ") ?? 0);
     bullet.setData("hitNpc", false);
 
-    const direction = this.scene.facing.clone().normalize();
+    const direction =
+      this.getAutoAimDirection() ??
+      this.scene.facing.clone().normalize();
     bullet.body.setVelocity(
       direction.x * this.scene.bulletSpeed,
       direction.y * this.scene.bulletSpeed
     );
-    bullet.lifespan = time + 1200;
+    bullet.lifespan =
+      time + (this.bulletRangePx / this.scene.bulletSpeed) * 1000;
 
     this.scene.nextFireTime = time + this.scene.fireCooldownMs;
     if (this.scene.spellbarShotQueued) {
@@ -766,5 +772,83 @@ export class CombatSystem {
         bullet.body.setVelocity(0, 0);
       }
     });
+  }
+
+  getAutoAimDirection() {
+    const { scene } = this;
+    const { player } = scene;
+    if (!player?.active) {
+      return null;
+    }
+    const facing = scene.facing?.clone().normalize();
+    if (!facing) {
+      return null;
+    }
+
+    const target = this.getAutoAimTarget();
+    if (!target) {
+      return null;
+    }
+
+    const direction = new Phaser.Math.Vector2(
+      target.x - player.x,
+      target.y - player.y
+    );
+    const distance = direction.length();
+    if (distance <= 0 || distance > this.bulletRangePx) {
+      return null;
+    }
+    direction.normalize();
+    if (facing.dot(direction) <= 0) {
+      return null;
+    }
+    return direction;
+  }
+
+  getAutoAimTarget() {
+    const { scene } = this;
+    const { player } = scene;
+    if (!player) {
+      return null;
+    }
+
+    const candidates = [];
+    const collect = (npc) => {
+      if (!npc?.active || !npc.getData("isNpc")) {
+        return;
+      }
+      if (npc.getData("type") === "friendly") {
+        return;
+      }
+      candidates.push(npc);
+    };
+
+    if (scene.targetedNpc) {
+      collect(scene.targetedNpc);
+    }
+    collect(scene.npc);
+    if (scene.pigNpcGroup) {
+      scene.pigNpcGroup.children.iterate((npc) => collect(npc));
+    }
+
+    let closestTarget = null;
+    let closestDistance = Infinity;
+    candidates.forEach((npc) => {
+      if (!npc?.active) {
+        return;
+      }
+      const distance = Phaser.Math.Distance.Between(
+        player.x,
+        player.y,
+        npc.x,
+        npc.y
+      );
+      if (distance <= this.bulletRangePx && distance < closestDistance) {
+        closestDistance = distance;
+        closestTarget = npc;
+      }
+    });
+
+    return closestTarget;
   }
 }

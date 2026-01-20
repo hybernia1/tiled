@@ -19,9 +19,6 @@ export class InputSystem {
     this.scene.tabKey = this.scene.input.keyboard.addKey(
       Phaser.Input.Keyboard.KeyCodes.TAB
     );
-    this.scene.interactKey = this.scene.input.keyboard.addKey(
-      Phaser.Input.Keyboard.KeyCodes.E
-    );
     this.scene.inventoryKey = this.scene.input.keyboard.addKey(
       Phaser.Input.Keyboard.KeyCodes.B
     );

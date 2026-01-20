@@ -24,7 +24,7 @@ export const createFriendlyNpc = (scene) => {
   });
 
   scene.friendlyNpcPrompt = scene.add
-    .text(0, 0, "Stiskni E pro rozhovor", {
+    .text(0, 0, "Klikni pro rozhovor", {
       fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
       fontSize: "12px",
       color: "#f6f2ee",
