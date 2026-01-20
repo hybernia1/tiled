@@ -686,6 +686,9 @@ export class BaseMapScene extends Phaser.Scene {
       .setScrollFactor(0)
       .setVisible(false);
 
+    this.questDialogWidth = panelWidth;
+    this.questDialogHeight = panelHeight;
+
     this.questDialogPanel = this.add.graphics().setScrollFactor(0);
     this.questDialogPanel.fillStyle(uiTheme.panelBackground, 0.95);
     this.questDialogPanel.fillRoundedRect(0, 0, panelWidth, panelHeight, 12);
@@ -782,10 +785,12 @@ export class BaseMapScene extends Phaser.Scene {
     if (!this.questDialog) {
       return;
     }
+    const panelWidth = this.questDialogWidth;
+    const panelHeight = this.questDialogHeight;
+    if (!panelWidth || !panelHeight) {
+      return;
+    }
     const { width, height } = this.scale;
-    const panelBounds = this.questDialogPanel.getBounds();
-    const panelWidth = panelBounds.width;
-    const panelHeight = panelBounds.height;
     this.questDialog.setPosition(
       Math.round((width - panelWidth) / 2),
       Math.round((height - panelHeight) / 2)
