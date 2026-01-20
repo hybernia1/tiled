@@ -33,6 +33,11 @@ const DEFAULT_STATE = {
     apple: 0,
     pear: 0,
   },
+  quests: {
+    active: {},
+    completed: {},
+    progress: {},
+  },
   maps: {},
 };
 
@@ -155,11 +160,55 @@ const normalizeState = (state) => {
       ...DEFAULT_STATE.inventory,
       ...rawInventory,
     },
+    quests: {
+      active:
+        state?.quests?.active && typeof state.quests.active === "object"
+          ? { ...state.quests.active }
+          : {},
+      completed:
+        state?.quests?.completed && typeof state.quests.completed === "object"
+          ? { ...state.quests.completed }
+          : {},
+      progress:
+        state?.quests?.progress && typeof state.quests.progress === "object"
+          ? { ...state.quests.progress }
+          : {},
+    },
     maps: { ...(state?.maps ?? {}) },
   };
 
   Object.keys(normalized.inventory).forEach((key) => {
     normalized.inventory[key] = Math.max(0, safeNumber(normalized.inventory[key]));
+  });
+
+  Object.entries(normalized.quests.active).forEach(([questId, questState]) => {
+    if (!questState || typeof questState !== "object") {
+      normalized.quests.active[questId] = { status: "active" };
+      return;
+    }
+    if (typeof questState.status !== "string") {
+      normalized.quests.active[questId].status = "active";
+    }
+  });
+
+  Object.entries(normalized.quests.completed).forEach(([questId, questState]) => {
+    if (!questState || typeof questState !== "object") {
+      normalized.quests.completed[questId] = { completedAt: 0 };
+      return;
+    }
+    if (!Number.isFinite(questState.completedAt)) {
+      normalized.quests.completed[questId].completedAt = 0;
+    }
+  });
+
+  Object.entries(normalized.quests.progress).forEach(([questId, progress]) => {
+    if (!progress || typeof progress !== "object") {
+      normalized.quests.progress[questId] = {};
+      return;
+    }
+    Object.keys(progress).forEach((objectiveKey) => {
+      progress[objectiveKey] = Math.max(0, safeNumber(progress[objectiveKey]));
+    });
   });
 
   Object.entries(normalized.maps).forEach(([mapKey, mapState]) => {
