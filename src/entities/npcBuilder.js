@@ -27,15 +27,18 @@ export const applyNpcDefinition = (scene, sprite, npcDefinition, options = {}) =
   sprite.setData("isoZ", isoZ);
   sprite.setData("isNpc", true);
 
-  if (Number.isFinite(npcDefinition.attackDamage)) {
-    sprite.setData("attackDamage", npcDefinition.attackDamage);
-  }
-  if (Number.isFinite(npcDefinition.aggroRange)) {
-    sprite.setData("aggroRange", npcDefinition.aggroRange * TILE_WIDTH);
-  }
-  if (Number.isFinite(npcDefinition.attackRange)) {
-    sprite.setData("attackRange", npcDefinition.attackRange * TILE_WIDTH);
-  }
+  const baseAttackDamage = Number.isFinite(npcDefinition.attackDamage)
+    ? npcDefinition.attackDamage
+    : scene.npcAttackDamage;
+  const baseAggroRange = Number.isFinite(npcDefinition.aggroRange)
+    ? npcDefinition.aggroRange * TILE_WIDTH
+    : scene.npcAggroRangePx;
+  const baseAttackRange = Number.isFinite(npcDefinition.attackRange)
+    ? npcDefinition.attackRange * TILE_WIDTH
+    : scene.npcAttackRangePx;
+  sprite.setData("attackDamage", baseAttackDamage);
+  sprite.setData("aggroRange", baseAggroRange);
+  sprite.setData("attackRange", baseAttackRange);
 
   if (showNameplate) {
     const nameplate = scene.add
