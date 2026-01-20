@@ -6,7 +6,8 @@ import {
 
 const STORAGE_KEY = "tiled:gameState";
 const SESSION_KEY = "tiled:sessionToken";
-const API_BASE_URL = import.meta.env.VITE_API_URL ?? "http://localhost:4000";
+export const API_BASE_URL =
+  import.meta.env.VITE_API_URL ?? "http://localhost:4000";
 
 const DEFAULT_SPELLBAR_SLOTS = [
   { spellId: "shot" },
@@ -308,6 +309,17 @@ const getSessionToken = () => {
     return null;
   }
   return localStorage.getItem(SESSION_KEY);
+};
+
+export const setSessionToken = (token) => {
+  if (typeof localStorage === "undefined") {
+    return;
+  }
+  if (typeof token !== "string" || token.length === 0) {
+    localStorage.removeItem(SESSION_KEY);
+    return;
+  }
+  localStorage.setItem(SESSION_KEY, token);
 };
 
 export const loadGameState = async () => {

@@ -11,6 +11,7 @@ const startGame = async () => {
       { WorldScene },
       { LoadingScene },
       { MenuScene },
+      { AuthScene },
     ] = await Promise.all([
       import("phaser"),
       import("./config/gameConfig.js"),
@@ -18,11 +19,13 @@ const startGame = async () => {
       import("./scenes/WorldScene.js"),
       import("./scenes/LoadingScene.js"),
       import("./scenes/MenuScene.js"),
+      import("./scenes/AuthScene.js"),
     ]);
 
     const config = createGameConfig([
       LoadingScene,
       MenuScene,
+      AuthScene,
       WorldScene,
       CaveScene,
     ]);
