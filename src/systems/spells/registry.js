@@ -44,8 +44,8 @@ export const spellRegistry = new Map([
       name: "Shot",
       iconKey: "spell-shot",
       cooldownMs: ({ scene }) => scene.fireCooldownMs,
-      onCast: (context, payload, time) => {
-        const sceneTime = payload?.sceneTime ?? time;
+      onCast: (context, payload) => {
+        const sceneTime = payload?.sceneTime ?? context.time;
         context.combatSystem.performShot(payload, sceneTime);
       },
     },
@@ -58,8 +58,8 @@ export const spellRegistry = new Map([
       iconKey: "spell-shield",
       cooldownMs: ({ combatSystem }) => combatSystem.shieldCooldownMs,
       durationMs: ({ combatSystem }) => combatSystem.shieldDurationMs,
-      onCast: (context, payload, time) => {
-        context.combatSystem.activateShield(time);
+      onCast: (context) => {
+        context.combatSystem.activateShield(context.time);
       },
       onExpire: (context) => {
         context.combatSystem.deactivateShield();

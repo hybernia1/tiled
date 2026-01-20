@@ -30,15 +30,30 @@ export class Spell {
     return Math.max(0, this.lastCastAt + this.cooldownMs - time);
   }
 
-  cast(time, context, payload = {}) {
-    if (!this.isReady(time)) {
+  cast(context, payload = {}) {
+    const spellTime = context?.time ?? Date.now();
+    if (!this.isReady(spellTime)) {
       return false;
     }
-    this.lastCastAt = time;
-    this.onCast?.(context, payload, time);
-    if (this.durationMs > 0 && this.onExpire) {
+    this.lastCastAt = spellTime;
+    context?.combatSystem?.emitSpellEvent?.("spell:cast", {
+      spell: this,
+      context,
+      payload,
+      time: spellTime,
+    });
+    this.onCast?.(context, payload);
+    if (this.durationMs > 0) {
       context.scene.time?.delayedCall(this.durationMs, () => {
-        this.onExpire?.(context, payload, time + this.durationMs);
+        const expireTime = spellTime + this.durationMs;
+        const expireContext = { ...context, time: expireTime };
+        this.onExpire?.(expireContext, payload);
+        context?.combatSystem?.emitSpellEvent?.("spell:expire", {
+          spell: this,
+          context: expireContext,
+          payload,
+          time: expireTime,
+        });
       });
     }
     return true;
