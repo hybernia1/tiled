@@ -43,14 +43,6 @@ export class GameLogSystem {
       this.panelBounds.height,
       10
     );
-    this.panel.lineStyle(2, 0x6fd3ff, 0.7);
-    this.panel.strokeRoundedRect(
-      this.panelBounds.x,
-      this.panelBounds.y,
-      this.panelBounds.width,
-      this.panelBounds.height,
-      10
-    );
     this.container.add(this.panel);
 
     this.titleText = this.scene.add
@@ -128,15 +120,6 @@ export class GameLogSystem {
       this.panelBounds.height,
       10
     );
-    this.panel.lineStyle(2, 0x6fd3ff, 0.7);
-    this.panel.strokeRoundedRect(
-      this.panelBounds.x,
-      this.panelBounds.y,
-      this.panelBounds.width,
-      this.panelBounds.height,
-      10
-    );
-
     this.titleText.setPosition(
       this.panelBounds.x + this.padding,
       this.panelBounds.y + this.padding

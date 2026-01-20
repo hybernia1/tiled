@@ -173,7 +173,7 @@ export class CombatSystem {
       ? storedHealth
       : maxHealth;
 
-    playerLevelValue.setText(`Lv. ${level}`);
+    playerLevelValue.setText(`[${level}]`);
     const baseX = 16;
     const barWidth = 180;
     const barHeight = 12;
@@ -484,7 +484,7 @@ export class CombatSystem {
     targetHealthBar.setVisible(true);
 
     targetNameValue
-      .setText(`${displayName} Lv.${level}`)
+      .setText(`[${level}] ${displayName}`)
       .setPosition(targetBarX, targetBarY - 6)
       .setVisible(true);
     targetHealthValue

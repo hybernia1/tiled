@@ -37,7 +37,7 @@ export const applyNpcDefinition = (scene, sprite, npcDefinition, options = {}) =
 
   if (showNameplate) {
     const nameplate = scene.add
-      .text(0, 0, `${displayName} Lv.${npcDefinition.level}`, {
+      .text(0, 0, `[${npcDefinition.level}] ${displayName}`, {
         fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
         fontSize: "11px",
         color: "#f6f2ee",
