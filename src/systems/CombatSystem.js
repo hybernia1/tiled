@@ -164,8 +164,17 @@ export class CombatSystem {
   }
 
   getSpellIconKey(spellId) {
-    const spell = this.getSpell(spellId);
-    return spell?.iconKey ?? null;
+    const definition = spellRegistry.get(spellId);
+    if (!definition) {
+      return null;
+    }
+    const iconKey = definition.iconKey;
+    if (typeof iconKey === "function") {
+      return iconKey(
+        this.createSpellContext({ time: this.getSpellTime() })
+      );
+    }
+    return iconKey ?? null;
   }
 
   restoreSpellCooldowns() {
@@ -378,6 +387,7 @@ export class CombatSystem {
 
   setupSpellbarDisplay() {
     const { scene } = this;
+    const spellbarSlotsConfig = this.getSpellbarSlotsConfig();
     scene.spellbarSlots = scene.add
       .graphics()
       .setDepth(10000)
@@ -391,6 +401,10 @@ export class CombatSystem {
     scene.spellbarShotQueued = false;
 
     for (let index = 0; index < 6; index += 1) {
+      const slotConfig = spellbarSlotsConfig[index] ?? null;
+      const spellId = slotConfig?.spellId ?? null;
+      const spellName =
+        (spellId && this.getSpell(spellId)?.name) ?? "";
       const slotLabel = scene.add
         .text(0, 0, `${index + 1}`, {
           fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
@@ -404,7 +418,6 @@ export class CombatSystem {
         .setOrigin(0, 0);
       scene.spellbarSlotLabels.push(slotLabel);
 
-      const spellName = this.spells[index]?.name ?? "";
       const slotName = scene.add
         .text(0, 0, spellName, {
           fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
@@ -459,7 +472,12 @@ export class CombatSystem {
   }
 
   handleSpellbarPointerDown(index) {
-    const spell = this.spells[index];
+    const slotConfig = this.getSpellbarSlotsConfig()[index] ?? null;
+    const spellId = slotConfig?.spellId ?? null;
+    if (!spellId) {
+      return;
+    }
+    const spell = this.getSpell(spellId);
     if (!spell) {
       return;
     }
@@ -478,15 +496,23 @@ export class CombatSystem {
   }
 
   handleSpellbarPointerUp(index) {
-    const spell = this.spells[index];
+    const slotConfig = this.getSpellbarSlotsConfig()[index] ?? null;
+    const spellId = slotConfig?.spellId ?? null;
+    const spell = spellId ? this.getSpell(spellId) : null;
     if (!spell || spell.id !== "shot") {
       return;
     }
     this.scene.pointerFireActive = false;
   }
 
+  getSpellbarSlotsConfig() {
+    const slots = this.scene.gameState?.player?.spellbarSlots;
+    return Array.isArray(slots) ? slots : [];
+  }
+
   updateSpellbarDisplay() {
     const { scene } = this;
+    const spellbarSlotsConfig = this.getSpellbarSlotsConfig();
     const {
       spellbarSlots,
       spellbarSlotLabels,
@@ -520,6 +546,9 @@ export class CombatSystem {
 
     for (let index = 0; index < slotCount; index += 1) {
       const slotX = startX + index * (slotSize + slotGap);
+      const slotConfig = spellbarSlotsConfig[index] ?? null;
+      const spellId = slotConfig?.spellId ?? null;
+      const spell = spellId ? this.getSpell(spellId) : null;
       spellbarSlots.fillRoundedRect(slotX, barY, slotSize, slotSize, 4);
       spellbarSlots.strokeRoundedRect(slotX, barY, slotSize, slotSize, 4);
 
@@ -529,11 +558,10 @@ export class CombatSystem {
       }
       const name = spellbarSlotNames[index];
       if (name) {
-        name.setText(this.spells[index]?.name ?? "");
+        name.setText(spell?.name ?? "");
         name.setPosition(slotX + slotSize / 2, barY + slotSize / 2 + 6);
       }
       const icon = spellbarSlotIcons[index];
-      const spell = this.spells[index];
       if (icon && spell) {
         const iconKey = this.getSpellIconKey(spell.id);
         if (iconKey && icon.scene?.sys && scene.textures.exists(iconKey)) {
@@ -567,9 +595,12 @@ export class CombatSystem {
     if (!spellbarCooldownTexts) {
       return;
     }
+    const spellbarSlotsConfig = this.getSpellbarSlotsConfig();
     const spellTime = this.getSpellTime();
     spellbarCooldownTexts.forEach((cooldownText, index) => {
-      const spell = this.spells[index];
+      const slotConfig = spellbarSlotsConfig[index] ?? null;
+      const spellId = slotConfig?.spellId ?? null;
+      const spell = spellId ? this.getSpell(spellId) : null;
       if (!spell || spell.cooldownMs <= 0) {
         cooldownText.setVisible(false);
         return;
