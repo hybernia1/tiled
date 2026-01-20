@@ -735,9 +735,10 @@ export class CombatSystem {
       Number(npc.getData("maxHealth")) || npcDefinition?.maxHealth || 1;
     const storedHealth = Number(npc.getData("health"));
     const currentHealth = Number.isFinite(storedHealth) ? storedHealth : maxHealth;
-    const newHealth = Math.max(0, currentHealth - 1);
+    const damage = Phaser.Math.Between(1, 3);
+    const newHealth = Math.max(0, currentHealth - damage);
     npc.setData("health", newHealth);
-    this.showFloatingText(npc, "-1", "#f65a5a");
+    this.showFloatingText(npc, `-${damage}`, "#f65a5a");
     const npcType = npc.getData("type");
     if (npcType === "neutral") {
       npc.setData("isProvoked", true);
