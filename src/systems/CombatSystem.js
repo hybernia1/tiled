@@ -732,8 +732,8 @@ export class CombatSystem {
       return;
     }
 
-    const autoAimTarget = this.getAutoAimTarget();
-    if (usingSpellbar && !autoAimTarget) {
+    const spellbarTarget = usingSpellbar ? this.getSpellbarTarget() : null;
+    if (usingSpellbar && !spellbarTarget) {
       this.scene.pointerFireActive = false;
       this.scene.spellbarShotQueued = false;
       return;
@@ -753,10 +753,19 @@ export class CombatSystem {
     bullet.setData("isoZ", this.scene.player.getData("isoZ") ?? 0);
     bullet.setData("hitNpc", false);
 
-    const direction =
-      (autoAimTarget
-        ? this.getAutoAimDirection()
-        : null) ?? this.scene.facing.clone().normalize();
+    const autoAimTarget = this.getAutoAimTarget();
+    const direction = usingSpellbar
+      ? this.getSpellbarDirection(spellbarTarget)
+      : (autoAimTarget
+          ? this.getAutoAimDirection()
+          : null) ?? this.scene.facing.clone().normalize();
+    if (!direction) {
+      if (usingSpellbar) {
+        this.scene.pointerFireActive = false;
+        this.scene.spellbarShotQueued = false;
+      }
+      return;
+    }
     bullet.body.setVelocity(
       direction.x * this.scene.bulletSpeed,
       direction.y * this.scene.bulletSpeed
@@ -867,5 +876,61 @@ export class CombatSystem {
     });
 
     return closestTarget;
+  }
+
+  isKillableNpc(npc) {
+    if (!npc?.active || !npc.getData("isNpc")) {
+      return false;
+    }
+    if (npc.getData("type") === "friendly") {
+      return false;
+    }
+    const maxHealth = Number(npc.getData("maxHealth"));
+    const health = Number(npc.getData("health"));
+    if (!Number.isFinite(maxHealth) || maxHealth <= 0) {
+      return false;
+    }
+    if (Number.isFinite(health) && health <= 0) {
+      return false;
+    }
+    return true;
+  }
+
+  getSpellbarTarget() {
+    const { scene } = this;
+    const { player } = scene;
+    if (!player) {
+      return null;
+    }
+    const target = scene.targetedNpc;
+    if (!this.isKillableNpc(target)) {
+      return null;
+    }
+    const distance = Phaser.Math.Distance.Between(
+      player.x,
+      player.y,
+      target.x,
+      target.y
+    );
+    if (distance > this.bulletRangePx) {
+      return null;
+    }
+    return target;
+  }
+
+  getSpellbarDirection(target) {
+    const { scene } = this;
+    const { player } = scene;
+    if (!player || !target) {
+      return null;
+    }
+    const direction = new Phaser.Math.Vector2(
+      target.x - player.x,
+      target.y - player.y
+    );
+    if (direction.length() <= 0) {
+      return null;
+    }
+    return direction.normalize();
   }
 }
