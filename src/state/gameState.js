@@ -38,6 +38,10 @@ const DEFAULT_STATE = {
     completed: {},
     progress: {},
   },
+  ui: {
+    inventoryAnchor: "bottom-right",
+    questLogOpen: false,
+  },
   maps: {},
 };
 
@@ -141,6 +145,16 @@ const normalizeState = (state) => {
   delete rawInventory.jablko;
   delete rawInventory.hruska;
 
+  const rawUi = state?.ui && typeof state.ui === "object" ? { ...state.ui } : {};
+  const ui = {
+    ...DEFAULT_STATE.ui,
+    ...rawUi,
+  };
+  if (typeof ui.inventoryAnchor !== "string") {
+    ui.inventoryAnchor = DEFAULT_STATE.ui.inventoryAnchor;
+  }
+  ui.questLogOpen = Boolean(ui.questLogOpen);
+
   const normalized = {
     ...DEFAULT_STATE,
     ...state,
@@ -174,6 +188,7 @@ const normalizeState = (state) => {
           ? { ...state.quests.progress }
           : {},
     },
+    ui,
     maps: { ...(state?.maps ?? {}) },
   };
 

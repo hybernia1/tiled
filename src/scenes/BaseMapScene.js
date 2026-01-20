@@ -37,6 +37,7 @@ import { MovementSystem } from "../systems/MovementSystem.js";
 import { NpcAggroSystem } from "../systems/NpcAggroSystem.js";
 import { EffectSystem } from "../systems/effects/EffectSystem.js";
 import { QuestSystem } from "../systems/QuestSystem.js";
+import { QuestLogSystem } from "../systems/QuestLogSystem.js";
 import { DropSystem } from "../systems/DropSystem.js";
 import { getMapDefinition } from "../worlds/registry.js";
 
@@ -105,6 +106,7 @@ export class BaseMapScene extends Phaser.Scene {
     this.npcAggroSystem = new NpcAggroSystem(this);
     this.inventorySystem = new InventorySystem(this);
     this.questSystem = new QuestSystem(this);
+    this.questLogSystem = new QuestLogSystem(this);
     this.dropSystem = new DropSystem(this);
     this.interactionSystem = new InteractionSystem(this, this.inventorySystem);
     this.gameLogSystem = new GameLogSystem(this);
@@ -123,6 +125,7 @@ export class BaseMapScene extends Phaser.Scene {
     createFriendlyNpc(this);
     createPigNpc(this);
     this.inventorySystem.createInventoryUi();
+    this.questLogSystem.createQuestLogUi();
     this.gameLogSystem.createLogUi();
     this.gameLogSystem.addEntry("logMapEntered", {
       map: MAP_NAMES[this.mapId] ?? this.mapId,
@@ -160,6 +163,8 @@ export class BaseMapScene extends Phaser.Scene {
     this.combatSystem.updateTargetHud();
     this.interactionSystem.updateFriendlyNpcInteraction();
     this.inventorySystem.updateInventoryToggle();
+    this.questLogSystem.updateQuestLogToggle();
+    this.questLogSystem.updateQuestLogUi();
     this.updatePortalInteraction();
     this.syncIsometricSprites();
     this.updateNpcNameplates();
