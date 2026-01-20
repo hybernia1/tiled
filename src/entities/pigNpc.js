@@ -4,7 +4,7 @@ import { applyNpcDefinition } from "./npcBuilder.js";
 import { findNearestOpenTilePosition } from "./spawnUtils.js";
 
 const PIG_SPAWNS = {
-  world: [
+  pinewood: [
     { x: 8, y: 12, id: NPC_IDS.pigLevel1 },
     { x: 14, y: 18, id: NPC_IDS.pigLevel2 },
     { x: 10, y: 22, id: NPC_IDS.pigLevel1 },
@@ -12,7 +12,7 @@ const PIG_SPAWNS = {
     { x: 20, y: 20, id: NPC_IDS.pigLevel3 },
     { x: 6, y: 16, id: NPC_IDS.pigLevel1 },
   ],
-  cave: [
+  "pinewood:cave": [
     { x: 26, y: 26, id: NPC_IDS.pigLevel1 },
     { x: 24, y: 30, id: NPC_IDS.pigLevel2 },
     { x: 28, y: 24, id: NPC_IDS.pigLevel3 },
@@ -75,7 +75,7 @@ const startPigWander = (scene, pig) => {
 
 export const createPigNpc = (scene) => {
   scene.pigNpcGroup = scene.physics.add.group({ allowGravity: false });
-  const spawns = PIG_SPAWNS[scene.mapType] ?? [];
+  const spawns = PIG_SPAWNS[scene.mapId] ?? [];
   const respawnState = scene.mapState?.pigRespawns ?? {};
   const now = Date.now();
 

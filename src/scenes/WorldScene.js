@@ -4,7 +4,7 @@ export class WorldScene extends BaseMapScene {
   constructor() {
     super({
       key: "world",
-      mapType: "world",
+      mapId: "pinewood",
       portalTargetKey: "cave",
       portalPromptKey: "enterCave",
     });

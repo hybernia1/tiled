@@ -84,8 +84,8 @@ export class CombatSystem {
       .setVisible(false);
 
     this.updatePlayerHealthDisplay();
-    this.setupPlayerProgressDisplay();
     this.setupSpellbarDisplay();
+    this.setupPlayerProgressDisplay();
     this.setupTargetHud();
     this.updateActiveEffectsDisplay(this.getSpellTime());
   }
