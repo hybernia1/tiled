@@ -42,10 +42,14 @@ export class InteractionSystem {
       .setPosition(friendlyNpcDisplay.x, friendlyNpcDisplay.y - 30)
       .setVisible(isClose);
 
+    if (!isClose) {
+      return;
+    }
+
     const interactTriggered =
       Phaser.Input.Keyboard.JustDown(this.scene.interactKey) ||
       this.consumeTouchAction("interact");
-    if (isClose && interactTriggered) {
+    if (interactTriggered) {
       this.showFriendlyNpcDialogue();
     }
   }
