@@ -110,7 +110,7 @@ export class CombatSystem {
       })
       .setDepth(10001)
       .setScrollFactor(0)
-      .setOrigin(0, 1);
+      .setOrigin(0.5, 1);
 
     this.updatePlayerProgressDisplay();
   }
@@ -128,10 +128,10 @@ export class CombatSystem {
     const xpNeeded = Number.isFinite(storedXpNeeded)
       ? storedXpNeeded
       : getXpNeededForNextLevel(level);
-    const { height } = this.scene.scale;
+    const { height, width } = this.scene.scale;
     const barWidth = 260;
     const barHeight = 8;
-    const barX = 16;
+    const barX = Math.round((width - barWidth) / 2);
     const barY = height - 18;
     const effectiveNeeded = xpNeeded > 0 ? xpNeeded : 0;
     const fillWidth =
@@ -157,7 +157,9 @@ export class CombatSystem {
       effectiveNeeded > 0
         ? `XP ${currentXp}/${effectiveNeeded}`
         : "XP MAX";
-    playerXpValue.setText(xpText).setPosition(barX, barY - 6);
+    playerXpValue
+      .setText(xpText)
+      .setPosition(barX + barWidth / 2, barY - 6);
   }
 
   addPlayerXp(amount) {
@@ -361,7 +363,21 @@ export class CombatSystem {
       }
       const respawnDelay = Number(npc.getData("respawnDelayMs"));
       if (Number.isFinite(respawnDelay) && respawnDelay > 0) {
-        this.scheduleNpcRespawn(npc, respawnDelay);
+        const spawnKey = npc.getData("spawnKey");
+        if (spawnKey && this.scene.mapState) {
+          const respawnAt = Date.now() + respawnDelay;
+          if (!this.scene.mapState.pigRespawns) {
+            this.scene.mapState.pigRespawns = {};
+          }
+          this.scene.mapState.pigRespawns[spawnKey] = respawnAt;
+          this.scene.persistGameState?.();
+          this.scheduleNpcRespawn(
+            npc,
+            Math.max(0, respawnAt - Date.now())
+          );
+        } else {
+          this.scheduleNpcRespawn(npc, respawnDelay);
+        }
       }
       if (npc === this.scene.npc) {
         if (this.scene.npcTween) {
@@ -420,6 +436,11 @@ export class CombatSystem {
         }
         if (patrolTween) {
           patrolTween.restart();
+        }
+        const spawnKey = npc.getData("spawnKey");
+        if (spawnKey && this.scene.mapState?.pigRespawns) {
+          delete this.scene.mapState.pigRespawns[spawnKey];
+          this.scene.persistGameState?.();
         }
       },
       null,

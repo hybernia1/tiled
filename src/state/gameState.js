@@ -24,6 +24,7 @@ const DEFAULT_STATE = {
 const defaultMapState = () => ({
   collectedItems: [],
   npcDefeated: false,
+  pigRespawns: {},
 });
 
 const safeNumber = (value, fallback = 0) => {
@@ -80,6 +81,17 @@ const normalizeState = (state) => {
   });
 
   Object.entries(normalized.maps).forEach(([mapKey, mapState]) => {
+    const rawPigRespawns =
+      mapState?.pigRespawns && typeof mapState.pigRespawns === "object"
+        ? mapState.pigRespawns
+        : {};
+    const pigRespawns = {};
+    Object.entries(rawPigRespawns).forEach(([spawnKey, respawnAt]) => {
+      const timestamp = safeNumber(respawnAt, 0);
+      if (timestamp > 0) {
+        pigRespawns[spawnKey] = timestamp;
+      }
+    });
     normalized.maps[mapKey] = {
       ...defaultMapState(),
       ...(mapState ?? {}),
@@ -87,6 +99,7 @@ const normalizeState = (state) => {
         ? mapState.collectedItems
         : [],
       npcDefeated: Boolean(mapState?.npcDefeated),
+      pigRespawns,
     };
   });
 
