@@ -278,6 +278,7 @@ export class CombatSystem {
       .setScrollFactor(0);
     scene.spellbarSlotLabels = [];
     scene.spellbarSlotNames = [];
+    scene.spellbarCooldownTexts = [];
     scene.pointerFireActive = false;
     scene.spellbarShotQueued = false;
 
@@ -308,6 +309,20 @@ export class CombatSystem {
         .setScrollFactor(0)
         .setOrigin(0.5, 0.5);
       scene.spellbarSlotNames.push(slotName);
+
+      const cooldownText = scene.add
+        .text(0, 0, "", {
+          fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+          fontSize: "10px",
+          color: "#f65a5a",
+          backgroundColor: "rgba(0, 0, 0, 0.45)",
+          padding: { x: 4, y: 2 },
+        })
+        .setDepth(10002)
+        .setScrollFactor(0)
+        .setOrigin(1, 0)
+        .setVisible(false);
+      scene.spellbarCooldownTexts.push(cooldownText);
     }
 
     this.updateSpellbarDisplay();
@@ -339,8 +354,18 @@ export class CombatSystem {
 
   updateSpellbarDisplay() {
     const { scene } = this;
-    const { spellbarSlots, spellbarSlotLabels, spellbarSlotNames } = scene;
-    if (!spellbarSlots || !spellbarSlotLabels || !spellbarSlotNames) {
+    const {
+      spellbarSlots,
+      spellbarSlotLabels,
+      spellbarSlotNames,
+      spellbarCooldownTexts,
+    } = scene;
+    if (
+      !spellbarSlots ||
+      !spellbarSlotLabels ||
+      !spellbarSlotNames ||
+      !spellbarCooldownTexts
+    ) {
       return;
     }
 
@@ -370,6 +395,10 @@ export class CombatSystem {
         name.setText(this.spells[index]?.name ?? "");
         name.setPosition(slotX + slotSize / 2, barY + slotSize / 2 + 6);
       }
+      const cooldownText = spellbarCooldownTexts[index];
+      if (cooldownText) {
+        cooldownText.setPosition(slotX + slotSize - 4, barY + 4);
+      }
 
       if (index === 0) {
         this.ensureSpellbarShotZone();
@@ -378,6 +407,31 @@ export class CombatSystem {
           .setSize(slotSize, slotSize);
       }
     }
+
+    this.updateSpellbarCooldowns(scene.time?.now ?? Date.now());
+  }
+
+  updateSpellbarCooldowns(time) {
+    const { scene } = this;
+    const { spellbarCooldownTexts } = scene;
+    if (!spellbarCooldownTexts) {
+      return;
+    }
+    spellbarCooldownTexts.forEach((cooldownText, index) => {
+      const spell = this.spells[index];
+      if (!spell || spell.cooldownMs <= 0) {
+        cooldownText.setVisible(false);
+        return;
+      }
+      const remainingMs = spell.getRemainingCooldown(time);
+      if (remainingMs <= 0) {
+        cooldownText.setVisible(false);
+        return;
+      }
+      const seconds = Math.ceil(remainingMs / 1000);
+      cooldownText.setText(seconds.toString());
+      cooldownText.setVisible(true);
+    });
   }
 
   setupTargetHud() {
@@ -554,6 +608,7 @@ export class CombatSystem {
     }
     const now = this.scene.time?.now ?? Date.now();
     if (this.isPlayerShielded(now)) {
+      this.showFloatingText(player, "BLOK", "#9fd7ff");
       return;
     }
     this.recordCombatActivity(this.scene.time?.now ?? Date.now());
@@ -565,6 +620,7 @@ export class CombatSystem {
     const newHealth = Math.max(0, currentHealth - amount);
     player.setData("health", newHealth);
     this.updatePlayerHealthDisplay();
+    this.showFloatingText(player, `-${amount}`, "#f65a5a");
     if (this.scene.gameState?.player) {
       this.scene.gameState.player.health = newHealth;
       this.scene.gameState.player.maxHealth = maxHealth;
@@ -681,6 +737,7 @@ export class CombatSystem {
     const currentHealth = Number.isFinite(storedHealth) ? storedHealth : maxHealth;
     const newHealth = Math.max(0, currentHealth - 1);
     npc.setData("health", newHealth);
+    this.showFloatingText(npc, "-1", "#f65a5a");
     const npcType = npc.getData("type");
     if (npcType === "neutral") {
       npc.setData("isProvoked", true);
@@ -801,6 +858,39 @@ export class CombatSystem {
       .setDepth(10002)
       .setScrollFactor(0)
       .setOrigin(0, 1);
+  }
+
+  showFloatingText(target, text, color) {
+    if (!target || !text) {
+      return;
+    }
+    const displaySprite = this.scene.getDisplaySprite?.(target) ?? target;
+    if (!displaySprite) {
+      return;
+    }
+    const startX = displaySprite.x;
+    const startY = displaySprite.y - 28;
+    const floatingText = this.scene.add
+      .text(startX, startY, text, {
+        fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+        fontSize: "14px",
+        color: color ?? "#f6f2ee",
+        stroke: "#0b0c10",
+        strokeThickness: 3,
+      })
+      .setDepth(10003)
+      .setOrigin(0.5, 1);
+
+    this.scene.tweens.add({
+      targets: floatingText,
+      y: startY - 20,
+      alpha: 0,
+      duration: 800,
+      ease: "Cubic.Out",
+      onComplete: () => {
+        floatingText.destroy();
+      },
+    });
   }
 
   handleWallHit(bullet, tile) {
