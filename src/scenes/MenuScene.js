@@ -53,12 +53,12 @@ export class MenuScene extends Phaser.Scene {
 
   updateTexts() {
     this.titleText.setText("Main Menu");
-    this.startText.setText("Start Game");
+    this.startText.setText("Start Adventure");
     this.updateFullscreenText();
   }
 
   startGame() {
-    this.scene.start("world");
+    this.scene.start("auth");
   }
 
   updateFullscreenText() {
