@@ -27,10 +27,10 @@ This directory contains helpers used by NPC entities, focused on combat stats, b
 
 ## NPC definition example
 
-NPC definitions live in `src/config/npcs.js` and are expected to include `id`, `type`, and `maxHealth` at minimum.
+NPC definitions live in `src/data/npc.json` and are expected to include `id`, `type`, and `stats.maxHealth` at minimum.
 
 ```js
-import { NPC_IDS } from "../config/npcs.js";
+import { NPC_IDS } from "../../data/npcRegistry.js";
 
 export const NPC_DEFINITIONS = {
   [NPC_IDS.hostileWanderer]: {
@@ -39,11 +39,15 @@ export const NPC_DEFINITIONS = {
     displayNameKey: "npcName",
     type: "hostile",
     behaviorProfile: "hostile",
-    level: 1,
-    maxHealth: 3,
-    attackDamage: 1,
-    aggroRange: 3,
-    attackRange: 1,
+    stats: {
+      level: 1,
+      maxHealth: 3,
+      attackDamage: 1,
+    },
+    ranges: {
+      aggroRange: 3,
+      attackRange: 1,
+    },
     respawnRules: {
       delay: 0,
       resetHealth: true,

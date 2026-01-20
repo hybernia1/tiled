@@ -1,5 +1,5 @@
 import { MAP_H, MAP_W, TILE_HEIGHT, TILE_WIDTH } from "../config/constants.js";
-import { getNpcDefinition, NPC_IDS } from "../config/npcs.js";
+import { getNpcDefinition, NPC_IDS } from "../data/npcRegistry.js";
 import { applyNpcDefinition } from "./npcBuilder.js";
 import { findNearestOpenTilePosition } from "./spawnUtils.js";
 
