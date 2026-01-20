@@ -13,6 +13,8 @@ export class GameLogSystem {
     this.panelBounds = { x: 0, y: 0, width: 0, height: 0 };
     this.handleWheel = this.handleWheel.bind(this);
     this.handleResize = this.handleResize.bind(this);
+    this.handleShutdown = this.handleShutdown.bind(this);
+    this.isShuttingDown = false;
   }
 
   createLogUi() {
@@ -84,10 +86,15 @@ export class GameLogSystem {
 
     this.scene.input.on("wheel", this.handleWheel);
     this.scene.scale.on("resize", this.handleResize, this);
+    this.scene.events.once("shutdown", this.handleShutdown, this);
+    this.scene.events.once("destroy", this.handleShutdown, this);
     this.updateVisibleEntries();
   }
 
   handleWheel(pointer, _gameObjects, _deltaX, deltaY) {
+    if (this.isShuttingDown) {
+      return;
+    }
     if (!this.isPointerInside(pointer)) {
       return;
     }
@@ -99,11 +106,33 @@ export class GameLogSystem {
   }
 
   handleResize(gameSize) {
-    if (!this.panel || !this.titleText || !this.logText) {
+    if (
+      this.isShuttingDown ||
+      !this.panel ||
+      !this.titleText ||
+      !this.logText ||
+      !this.logText.scene
+    ) {
       return;
     }
 
-    this.panelWidth = Math.min(360, Math.max(220, gameSize.width - 32));
+    const nextWidth = Math.min(360, Math.max(220, gameSize.width - 32));
+    const nextBounds = {
+      x: 16,
+      y: gameSize.height - this.panelHeight - 16,
+      width: nextWidth,
+      height: this.panelHeight,
+    };
+    const didChange =
+      nextBounds.x !== this.panelBounds.x ||
+      nextBounds.y !== this.panelBounds.y ||
+      nextBounds.width !== this.panelBounds.width ||
+      nextBounds.height !== this.panelBounds.height;
+    if (!didChange) {
+      return;
+    }
+
+    this.panelWidth = nextWidth;
     this.panelBounds = {
       x: 16,
       y: gameSize.height - this.panelHeight - 16,
@@ -167,7 +196,7 @@ export class GameLogSystem {
   }
 
   updateVisibleEntries() {
-    if (!this.logText) {
+    if (!this.logText || this.isShuttingDown) {
       return;
     }
     const maxScroll = Math.max(0, this.entries.length - this.visibleLines);
@@ -186,5 +215,20 @@ export class GameLogSystem {
 
   saveEntries() {
     this.scene.registry.set(this.registryKey, [...this.entries]);
+  }
+
+  handleShutdown() {
+    if (this.isShuttingDown) {
+      return;
+    }
+    this.isShuttingDown = true;
+    this.scene.input.off("wheel", this.handleWheel);
+    this.scene.scale.off("resize", this.handleResize, this);
+    if (this.container) {
+      this.container.destroy(true);
+    }
+    this.panel = null;
+    this.titleText = null;
+    this.logText = null;
   }
 }
