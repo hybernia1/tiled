@@ -6,18 +6,15 @@ export class MovementSystem {
   }
 
   updatePlayerMovement() {
-    const { player, cursors, wasd, touchState } = this.scene;
+    const { player, cursors, wasd } = this.scene;
     if (!player?.body || !player.active) {
       return;
     }
 
-    const left =
-      cursors.left.isDown || wasd.left.isDown || touchState?.left;
-    const right =
-      cursors.right.isDown || wasd.right.isDown || touchState?.right;
-    const up = cursors.up.isDown || wasd.up.isDown || touchState?.up;
-    const down =
-      cursors.down.isDown || wasd.down.isDown || touchState?.down;
+    const left = cursors.left.isDown || wasd.left.isDown;
+    const right = cursors.right.isDown || wasd.right.isDown;
+    const up = cursors.up.isDown || wasd.up.isDown;
+    const down = cursors.down.isDown || wasd.down.isDown;
 
     let velocityX = 0;
     let velocityY = 0;

@@ -185,8 +185,9 @@ export class CombatSystem {
       }
       this.scene.npcHealthBar.setVisible(false);
       this.scene.npcHealthValue.setVisible(false);
-      this.showCombatMessage(t(this.scene.locale, "combatNpcDefeated"));
-      this.scene.gameLogSystem?.addEntry("logNpcDefeated");
+      const npcName =
+        npc.getData("displayName") ?? t(this.scene.locale, "npcName");
+      this.scene.gameLogSystem?.addEntry("logNpcDefeated", { npc: npcName });
     }
   }
 
@@ -234,8 +235,8 @@ export class CombatSystem {
     if (!this.scene.player?.active) {
       return;
     }
-    const { fireKey, touchState, nextFireTime } = this.scene;
-    const isFiring = fireKey.isDown || touchState?.fire;
+    const { fireKey, nextFireTime } = this.scene;
+    const isFiring = fireKey.isDown;
     if (!isFiring || time < nextFireTime) {
       return;
     }
