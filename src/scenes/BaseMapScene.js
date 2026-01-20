@@ -482,11 +482,29 @@ export class BaseMapScene extends Phaser.Scene {
       this.targetRing.setVisible(false);
       return;
     }
-    const ringOffsetY = 10;
+    const isoOrigin = this.targetedNpc.getData("isoOrigin");
+    const originY = isoOrigin?.y ?? displaySprite.originY ?? 0.5;
+    let ringOffsetY = this.targetedNpc.getData("targetRingOffsetY");
+    if (!Number.isFinite(ringOffsetY)) {
+      const spriteHeight =
+        displaySprite.displayHeight ??
+        displaySprite.height ??
+        displaySprite.frame?.height ??
+        0;
+      ringOffsetY = Number.isFinite(spriteHeight)
+        ? (1 - originY) * spriteHeight
+        : 0;
+      this.targetedNpc.setData("targetRingOffsetY", ringOffsetY);
+    }
+    const isoX = displaySprite.isoX ?? this.targetedNpc.x ?? displaySprite.x;
+    const isoY = displaySprite.isoY ?? this.targetedNpc.y ?? displaySprite.y;
+    const isoZ =
+      displaySprite.isoZ ?? this.targetedNpc.getData("isoZ") ?? 0;
+    const depthEpsilon = 0.1;
     this.targetRing
       .setVisible(displaySprite.visible)
       .setPosition(displaySprite.x, displaySprite.y + ringOffsetY)
-      .setDepth(displaySprite.depth - 1);
+      .setDepth(isoX + isoY + isoZ - depthEpsilon);
   }
 
   setupNpcPointerInteractions(sprite, displaySprite) {
