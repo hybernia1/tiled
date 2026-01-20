@@ -48,7 +48,7 @@ export const createMap = (scene, options = {}) => {
   textureLoader?.ensureTexture("wall");
   textureLoader?.ensureTexture("mountains");
   textureLoader?.ensureTexture("pond");
-  textureLoader?.ensureTexture("stairs");
+  textureLoader?.ensureTexture("cave-entrance");
   textureLoader?.ensureTexture("tree-conifer");
   textureLoader?.ensureTexture("tree-deciduous");
 
@@ -97,8 +97,10 @@ export const createMap = (scene, options = {}) => {
   const mountainFrames = ["mountain-0", "mountain-1", "mountain-2"];
   const pondW = getFrameWidth(scene, "pond") || 0;
   const pondScale = pondW ? desiredFloorW / pondW : floorScale;
-  const stairsW = getFrameWidth(scene, "stairs") || 0;
-  const stairsScale = stairsW ? desiredFloorW / stairsW : floorScale;
+  const caveEntranceW = getFrameWidth(scene, "cave-entrance") || 0;
+  const caveEntranceScale = caveEntranceW
+    ? desiredFloorW / caveEntranceW
+    : floorScale;
   const treeW = getFrameWidth(scene, "tree-conifer") || desiredFloorW;
   const treeScale = treeW ? desiredFloorW / treeW : floorScale;
 
@@ -207,10 +209,10 @@ export const createMap = (scene, options = {}) => {
       portalIsoX,
       portalIsoY,
       1,
-      "stairs"
+      "cave-entrance"
     );
     portalTile.setOrigin(0.5, 1);
-    portalTile.setScale(stairsScale);
+    portalTile.setScale(caveEntranceScale);
     portalTile.isoX = portalIsoX;
     portalTile.isoY = portalIsoY;
     portalTile.isoZ = 1;
