@@ -700,7 +700,12 @@ export class BaseMapScene extends Phaser.Scene {
   }
 
   setupFullscreenInput() {
-    this.input.keyboard.on("keydown-F", () => this.toggleFullscreen());
+    this.input.keyboard.on("keydown-F", (event) => {
+      if (event.repeat) {
+        return;
+      }
+      this.toggleFullscreen();
+    });
     this.scale.on("enterfullscreen", () => this.updateFullscreenText());
     this.scale.on("leavefullscreen", () => this.updateFullscreenText());
   }
@@ -743,6 +748,9 @@ export class BaseMapScene extends Phaser.Scene {
   }
 
   toggleFullscreen() {
+    if (this.scale.fullscreen && !this.scale.fullscreen.available) {
+      return;
+    }
     if (this.scale.isFullscreen) {
       this.scale.stopFullscreen();
       return;
