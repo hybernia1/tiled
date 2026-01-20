@@ -1,36 +1,39 @@
-[
-  {
-    "id": "spell_firebolt_01",
-    "type": "spell",
-    "nameKey": "spell.firebolt.01",
-    "tags": ["fire", "ranged"],
-    "version": 1,
-    "manaCost": 12,
-    "cooldown": 3,
-    "effects": [
-      {
-        "effectKey": "burn",
-        "magnitude": 6,
-        "duration": 4
-      }
-    ],
-    "iconKey": "icon.spell.firebolt"
+{
+  "shot": {
+    "spellId": "shot",
+    "name": "Shot",
+    "iconKey": "spell-shot",
+    "description": "Quick ranged attack with a basic projectile.",
+    "damage": "1-3",
+    "cooldownMs": {
+      "contextPath": "scene.fireCooldownMs"
+    },
+    "globalCooldownMs": 350,
+    "castTimeMs": 0,
+    "resourceCost": {
+      "type": "mana",
+      "amount": 5
+    },
+    "handler": "shot"
   },
-  {
-    "id": "spell_frost_nova_01",
-    "type": "spell",
-    "nameKey": "spell.frostnova.01",
-    "tags": ["ice", "aoe"],
-    "version": 1,
-    "manaCost": 18,
-    "cooldown": 6,
-    "effects": [
-      {
-        "effectKey": "slow",
-        "magnitude": 0.35,
-        "duration": 5
-      }
-    ],
-    "iconKey": "icon.spell.frostnova"
+  "shield": {
+    "spellId": "shield",
+    "name": "Shield",
+    "iconKey": "spell-shield",
+    "description": "Absorb incoming damage for a short duration.",
+    "damage": 0,
+    "cooldownMs": {
+      "contextPath": "combatSystem.shieldCooldownMs"
+    },
+    "durationMs": {
+      "contextPath": "combatSystem.shieldDurationMs"
+    },
+    "globalCooldownMs": 800,
+    "castTimeMs": 400,
+    "resourceCost": {
+      "type": "mana",
+      "amount": 20
+    },
+    "handler": "shield"
   }
-]
+}

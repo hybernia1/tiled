@@ -1,3 +1,5 @@
+import spellData from "../../data/spells.json";
+import { spellHandlers } from "./handlers.js";
 import { Spell } from "./Spell.js";
 
 const resolveValue = (value, context, fallback) => {
@@ -66,44 +68,52 @@ export const createSpell = (definition, context = {}) => {
   });
 };
 
-const spellDefinitions = [
-  [
-    "shot",
-    {
-      spellId: "shot",
-      name: "Shot",
-      iconKey: "spell-shot",
-      description: "Quick ranged attack with a basic projectile.",
-      damage: "1-3",
-      cooldownMs: ({ scene }) => scene.fireCooldownMs,
-      globalCooldownMs: 350,
-      castTimeMs: 0,
-      resourceCost: { type: "mana", amount: 5 },
-      onCast: (context, payload) => {
-        const sceneTime = payload?.sceneTime ?? context.time;
-        context.combatSystem.performShot(payload, sceneTime);
-      },
-    },
-  ],
-  [
-    "shield",
-    {
-      spellId: "shield",
-      name: "Shield",
-      iconKey: "spell-shield",
-      description: "Absorb incoming damage for a short duration.",
-      damage: 0,
-      cooldownMs: ({ combatSystem }) => combatSystem.shieldCooldownMs,
-      durationMs: ({ combatSystem }) => combatSystem.shieldDurationMs,
-      globalCooldownMs: 800,
-      castTimeMs: 400,
-      resourceCost: { type: "mana", amount: 20 },
-      onCast: (context) => {
-        context.combatSystem.activateShield(context.time);
-      },
-    },
-  ],
-];
+const resolveContextPath = (context, path) => {
+  if (!path) {
+    return undefined;
+  }
+  return path.split(".").reduce((value, key) => value?.[key], context);
+};
+
+const resolveDefinitionValue = (value) => {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return value;
+  }
+
+  if ("contextPath" in value) {
+    return (context) => resolveContextPath(context, value.contextPath);
+  }
+
+  return value;
+};
+
+const hydrateDefinition = (definition, registryKey) => {
+  const { handler, ...rest } = definition;
+  const onCast = spellHandlers[handler];
+
+  if (!onCast) {
+    console.error(
+      `[spells] Spell definition "${registryKey}" references unknown handler "${handler}".`
+    );
+  }
+
+  const hydrated = Object.fromEntries(
+    Object.entries(rest).map(([key, value]) => [
+      key,
+      resolveDefinitionValue(value),
+    ])
+  );
+
+  return {
+    ...hydrated,
+    onCast,
+  };
+};
+
+const spellDefinitions = Object.entries(spellData).map(([key, definition]) => [
+  key,
+  hydrateDefinition(definition, key),
+]);
 
 spellDefinitions.forEach(([key, definition]) =>
   validateSpellDefinition(definition, key)
