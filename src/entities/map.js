@@ -49,24 +49,6 @@ const generateMapData = (type = "world") => {
     data[y][MAP_W - 1] = TILE_TYPES.HARD_WALL;
   }
 
-  const destructibleWalls = [
-    { x: 10, y: 9 },
-    { x: 11, y: 9 },
-    { x: 12, y: 9 },
-    { x: 18, y: 16 },
-    { x: 19, y: 16 },
-    { x: 20, y: 16 },
-    { x: 32, y: 24 },
-    { x: 33, y: 25 },
-    { x: 34, y: 26 },
-  ];
-
-  destructibleWalls.forEach(({ x, y }) => {
-    if (data[y]?.[x] !== undefined) {
-      data[y][x] = TILE_TYPES.WALL;
-    }
-  });
-
   const pondTiles = [
     { x: 26, y: 27 },
     { x: 27, y: 27 },
@@ -180,7 +162,6 @@ export const createMap = (scene, options = {}) => {
   layer.setVisible(false);
 
   scene.mapLayer = layer;
-  scene.destructibleWallIndex = TILE_TYPES.WALL;
   scene.isoTiles = [];
   scene.isoWalls = [];
   scene.isoWallsGrid = [];

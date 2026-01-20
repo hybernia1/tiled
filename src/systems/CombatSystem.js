@@ -6,6 +6,7 @@ import {
   getXpNeededForNextLevel,
   MAX_LEVEL,
 } from "../config/playerProgression.js";
+import { Spell } from "./spells/Spell.js";
 
 export class CombatSystem {
   constructor(scene) {
@@ -15,6 +16,10 @@ export class CombatSystem {
     this.bulletRangePx = BULLET_RANGE_TILES * TILE_WIDTH;
     this.lastCombatAt = -Infinity;
     this.lastRegenAt = null;
+    this.spells = [];
+    this.spellMap = new Map();
+    this.shieldDurationMs = 5000;
+    this.shieldCooldownMs = 60000;
   }
 
   setupPlayerHealth() {
@@ -22,6 +27,8 @@ export class CombatSystem {
     if (!player) {
       return;
     }
+
+    this.setupSpells();
 
     const maxHealth = Number(player.getData("maxHealth")) || 1;
     const storedHealth = Number(player.getData("health"));
@@ -58,6 +65,98 @@ export class CombatSystem {
     this.setupPlayerProgressDisplay();
     this.setupSpellbarDisplay();
     this.setupTargetHud();
+  }
+
+  setupSpells() {
+    if (this.spells.length) {
+      return;
+    }
+
+    const shotSpell = new Spell({
+      id: "shot",
+      name: "Shot",
+      cooldownMs: this.scene.fireCooldownMs,
+      onCast: (context, payload, time) => {
+        context.combatSystem.performShot(payload, time);
+      },
+    });
+
+    const shieldSpell = new Spell({
+      id: "shield",
+      name: "Shield",
+      cooldownMs: this.shieldCooldownMs,
+      durationMs: this.shieldDurationMs,
+      onCast: (context, payload, time) => {
+        context.combatSystem.activateShield(time);
+      },
+      onExpire: (context) => {
+        context.combatSystem.deactivateShield();
+      },
+    });
+
+    this.spells = [shotSpell, shieldSpell];
+    this.spellMap = new Map(this.spells.map((spell) => [spell.id, spell]));
+  }
+
+  getSpell(id) {
+    return this.spellMap.get(id);
+  }
+
+  updateSpells(time) {
+    this.updateShieldStatus(time);
+    const shieldKey = this.scene.shieldKey;
+    const shieldSpell = this.getSpell("shield");
+    if (!shieldKey || !shieldSpell) {
+      return;
+    }
+
+    if (Phaser.Input.Keyboard.JustDown(shieldKey)) {
+      shieldSpell.cast(time, { scene: this.scene, combatSystem: this });
+    }
+  }
+
+  activateShield(time) {
+    const { player } = this.scene;
+    if (!player?.active) {
+      return;
+    }
+    const shieldUntil = time + this.shieldDurationMs;
+    player.setData("shieldedUntil", shieldUntil);
+    player.setData("isShielded", true);
+  }
+
+  deactivateShield() {
+    const { player } = this.scene;
+    if (!player) {
+      return;
+    }
+    player.setData("isShielded", false);
+  }
+
+  updateShieldStatus(time) {
+    const { player } = this.scene;
+    if (!player) {
+      return;
+    }
+    const shieldUntil = Number(player.getData("shieldedUntil"));
+    if (Number.isFinite(shieldUntil) && time >= shieldUntil) {
+      player.setData("isShielded", false);
+    }
+  }
+
+  isPlayerShielded(time) {
+    const { player } = this.scene;
+    if (!player) {
+      return false;
+    }
+    const shieldUntil = Number(player.getData("shieldedUntil"));
+    if (Number.isFinite(shieldUntil) && shieldUntil > time) {
+      return true;
+    }
+    if (player.getData("isShielded")) {
+      player.setData("isShielded", false);
+    }
+    return false;
   }
 
   updatePlayerHealthDisplay() {
@@ -198,8 +297,9 @@ export class CombatSystem {
         .setOrigin(0, 0);
       scene.spellbarSlotLabels.push(slotLabel);
 
+      const spellName = this.spells[index]?.name ?? "";
       const slotName = scene.add
-        .text(0, 0, index === 0 ? "Shot" : "", {
+        .text(0, 0, spellName, {
           fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
           fontSize: "9px",
           color: "#f6f2ee",
@@ -267,6 +367,7 @@ export class CombatSystem {
       }
       const name = spellbarSlotNames[index];
       if (name) {
+        name.setText(this.spells[index]?.name ?? "");
         name.setPosition(slotX + slotSize / 2, barY + slotSize / 2 + 6);
       }
 
@@ -449,6 +550,10 @@ export class CombatSystem {
   damagePlayer(amount) {
     const { player } = this.scene;
     if (!player?.active) {
+      return;
+    }
+    const now = this.scene.time?.now ?? Date.now();
+    if (this.isPlayerShielded(now)) {
       return;
     }
     this.recordCombatActivity(this.scene.time?.now ?? Date.now());
@@ -707,32 +812,22 @@ export class CombatSystem {
     bullet.setVisible(false);
     bullet.body.setVelocity(0, 0);
     bullet.body.enable = false;
-
-    const destroyedTile = this.scene.mapLayer.getTileAt(tile.x, tile.y);
-    if (
-      destroyedTile?.index !== this.scene.destructibleWallIndex &&
-      destroyedTile?.index !== undefined
-    ) {
-      return;
-    }
-    if (destroyedTile) {
-      destroyedTile.setCollision(false);
-      this.scene.mapLayer.removeTileAt(tile.x, tile.y);
-      this.scene.removeIsoWallAt(tile.x, tile.y);
-    }
-    this.scene.lightingSystem?.updateLightingMask();
   }
 
   updateShooting(time) {
     if (!this.scene.player?.active) {
       return;
     }
-    const { fireKey, nextFireTime } = this.scene;
+    const { fireKey } = this.scene;
+    const shotSpell = this.getSpell("shot");
+    if (!shotSpell) {
+      return;
+    }
     const usingSpellbar =
       this.scene.pointerFireActive || this.scene.spellbarShotQueued;
     const isFiring =
       fireKey.isDown || this.scene.pointerFireActive || this.scene.spellbarShotQueued;
-    if (!isFiring || time < nextFireTime) {
+    if (!isFiring || !shotSpell.isReady(time)) {
       return;
     }
 
@@ -752,6 +847,18 @@ export class CombatSystem {
       return;
     }
 
+    shotSpell.cast(
+      time,
+      { scene: this.scene, combatSystem: this },
+      { direction, usingSpellbar }
+    );
+  }
+
+  performShot(payload, time) {
+    const { direction, usingSpellbar } = payload ?? {};
+    if (!direction) {
+      return;
+    }
     const bullet = this.scene.bullets.get(this.scene.player.x, this.scene.player.y);
     if (!bullet) {
       return;
@@ -771,10 +878,9 @@ export class CombatSystem {
     );
     bullet.lifespan =
       time + (this.bulletRangePx / this.scene.bulletSpeed) * 1000;
-
-    this.scene.nextFireTime = time + this.scene.fireCooldownMs;
     this.recordCombatActivity(time);
-    if (this.scene.spellbarShotQueued) {
+
+    if (usingSpellbar && this.scene.spellbarShotQueued) {
       this.scene.spellbarShotQueued = false;
     }
   }
