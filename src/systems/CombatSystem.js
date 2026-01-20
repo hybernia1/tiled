@@ -591,6 +591,7 @@ export class CombatSystem {
 
       const defaultSpellIcon =
         this.getSpellIconKey(spellId) ?? getTextureIdByEffectTag("spell");
+      scene.textureLoader?.ensureTexture(defaultSpellIcon);
       const slotIcon = scene.add
         .image(0, 0, defaultSpellIcon)
         .setDepth(10001)
@@ -733,6 +734,9 @@ export class CombatSystem {
       const icon = spellbarSlotIcons[index];
       if (icon && spell) {
         const iconKey = this.getSpellIconKey(spell.spellId);
+        if (iconKey) {
+          scene.textureLoader?.ensureTexture(iconKey);
+        }
         if (iconKey && icon.scene?.sys && scene.textures.exists(iconKey)) {
           icon.setTexture(iconKey);
           icon.setVisible(true);

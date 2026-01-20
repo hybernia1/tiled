@@ -31,6 +31,10 @@ export class TextureLoader {
   constructor(scene, registry = textureRegistry) {
     this.scene = scene;
     this.registry = registry;
+    this.textureCache = new Map();
+    this.registryMap = new Map(
+      this.registry.map((entry) => [entry?.id, entry])
+    );
   }
 
   load() {
@@ -40,31 +44,48 @@ export class TextureLoader {
     }
 
     ensureMissingTexture(this.scene);
+  }
 
-    this.registry.forEach((entry) => {
-      if (!entry?.id) {
-        return;
-      }
+  ensureTexture(id) {
+    if (!id) {
+      return null;
+    }
 
-      if (this.scene.textures.exists(entry.id)) {
-        return;
-      }
+    if (this.textureCache.has(id)) {
+      return this.scene.textures.get(id) ?? null;
+    }
 
-      if (typeof entry.create !== "function") {
-        this.applyFallback(entry.id);
-        return;
-      }
+    if (this.scene.textures.exists(id)) {
+      this.textureCache.set(id, "existing");
+      return this.scene.textures.get(id);
+    }
 
-      try {
-        entry.create(this.scene);
-      } catch (error) {
-        console.warn(`Failed to create texture "${entry.id}":`, error);
-      }
+    const entry = this.registryMap.get(id);
+    if (!entry || typeof entry.create !== "function") {
+      this.applyFallback(id);
+      this.textureCache.set(id, "fallback");
+      return this.scene.textures.get(id) ?? null;
+    }
 
-      if (!this.scene.textures.exists(entry.id)) {
-        this.applyFallback(entry.id);
-      }
-    });
+    this.textureCache.set(id, "creating");
+    try {
+      entry.create(this.scene);
+    } catch (error) {
+      console.warn(`Failed to create texture "${id}":`, error);
+    }
+
+    if (!this.scene.textures.exists(id)) {
+      this.applyFallback(id);
+      this.textureCache.set(id, "fallback");
+      return this.scene.textures.get(id) ?? null;
+    }
+
+    this.textureCache.set(id, "created");
+    return this.scene.textures.get(id);
+  }
+
+  prefetch(ids = []) {
+    ids.forEach((id) => this.ensureTexture(id));
   }
 
   applyFallback(id) {

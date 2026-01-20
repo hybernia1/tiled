@@ -2,6 +2,8 @@ import { TILE_HEIGHT, TILE_WIDTH } from "../config/constants.js";
 
 export const createCollectibles = (scene, onPickup, mapState) => {
   scene.collectibles = scene.physics.add.group({ allowGravity: false });
+  scene.textureLoader?.ensureTexture("apple");
+  scene.textureLoader?.ensureTexture("pear");
   const appleSpots = [
     { x: 4, y: 3 },
     { x: 9, y: 6 },

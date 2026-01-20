@@ -4,6 +4,7 @@ import { applyNpcDefinition } from "./npcBuilder.js";
 import { findNearestOpenTilePosition } from "./spawnUtils.js";
 
 export const createNpc = (scene) => {
+  scene.textureLoader?.ensureTexture("npc");
   const npcDefinition = getNpcDefinition(NPC_IDS.hostileWanderer);
   const startPosition = findNearestOpenTilePosition(
     scene,
