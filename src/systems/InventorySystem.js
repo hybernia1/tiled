@@ -1,6 +1,7 @@
 import * as Phaser from "phaser";
 import { UI_MARGIN, UI_PADDING } from "../config/constants.js";
 import { uiTheme } from "../config/uiTheme.js";
+import itemsData from "../data/items.json";
 
 export class InventorySystem {
   constructor(scene) {
@@ -10,9 +11,14 @@ export class InventorySystem {
 
   createInventoryUi() {
     const existingInventory = this.scene?.gameState?.inventory ?? {};
+    const inventoryItems = Array.isArray(itemsData) ? itemsData : [];
     this.inventory = {
-      apple: existingInventory.apple ?? 0,
-      pear: existingInventory.pear ?? 0,
+      ...inventoryItems.reduce((acc, item) => {
+        if (item?.id) {
+          acc[item.id] = existingInventory[item.id] ?? 0;
+        }
+        return acc;
+      }, {}),
     };
     this.inventoryOpen = false;
 
@@ -107,8 +113,12 @@ export class InventorySystem {
       this.scene.inventorySlots[itemKey] = { icon, count };
     };
 
-    addItemSlot("apple", "apple", 0);
-    addItemSlot("pear", "pear", 1);
+    inventoryItems
+      .filter((item) => item?.id)
+      .slice(0, slotPositions.length)
+      .forEach((item, index) => {
+        addItemSlot(item.id, item.iconKey ?? item.id, index);
+      });
 
     this.updateInventoryPosition();
     this.scene.scale.on("resize", this.handleResize, this);
@@ -116,13 +126,13 @@ export class InventorySystem {
     this.setInventoryUiVisible(false);
   }
 
-  addItem(itemType) {
-    if (this.inventory[itemType] === undefined) {
+  addItem(itemId) {
+    if (this.inventory[itemId] === undefined) {
       return;
     }
-    this.inventory[itemType] += 1;
+    this.inventory[itemId] += 1;
     if (this.scene?.gameState?.inventory) {
-      this.scene.gameState.inventory[itemType] = this.inventory[itemType];
+      this.scene.gameState.inventory[itemId] = this.inventory[itemId];
       this.scene.persistGameState?.();
     }
     this.updateInventoryUi();
