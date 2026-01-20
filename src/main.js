@@ -1,6 +1,5 @@
 import * as Phaser from "phaser";
 import { createGameConfig } from "./config/gameConfig.js";
-import { validateNpcDefinitions } from "./data/npcRegistry.js";
 import { loadRegistry } from "./data/registry.js";
 import { CaveScene } from "./scenes/CaveScene.js";
 import { WorldScene } from "./scenes/WorldScene.js";
@@ -13,8 +12,6 @@ const config = createGameConfig([
   WorldScene,
   CaveScene,
 ]);
-
-validateNpcDefinitions();
 
 const registry = loadRegistry();
 globalThis.gameRegistry = registry;

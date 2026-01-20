@@ -24,33 +24,6 @@ const NPC_DEFINITIONS = Object.fromEntries(
   ])
 );
 
-export const validateNpcDefinitions = () => {
-  const issues = [];
-
-  Object.entries(NPC_DEFINITIONS).forEach(([key, definition]) => {
-    if (!definition) {
-      issues.push(`NPC definition \"${key}\" is missing.`);
-      return;
-    }
-    if (!definition.id) {
-      issues.push(`NPC definition \"${key}\" is missing required id.`);
-    }
-    if (!definition.type) {
-      issues.push(`NPC definition \"${key}\" is missing required type.`);
-    }
-    if (!Number.isFinite(definition.maxHealth)) {
-      issues.push(`NPC definition \"${key}\" is missing required maxHealth.`);
-    }
-  });
-
-  if (issues.length > 0) {
-    issues.forEach((issue) => {
-      console.error(issue);
-    });
-    throw new Error(`NPC definition validation failed (${issues.length} issue(s)).`);
-  }
-};
-
 export const getNpcId = (npcKey, level) => {
   const baseId = NPC_IDS[npcKey] ?? npcKey;
   const normalizedLevel =

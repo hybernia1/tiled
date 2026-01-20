@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "patternProperties": {
+    "^[A-Za-z0-9_-]+$": {
+      "type": "object",
+      "required": [
+        "spellId",
+        "name",
+        "iconKey",
+        "description",
+        "damage",
+        "cooldownMs",
+        "globalCooldownMs",
+        "castTimeMs",
+        "resourceCost",
+        "handler"
+      ],
+      "properties": {
+        "spellId": { "type": "string" },
+        "name": { "type": "string" },
+        "iconKey": { "type": "string" },
+        "description": { "type": "string" },
+        "damage": { "type": ["number", "string"] },
+        "cooldownMs": {
+          "oneOf": [
+            { "type": "number" },
+            {
+              "type": "object",
+              "required": ["contextPath"],
+              "properties": {
+                "contextPath": { "type": "string" }
+              },
+              "additionalProperties": false
+            }
+          ]
+        },
+        "durationMs": {
+          "oneOf": [
+            { "type": "number" },
+            {
+              "type": "object",
+              "required": ["contextPath"],
+              "properties": {
+                "contextPath": { "type": "string" }
+              },
+              "additionalProperties": false
+            }
+          ]
+        },
+        "globalCooldownMs": { "type": "number" },
+        "castTimeMs": { "type": "number" },
+        "resourceCost": {
+          "type": "object",
+          "required": ["type", "amount"],
+          "properties": {
+            "type": { "type": "string" },
+            "amount": { "type": "number" }
+          },
+          "additionalProperties": false
+        },
+        "handler": { "type": "string" }
+      },
+      "additionalProperties": false
+    }
+  }
+}

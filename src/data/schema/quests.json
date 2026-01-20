@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "required": [
+      "id",
+      "type",
+      "nameKey",
+      "tags",
+      "version",
+      "objectives",
+      "rewards"
+    ],
+    "properties": {
+      "id": { "type": "string" },
+      "type": { "type": "string" },
+      "nameKey": { "type": "string" },
+      "tags": {
+        "type": "array",
+        "items": { "type": "string" }
+      },
+      "version": { "type": "number" },
+      "objectives": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "required": ["objectiveKey", "targetId", "count"],
+          "properties": {
+            "objectiveKey": { "type": "string" },
+            "targetId": { "type": "string" },
+            "count": { "type": "number" }
+          },
+          "additionalProperties": false
+        }
+      },
+      "rewards": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "required": ["rewardType", "amount"],
+          "properties": {
+            "rewardType": { "type": "string" },
+            "itemId": { "type": "string" },
+            "amount": { "type": "number" }
+          },
+          "additionalProperties": false
+        }
+      }
+    },
+    "additionalProperties": false
+  }
+}
