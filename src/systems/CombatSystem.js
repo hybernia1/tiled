@@ -12,6 +12,7 @@ import {
 import { createSpell, spellRegistry } from "./spells/registry.js";
 import { getMaxHealth } from "./npc/stats.js";
 import { NpcStateMachine } from "./npc/stateMachine.js";
+import { uiTheme } from "../config/uiTheme.js";
 
 export class CombatSystem {
   constructor(scene) {
@@ -77,7 +78,7 @@ export class CombatSystem {
       .text(16, 16, "", {
         fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
         fontSize: "12px",
-        color: "#f6f2ee",
+        color: uiTheme.textPrimary,
         backgroundColor: "rgba(0, 0, 0, 0.55)",
         padding: { x: 6, y: 4 },
       })
@@ -87,7 +88,7 @@ export class CombatSystem {
       .text(16, 44, "", {
         fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
         fontSize: "13px",
-        color: "#f6f2ee",
+        color: uiTheme.textPrimary,
         backgroundColor: "rgba(0, 0, 0, 0.45)",
         padding: { x: 6, y: 3 },
       })
@@ -105,7 +106,7 @@ export class CombatSystem {
       .text(0, 0, "", {
         fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
         fontSize: "11px",
-        color: "#9fd7ff",
+        color: uiTheme.textInfo,
         backgroundColor: "rgba(0, 0, 0, 0.45)",
         padding: { x: 4, y: 2 },
       })
@@ -121,7 +122,7 @@ export class CombatSystem {
       .text(16, 0, "", {
         fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
         fontSize: "11px",
-        color: "#e7e2dc",
+        color: uiTheme.textSecondary,
         backgroundColor: "rgba(0, 0, 0, 0.45)",
         padding: { x: 6, y: 3 },
       })
@@ -257,7 +258,7 @@ export class CombatSystem {
     );
 
     tooltipBox.clear();
-    tooltipBox.fillStyle(0x0b0c10, 0.92);
+    tooltipBox.fillStyle(uiTheme.barTrack, 0.92);
     tooltipBox.fillRoundedRect(
       clampedX,
       clampedY,
@@ -265,7 +266,7 @@ export class CombatSystem {
       tooltipHeight,
       6
     );
-    tooltipBox.lineStyle(1, 0x2e2f36, 0.9);
+    tooltipBox.lineStyle(1, uiTheme.panelBorder, 0.9);
     tooltipBox.strokeRoundedRect(
       clampedX,
       clampedY,
@@ -403,11 +404,11 @@ export class CombatSystem {
     const fillWidth = (currentHealth / maxHealth) * (barWidth - 2);
 
     playerHealthBar.clear();
-    playerHealthBar.fillStyle(0x0b0c10, 0.9);
+    playerHealthBar.fillStyle(uiTheme.barTrack, 0.9);
     playerHealthBar.fillRoundedRect(barX, barY, barWidth, barHeight, 3);
-    playerHealthBar.lineStyle(1, 0x2e2f36, 0.9);
+    playerHealthBar.lineStyle(1, uiTheme.panelBorder, 0.9);
     playerHealthBar.strokeRoundedRect(barX, barY, barWidth, barHeight, 3);
-    playerHealthBar.fillStyle(0x58d68d, 0.95);
+    playerHealthBar.fillStyle(uiTheme.healthBarFill, 0.95);
     playerHealthBar.fillRoundedRect(
       barX + 1,
       barY + 1,
@@ -467,7 +468,7 @@ export class CombatSystem {
       .text(0, 0, "", {
         fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
         fontSize: "12px",
-        color: "#e7e2dc",
+        color: uiTheme.textSecondary,
         backgroundColor: "rgba(0, 0, 0, 0.45)",
         padding: { x: 6, y: 3 },
       })
@@ -503,11 +504,11 @@ export class CombatSystem {
         : barWidth - 2;
 
     playerXpBar.clear();
-    playerXpBar.fillStyle(0x0b0c10, 0.9);
+    playerXpBar.fillStyle(uiTheme.barTrack, 0.9);
     playerXpBar.fillRoundedRect(barX, barY, barWidth, barHeight, 3);
-    playerXpBar.lineStyle(1, 0x2e2f36, 0.9);
+    playerXpBar.lineStyle(1, uiTheme.panelBorder, 0.9);
     playerXpBar.strokeRoundedRect(barX, barY, barWidth, barHeight, 3);
-    playerXpBar.fillStyle(0x5dade2, 0.95);
+    playerXpBar.fillStyle(uiTheme.manaFill, 0.95);
     playerXpBar.fillRoundedRect(
       barX + 1,
       barY + 1,
@@ -549,7 +550,7 @@ export class CombatSystem {
       .text(0, 0, "", {
         fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
         fontSize: "11px",
-        color: "#f6f2ee",
+        color: uiTheme.textPrimary,
         align: "left",
         wordWrap: { width: 240 },
       })
@@ -568,7 +569,7 @@ export class CombatSystem {
         .text(0, 0, `${index + 1}`, {
           fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
           fontSize: "10px",
-          color: "#f6f2ee",
+          color: uiTheme.textPrimary,
           backgroundColor: "rgba(0, 0, 0, 0.35)",
           padding: { x: 4, y: 2 },
         })
@@ -581,7 +582,7 @@ export class CombatSystem {
         .text(0, 0, spellName, {
           fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
           fontSize: "9px",
-          color: "#f6f2ee",
+          color: uiTheme.textPrimary,
         })
         .setDepth(10001)
         .setScrollFactor(0)
@@ -603,7 +604,7 @@ export class CombatSystem {
         .text(0, 0, "", {
           fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
           fontSize: "10px",
-          color: "#f65a5a",
+          color: uiTheme.textDanger,
           backgroundColor: "rgba(0, 0, 0, 0.45)",
           padding: { x: 4, y: 2 },
         })
@@ -614,7 +615,7 @@ export class CombatSystem {
       scene.spellbarCooldownTexts.push(cooldownText);
 
       const slotZone = scene.add
-        .rectangle(0, 0, 1, 1, 0x000000, 0.001)
+        .rectangle(0, 0, 1, 1, uiTheme.transparent, 0.001)
         .setDepth(10002)
         .setScrollFactor(0)
         .setInteractive({ useHandCursor: true });
@@ -710,8 +711,8 @@ export class CombatSystem {
     const barY = height - 60;
 
     spellbarSlots.clear();
-    spellbarSlots.fillStyle(0x0b0c10, 0.75);
-    spellbarSlots.lineStyle(1, 0x2e2f36, 0.9);
+    spellbarSlots.fillStyle(uiTheme.barTrack, 0.75);
+    spellbarSlots.lineStyle(1, uiTheme.panelBorder, 0.9);
 
     for (let index = 0; index < slotCount; index += 1) {
       const slotX = startX + index * (slotSize + slotGap);
@@ -799,7 +800,7 @@ export class CombatSystem {
       .text(0, 0, "", {
         fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
         fontSize: "11px",
-        color: "#f6f2ee",
+        color: uiTheme.textPrimary,
         backgroundColor: "rgba(0, 0, 0, 0.35)",
         padding: { x: 6, y: 3 },
       })
@@ -811,7 +812,7 @@ export class CombatSystem {
       .text(0, 0, "", {
         fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
         fontSize: "12px",
-        color: "#f6f2ee",
+        color: uiTheme.textPrimary,
         backgroundColor: "rgba(0, 0, 0, 0.45)",
         padding: { x: 6, y: 3 },
       })
@@ -863,7 +864,7 @@ export class CombatSystem {
     const fillWidth = (currentHealth / maxHealth) * (targetBarWidth - 2);
 
     targetHealthBar.clear();
-    targetHealthBar.fillStyle(0x0b0c10, 0.9);
+    targetHealthBar.fillStyle(uiTheme.barTrack, 0.9);
     targetHealthBar.fillRoundedRect(
       targetBarX,
       targetBarY,
@@ -871,7 +872,7 @@ export class CombatSystem {
       targetBarHeight,
       3
     );
-    targetHealthBar.lineStyle(1, 0x2e2f36, 0.9);
+    targetHealthBar.lineStyle(1, uiTheme.panelBorder, 0.9);
     targetHealthBar.strokeRoundedRect(
       targetBarX,
       targetBarY,
@@ -879,7 +880,7 @@ export class CombatSystem {
       targetBarHeight,
       3
     );
-    targetHealthBar.fillStyle(0xf65a5a, 0.95);
+    targetHealthBar.fillStyle(uiTheme.dangerFill, 0.95);
     targetHealthBar.fillRoundedRect(
       targetBarX + 1,
       targetBarY + 1,
@@ -960,7 +961,7 @@ export class CombatSystem {
     }
     const now = this.getSpellTime();
     if (this.isPlayerShielded(now)) {
-      this.showFloatingText(player, "BLOCK", "#9fd7ff");
+      this.showFloatingText(player, "BLOCK", uiTheme.textInfo);
       return;
     }
     this.recordCombatActivity(this.scene.time?.now ?? Date.now());
@@ -972,7 +973,7 @@ export class CombatSystem {
     const newHealth = Math.max(0, currentHealth - amount);
     player.setData("health", newHealth);
     this.updatePlayerHealthDisplay();
-    this.showFloatingText(player, `-${amount}`, "#f65a5a");
+    this.showFloatingText(player, `-${amount}`, uiTheme.textDanger);
     if (this.scene.gameState?.player) {
       this.scene.gameState.player.health = newHealth;
       this.scene.gameState.player.maxHealth = maxHealth;
@@ -1037,9 +1038,9 @@ export class CombatSystem {
     const barY = npcDisplay.y - 28;
 
     npcHealthBar.clear();
-    npcHealthBar.fillStyle(0x0f0f14, 0.8);
+    npcHealthBar.fillStyle(uiTheme.panelBackground, 0.8);
     npcHealthBar.fillRoundedRect(barX, barY, barWidth, barHeight, 2);
-    npcHealthBar.fillStyle(0xf65a5a, 0.9);
+    npcHealthBar.fillStyle(uiTheme.dangerFill, 0.9);
     npcHealthBar.fillRoundedRect(
       barX + 1,
       barY + 1,
@@ -1097,7 +1098,7 @@ export class CombatSystem {
     const damage = Phaser.Math.Between(1, 3);
     const newHealth = Math.max(0, currentHealth - damage);
     npc.setData("health", newHealth);
-    this.showFloatingText(npc, `-${damage}`, "#f65a5a");
+    this.showFloatingText(npc, `-${damage}`, uiTheme.textDanger);
     const npcType = npc.getData("type");
     if (npcType === "neutral") {
       this.scene.npcAggroSystem?.triggerProvocation(npc, "hit");
@@ -1213,7 +1214,7 @@ export class CombatSystem {
       .text(16, height - 44, message, {
         fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
         fontSize: "16px",
-        color: "#f6f2ee",
+        color: uiTheme.textPrimary,
         backgroundColor: "rgba(0, 0, 0, 0.35)",
         padding: { x: 8, y: 4 },
       })
@@ -1236,8 +1237,8 @@ export class CombatSystem {
       .text(startX, startY, text, {
         fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
         fontSize: "14px",
-        color: color ?? "#f6f2ee",
-        stroke: "#0b0c10",
+        color: color ?? uiTheme.textPrimary,
+        stroke: uiTheme.textOutline,
         strokeThickness: 3,
       })
       .setDepth(10003)
@@ -1351,7 +1352,7 @@ export class CombatSystem {
         currentKey: "mana",
         maxKey: "maxMana",
         label: "MP",
-        fillColor: 0x5dade2,
+        fillColor: uiTheme.manaFill,
       };
     }
     return null;
@@ -1465,9 +1466,9 @@ export class CombatSystem {
       const fillWidth = (safeCurrent / safeMax) * (barWidth - 2);
 
       bar.clear();
-      bar.fillStyle(0x0b0c10, 0.9);
+      bar.fillStyle(uiTheme.barTrack, 0.9);
       bar.fillRoundedRect(barX, y, barWidth, barHeight, 3);
-      bar.lineStyle(1, 0x2e2f36, 0.9);
+      bar.lineStyle(1, uiTheme.panelBorder, 0.9);
       bar.strokeRoundedRect(barX, y, barWidth, barHeight, 3);
       bar.fillStyle(definition.fillColor, 0.95);
       bar.fillRoundedRect(
