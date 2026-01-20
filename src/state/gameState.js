@@ -13,6 +13,8 @@ const DEFAULT_STATE = {
     xp: 0,
     maxHealth: getMaxHealthForLevel(1),
     health: getMaxHealthForLevel(1),
+    spellCooldowns: {},
+    shieldedUntil: 0,
   },
   inventory: {
     jablko: 0,
@@ -59,6 +61,18 @@ const normalizeState = (state) => {
   const health = clampNumber(rawPlayer.health, 0, maxHealth, maxHealth);
   const xpNeeded = getXpNeededForNextLevel(level);
   const clampedXp = xpNeeded > 0 ? Math.min(xp, xpNeeded) : 0;
+  const rawSpellCooldowns =
+    rawPlayer.spellCooldowns && typeof rawPlayer.spellCooldowns === "object"
+      ? rawPlayer.spellCooldowns
+      : {};
+  const spellCooldowns = {};
+  Object.entries(rawSpellCooldowns).forEach(([spellId, timestamp]) => {
+    const value = safeNumber(timestamp, 0);
+    if (value > 0) {
+      spellCooldowns[spellId] = value;
+    }
+  });
+  const shieldedUntil = Math.max(0, safeNumber(rawPlayer.shieldedUntil, 0));
 
   const normalized = {
     ...DEFAULT_STATE,
@@ -68,6 +82,8 @@ const normalizeState = (state) => {
       xp: clampedXp,
       maxHealth,
       health,
+      spellCooldowns,
+      shieldedUntil,
     },
     inventory: {
       ...DEFAULT_STATE.inventory,

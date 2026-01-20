@@ -15,6 +15,10 @@ import {
 } from "../config/constants.js";
 import { createPlayerTexture } from "../assets/textures/player.js";
 import { createAppleTexture, createPearTexture } from "../assets/textures/items.js";
+import {
+  createSpellShieldTexture,
+  createSpellShotTexture,
+} from "../assets/textures/spells.js";
 import { createBulletTexture } from "../assets/textures/bullet.js";
 import { createFriendlyNpcTexture } from "../assets/textures/npcFriend.js";
 import { createNpcTexture } from "../assets/textures/npc.js";
@@ -96,6 +100,8 @@ export class BaseMapScene extends Phaser.Scene {
     createBulletTexture(this);
     createAppleTexture(this);
     createPearTexture(this);
+    createSpellShotTexture(this);
+    createSpellShieldTexture(this);
   }
 
   create() {
@@ -160,7 +166,7 @@ export class BaseMapScene extends Phaser.Scene {
     this.combatSystem.updateShooting(time);
     this.combatSystem.updatePlayerRegen(time);
     this.combatSystem.cleanupBullets(time);
-    this.combatSystem.updateSpellbarCooldowns(time);
+    this.combatSystem.updateSpellbarCooldowns();
     this.combatSystem.updateNpcHealthDisplay();
     this.combatSystem.updateTargetHud();
     this.interactionSystem.updateFriendlyNpcInteraction();

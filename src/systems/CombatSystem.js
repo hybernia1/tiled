@@ -22,6 +22,10 @@ export class CombatSystem {
     this.shieldCooldownMs = 60000;
   }
 
+  getSpellTime() {
+    return Date.now();
+  }
+
   setupPlayerHealth() {
     const { player } = this.scene;
     if (!player) {
@@ -60,11 +64,30 @@ export class CombatSystem {
       })
       .setDepth(10001)
       .setScrollFactor(0);
+    this.scene.playerShieldIcon = this.scene.add
+      .image(0, 0, "spell-shield")
+      .setDepth(10002)
+      .setScrollFactor(0)
+      .setScale(0.7)
+      .setVisible(false);
+    this.scene.playerShieldTimer = this.scene.add
+      .text(0, 0, "", {
+        fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+        fontSize: "11px",
+        color: "#9fd7ff",
+        backgroundColor: "rgba(0, 0, 0, 0.45)",
+        padding: { x: 4, y: 2 },
+      })
+      .setDepth(10002)
+      .setScrollFactor(0)
+      .setOrigin(0, 0.5)
+      .setVisible(false);
 
     this.updatePlayerHealthDisplay();
     this.setupPlayerProgressDisplay();
     this.setupSpellbarDisplay();
     this.setupTargetHud();
+    this.updateActiveEffectsDisplay(this.getSpellTime());
   }
 
   setupSpells() {
@@ -77,7 +100,8 @@ export class CombatSystem {
       name: "Shot",
       cooldownMs: this.scene.fireCooldownMs,
       onCast: (context, payload, time) => {
-        context.combatSystem.performShot(payload, time);
+        const sceneTime = payload?.sceneTime ?? time;
+        context.combatSystem.performShot(payload, sceneTime);
       },
     });
 
@@ -96,14 +120,46 @@ export class CombatSystem {
 
     this.spells = [shotSpell, shieldSpell];
     this.spellMap = new Map(this.spells.map((spell) => [spell.id, spell]));
+    this.restoreSpellCooldowns();
   }
 
   getSpell(id) {
     return this.spellMap.get(id);
   }
 
+  getSpellIconKey(spellId) {
+    const icons = {
+      shot: "spell-shot",
+      shield: "spell-shield",
+    };
+    return icons[spellId] ?? null;
+  }
+
+  restoreSpellCooldowns() {
+    const storedCooldowns = this.scene.gameState?.player?.spellCooldowns ?? {};
+    this.spells.forEach((spell) => {
+      const lastCastAt = Number(storedCooldowns[spell.id]);
+      if (Number.isFinite(lastCastAt)) {
+        spell.lastCastAt = lastCastAt;
+      }
+    });
+  }
+
+  recordSpellCooldown(spell, time) {
+    if (!spell || !this.scene.gameState?.player) {
+      return;
+    }
+    if (!this.scene.gameState.player.spellCooldowns) {
+      this.scene.gameState.player.spellCooldowns = {};
+    }
+    this.scene.gameState.player.spellCooldowns[spell.id] = time;
+    this.scene.persistGameState?.();
+  }
+
   updateSpells(time) {
-    this.updateShieldStatus(time);
+    const spellTime = this.getSpellTime();
+    this.updateShieldStatus(spellTime);
+    this.updateActiveEffectsDisplay(spellTime);
     const shieldKey = this.scene.shieldKey;
     const shieldSpell = this.getSpell("shield");
     if (!shieldKey || !shieldSpell) {
@@ -111,7 +167,14 @@ export class CombatSystem {
     }
 
     if (Phaser.Input.Keyboard.JustDown(shieldKey)) {
-      shieldSpell.cast(time, { scene: this.scene, combatSystem: this });
+      const casted = shieldSpell.cast(
+        spellTime,
+        { scene: this.scene, combatSystem: this },
+        { sceneTime: time }
+      );
+      if (casted) {
+        this.recordSpellCooldown(shieldSpell, spellTime);
+      }
     }
   }
 
@@ -123,6 +186,10 @@ export class CombatSystem {
     const shieldUntil = time + this.shieldDurationMs;
     player.setData("shieldedUntil", shieldUntil);
     player.setData("isShielded", true);
+    if (this.scene.gameState?.player) {
+      this.scene.gameState.player.shieldedUntil = shieldUntil;
+      this.scene.persistGameState?.();
+    }
   }
 
   deactivateShield() {
@@ -131,6 +198,10 @@ export class CombatSystem {
       return;
     }
     player.setData("isShielded", false);
+    if (this.scene.gameState?.player) {
+      this.scene.gameState.player.shieldedUntil = 0;
+      this.scene.persistGameState?.();
+    }
   }
 
   updateShieldStatus(time) {
@@ -141,6 +212,11 @@ export class CombatSystem {
     const shieldUntil = Number(player.getData("shieldedUntil"));
     if (Number.isFinite(shieldUntil) && time >= shieldUntil) {
       player.setData("isShielded", false);
+      player.setData("shieldedUntil", 0);
+      if (this.scene.gameState?.player) {
+        this.scene.gameState.player.shieldedUntil = 0;
+        this.scene.persistGameState?.();
+      }
     }
   }
 
@@ -199,6 +275,32 @@ export class CombatSystem {
     playerHealthValue
       .setText(`HP ${currentHealth}/${maxHealth}`)
       .setPosition(barX, barY + barHeight + 6);
+
+    this.updateActiveEffectsDisplay(this.getSpellTime());
+  }
+
+  updateActiveEffectsDisplay(time) {
+    const { player, playerShieldIcon, playerShieldTimer, playerHealthValue } =
+      this.scene;
+    if (!player || !playerShieldIcon || !playerShieldTimer || !playerHealthValue) {
+      return;
+    }
+    const shieldUntil = Number(player.getData("shieldedUntil"));
+    const remainingMs = Number.isFinite(shieldUntil) ? shieldUntil - time : 0;
+    if (remainingMs <= 0) {
+      playerShieldIcon.setVisible(false);
+      playerShieldTimer.setVisible(false);
+      return;
+    }
+    const seconds = Math.ceil(remainingMs / 1000);
+    const iconX = playerHealthValue.x + playerHealthValue.width + 10;
+    const iconY = playerHealthValue.y + playerHealthValue.height / 2;
+    playerShieldIcon.setPosition(iconX, iconY);
+    playerShieldTimer
+      .setText(`${seconds}s`)
+      .setPosition(iconX + 12, iconY);
+    playerShieldIcon.setVisible(true);
+    playerShieldTimer.setVisible(true);
   }
 
   setupPlayerProgressDisplay() {
@@ -278,11 +380,11 @@ export class CombatSystem {
       .setScrollFactor(0);
     scene.spellbarSlotLabels = [];
     scene.spellbarSlotNames = [];
+    scene.spellbarSlotIcons = [];
     scene.spellbarCooldownTexts = [];
+    scene.spellbarSlotZones = [];
     scene.pointerFireActive = false;
     scene.spellbarShotQueued = false;
-
-    this.ensureSpellbarShotZone();
 
     for (let index = 0; index < 6; index += 1) {
       const slotLabel = scene.add
@@ -310,6 +412,14 @@ export class CombatSystem {
         .setOrigin(0.5, 0.5);
       scene.spellbarSlotNames.push(slotName);
 
+      const slotIcon = scene.add
+        .image(0, 0, "spell-shot")
+        .setDepth(10001)
+        .setScrollFactor(0)
+        .setScale(0.8)
+        .setVisible(false);
+      scene.spellbarSlotIcons.push(slotIcon);
+
       const cooldownText = scene.add
         .text(0, 0, "", {
           fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
@@ -323,33 +433,55 @@ export class CombatSystem {
         .setOrigin(1, 0)
         .setVisible(false);
       scene.spellbarCooldownTexts.push(cooldownText);
+
+      const slotZone = scene.add
+        .rectangle(0, 0, 1, 1, 0x000000, 0.001)
+        .setDepth(10002)
+        .setScrollFactor(0)
+        .setInteractive({ useHandCursor: true });
+      slotZone.on("pointerdown", () => {
+        this.handleSpellbarPointerDown(index);
+      });
+      slotZone.on("pointerup", () => {
+        this.handleSpellbarPointerUp(index);
+      });
+      slotZone.on("pointerout", () => {
+        this.handleSpellbarPointerUp(index);
+      });
+      scene.spellbarSlotZones.push(slotZone);
     }
 
     this.updateSpellbarDisplay();
   }
 
-  ensureSpellbarShotZone() {
-    const { scene } = this;
-    const zone = scene.spellbarShotZone;
-    if (zone?.active && zone.scene && zone.geom) {
+  handleSpellbarPointerDown(index) {
+    const spell = this.spells[index];
+    if (!spell) {
       return;
     }
-    zone?.destroy?.();
-    scene.spellbarShotZone = scene.add
-      .rectangle(0, 0, 1, 1, 0x000000, 0.001)
-      .setDepth(10002)
-      .setScrollFactor(0)
-      .setInteractive({ useHandCursor: true });
-    scene.spellbarShotZone.on("pointerdown", () => {
-      scene.pointerFireActive = true;
-      scene.spellbarShotQueued = true;
-    });
-    scene.spellbarShotZone.on("pointerup", () => {
-      scene.pointerFireActive = false;
-    });
-    scene.spellbarShotZone.on("pointerout", () => {
-      scene.pointerFireActive = false;
-    });
+    if (spell.id === "shot") {
+      this.scene.pointerFireActive = true;
+      this.scene.spellbarShotQueued = true;
+      return;
+    }
+    const sceneTime = this.scene.time?.now ?? 0;
+    const spellTime = this.getSpellTime();
+    const casted = spell.cast(
+      spellTime,
+      { scene: this.scene, combatSystem: this },
+      { sceneTime }
+    );
+    if (casted) {
+      this.recordSpellCooldown(spell, spellTime);
+    }
+  }
+
+  handleSpellbarPointerUp(index) {
+    const spell = this.spells[index];
+    if (!spell || spell.id !== "shot") {
+      return;
+    }
+    this.scene.pointerFireActive = false;
   }
 
   updateSpellbarDisplay() {
@@ -358,13 +490,17 @@ export class CombatSystem {
       spellbarSlots,
       spellbarSlotLabels,
       spellbarSlotNames,
+      spellbarSlotIcons,
       spellbarCooldownTexts,
+      spellbarSlotZones,
     } = scene;
     if (
       !spellbarSlots ||
       !spellbarSlotLabels ||
       !spellbarSlotNames ||
-      !spellbarCooldownTexts
+      !spellbarSlotIcons ||
+      !spellbarCooldownTexts ||
+      !spellbarSlotZones
     ) {
       return;
     }
@@ -395,35 +531,49 @@ export class CombatSystem {
         name.setText(this.spells[index]?.name ?? "");
         name.setPosition(slotX + slotSize / 2, barY + slotSize / 2 + 6);
       }
+      const icon = spellbarSlotIcons[index];
+      const spell = this.spells[index];
+      if (icon && spell) {
+        const iconKey = this.getSpellIconKey(spell.id);
+        if (iconKey) {
+          icon.setTexture(iconKey);
+          icon.setVisible(true);
+          icon.setPosition(slotX + slotSize / 2, barY + slotSize / 2 - 4);
+        } else {
+          icon.setVisible(false);
+        }
+      } else if (icon) {
+        icon.setVisible(false);
+      }
       const cooldownText = spellbarCooldownTexts[index];
       if (cooldownText) {
         cooldownText.setPosition(slotX + slotSize - 4, barY + 4);
       }
-
-      if (index === 0) {
-        this.ensureSpellbarShotZone();
-        scene.spellbarShotZone
-          ?.setPosition(slotX + slotSize / 2, barY + slotSize / 2)
+      const slotZone = spellbarSlotZones[index];
+      if (slotZone) {
+        slotZone
+          .setPosition(slotX + slotSize / 2, barY + slotSize / 2)
           .setSize(slotSize, slotSize);
       }
     }
 
-    this.updateSpellbarCooldowns(scene.time?.now ?? Date.now());
+    this.updateSpellbarCooldowns();
   }
 
-  updateSpellbarCooldowns(time) {
+  updateSpellbarCooldowns() {
     const { scene } = this;
     const { spellbarCooldownTexts } = scene;
     if (!spellbarCooldownTexts) {
       return;
     }
+    const spellTime = this.getSpellTime();
     spellbarCooldownTexts.forEach((cooldownText, index) => {
       const spell = this.spells[index];
       if (!spell || spell.cooldownMs <= 0) {
         cooldownText.setVisible(false);
         return;
       }
-      const remainingMs = spell.getRemainingCooldown(time);
+      const remainingMs = spell.getRemainingCooldown(spellTime);
       if (remainingMs <= 0) {
         cooldownText.setVisible(false);
         return;
@@ -606,7 +756,7 @@ export class CombatSystem {
     if (!player?.active) {
       return;
     }
-    const now = this.scene.time?.now ?? Date.now();
+    const now = this.getSpellTime();
     if (this.isPlayerShielded(now)) {
       this.showFloatingText(player, "BLOK", "#9fd7ff");
       return;
@@ -914,11 +1064,12 @@ export class CombatSystem {
     if (!shotSpell) {
       return;
     }
+    const spellTime = this.getSpellTime();
     const usingSpellbar =
       this.scene.pointerFireActive || this.scene.spellbarShotQueued;
     const isFiring =
       fireKey.isDown || this.scene.pointerFireActive || this.scene.spellbarShotQueued;
-    if (!isFiring || !shotSpell.isReady(time)) {
+    if (!isFiring || !shotSpell.isReady(spellTime)) {
       return;
     }
 
@@ -938,11 +1089,14 @@ export class CombatSystem {
       return;
     }
 
-    shotSpell.cast(
-      time,
+    const casted = shotSpell.cast(
+      spellTime,
       { scene: this.scene, combatSystem: this },
-      { direction, usingSpellbar }
+      { direction, usingSpellbar, sceneTime: time }
     );
+    if (casted) {
+      this.recordSpellCooldown(shotSpell, spellTime);
+    }
   }
 
   performShot(payload, time) {
