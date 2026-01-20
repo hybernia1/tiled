@@ -6,6 +6,15 @@ import {
 
 const STORAGE_KEY = "tiled:gameState";
 
+const DEFAULT_SPELLBAR_SLOTS = [
+  { spellId: "shot" },
+  { spellId: "shield" },
+  { spellId: null },
+  { spellId: null },
+  { spellId: null },
+  { spellId: null },
+];
+
 const DEFAULT_STATE = {
   version: 1,
   player: {
@@ -18,6 +27,7 @@ const DEFAULT_STATE = {
     maxEnergy: 100,
     energy: 100,
     spellCooldowns: {},
+    spellbarSlots: DEFAULT_SPELLBAR_SLOTS.map((slot) => ({ ...slot })),
     effects: [],
     shieldedUntil: 0,
   },
@@ -45,6 +55,18 @@ const clampNumber = (value, min, max, fallback) => {
     return fallback;
   }
   return Math.min(max, Math.max(min, parsed));
+};
+
+const normalizeSpellbarSlots = (slots) => {
+  const rawSlots = Array.isArray(slots) ? slots : [];
+  return DEFAULT_SPELLBAR_SLOTS.map((fallbackSlot, index) => {
+    const rawSlot = rawSlots[index];
+    const spellId =
+      typeof rawSlot?.spellId === "string"
+        ? rawSlot.spellId
+        : fallbackSlot.spellId ?? null;
+    return { spellId };
+  });
 };
 
 const normalizeState = (state) => {
@@ -123,6 +145,7 @@ const normalizeState = (state) => {
       maxEnergy,
       energy,
       spellCooldowns,
+      spellbarSlots: normalizeSpellbarSlots(rawPlayer.spellbarSlots),
       effects,
       shieldedUntil,
     },
