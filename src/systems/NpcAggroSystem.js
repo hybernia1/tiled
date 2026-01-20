@@ -1,5 +1,6 @@
 import * as Phaser from "phaser";
 import { getNpcBehavior } from "./npc/behaviorProfiles";
+import { NpcStateMachine, NpcStates } from "./npc/stateMachine.js";
 
 export class NpcAggroSystem {
   constructor(scene) {
@@ -14,9 +15,11 @@ export class NpcAggroSystem {
       }
       return;
     }
+    const stateMachine = new NpcStateMachine(npc);
     if (!player?.active) {
       npc.body?.setVelocity(0, 0);
       this.setNpcAggro(false);
+      stateMachine.setPassiveState({ reason: "no-target" });
       return;
     }
 
@@ -28,6 +31,7 @@ export class NpcAggroSystem {
     if (!canEngage) {
       npc.body.setVelocity(0, 0);
       this.setNpcAggro(false);
+      stateMachine.setPassiveState({ reason: "cannot-engage" });
       return;
     }
 
@@ -45,24 +49,54 @@ export class NpcAggroSystem {
       aggroRangeBase * (behavior.aggroRangeMultiplier ?? 1);
     const attackRange =
       attackRangeBase * (behavior.attackRangeMultiplier ?? 1);
+    const inAggroRange = distance <= aggroRange;
+    const inAttackRange = distance <= attackRange;
 
-    if (distance <= aggroRange) {
-      this.setNpcAggro(true);
-      const direction = new Phaser.Math.Vector2(
-        player.x - npc.x,
-        player.y - npc.y
-      ).normalize();
-      npc.body.setVelocity(
-        direction.x * this.scene.npcChaseSpeed,
-        direction.y * this.scene.npcChaseSpeed
-      );
+    switch (stateMachine.getState()) {
+      case NpcStates.DISENGAGE:
+        npc.body.setVelocity(0, 0);
+        this.setNpcAggro(false);
+        stateMachine.setPassiveState({ reason: "disengaged" });
+        return;
+      case NpcStates.IDLE:
+      case NpcStates.PATROL:
+        if (!inAggroRange) {
+          npc.body.setVelocity(0, 0);
+          this.setNpcAggro(false);
+          stateMachine.setPassiveState({ reason: "out-of-range" });
+          return;
+        }
+        break;
+      case NpcStates.AGGRO:
+      case NpcStates.COMBAT:
+        if (!inAggroRange) {
+          npc.body.setVelocity(0, 0);
+          this.setNpcAggro(false);
+          stateMachine.transition(NpcStates.DISENGAGE, {
+            reason: "out-of-range",
+          });
+          return;
+        }
+        break;
+      default:
+        break;
+    }
 
-      if (behavior.canAttack && distance <= attackRange) {
-        this.handleNpcAttack(time);
-      }
+    this.setNpcAggro(true);
+    const direction = new Phaser.Math.Vector2(
+      player.x - npc.x,
+      player.y - npc.y
+    ).normalize();
+    npc.body.setVelocity(
+      direction.x * this.scene.npcChaseSpeed,
+      direction.y * this.scene.npcChaseSpeed
+    );
+
+    if (behavior.canAttack && inAttackRange) {
+      stateMachine.transition(NpcStates.COMBAT, { reason: "attack-range" });
+      this.handleNpcAttack(time);
     } else {
-      npc.body.setVelocity(0, 0);
-      this.setNpcAggro(false);
+      stateMachine.transition(NpcStates.AGGRO, { reason: "chasing" });
     }
   }
 
@@ -83,9 +117,11 @@ export class NpcAggroSystem {
       }
       return;
     }
+    const stateMachine = new NpcStateMachine(npc);
     if (!player?.active) {
       npc.body?.setVelocity(0, 0);
       this.setSpriteAggro(npc, false);
+      stateMachine.setPassiveState({ reason: "no-target" });
       return;
     }
 
@@ -97,6 +133,7 @@ export class NpcAggroSystem {
     if (!canEngage) {
       npc.body.setVelocity(0, 0);
       this.setSpriteAggro(npc, false);
+      stateMachine.setPassiveState({ reason: "cannot-engage" });
       return;
     }
 
@@ -118,49 +155,73 @@ export class NpcAggroSystem {
     const resetHealthOnDisengage = Boolean(
       npc.getData("resetHealthOnDisengage")
     );
+    const inAggroRange = distance <= aggroRange;
+    const inAttackRange = distance <= attackRange;
+    const hasCombatLeash = Number.isFinite(combatLeashRange);
+    const isLeashCombat =
+      behavior.canRetaliate && isProvoked && hasCombatLeash;
 
-    if (
-      behavior.canRetaliate &&
-      isProvoked &&
-      Number.isFinite(combatLeashRange)
-    ) {
-      if (distance > combatLeashRange) {
-        this.resetNpcCombatState(npc, { resetHealthOnDisengage });
+    switch (stateMachine.getState()) {
+      case NpcStates.DISENGAGE:
+        npc.body.setVelocity(0, 0);
+        this.setSpriteAggro(npc, false);
+        stateMachine.setPassiveState({ reason: "disengaged" });
         return;
-      }
-      this.setSpriteAggro(npc, true);
-      const direction = new Phaser.Math.Vector2(
-        player.x - npc.x,
-        player.y - npc.y
-      ).normalize();
-      npc.body.setVelocity(
-        direction.x * this.scene.npcChaseSpeed,
-        direction.y * this.scene.npcChaseSpeed
-      );
-
-      if (behavior.canAttack && distance <= attackRange) {
-        this.handleNpcAttackForSprite(time, npc);
-      }
-      return;
+      case NpcStates.IDLE:
+      case NpcStates.PATROL:
+        if (isLeashCombat) {
+          if (distance > combatLeashRange) {
+            this.resetNpcCombatState(npc, { resetHealthOnDisengage });
+            stateMachine.transition(NpcStates.DISENGAGE, {
+              reason: "leash-broken",
+            });
+            return;
+          }
+        } else if (!inAggroRange) {
+          npc.body.setVelocity(0, 0);
+          this.setSpriteAggro(npc, false);
+          stateMachine.setPassiveState({ reason: "out-of-range" });
+          return;
+        }
+        break;
+      case NpcStates.AGGRO:
+      case NpcStates.COMBAT:
+        if (isLeashCombat) {
+          if (distance > combatLeashRange) {
+            this.resetNpcCombatState(npc, { resetHealthOnDisengage });
+            stateMachine.transition(NpcStates.DISENGAGE, {
+              reason: "leash-broken",
+            });
+            return;
+          }
+        } else if (!inAggroRange) {
+          npc.body.setVelocity(0, 0);
+          this.setSpriteAggro(npc, false);
+          stateMachine.transition(NpcStates.DISENGAGE, {
+            reason: "out-of-range",
+          });
+          return;
+        }
+        break;
+      default:
+        break;
     }
 
-    if (distance <= aggroRange) {
-      this.setSpriteAggro(npc, true);
-      const direction = new Phaser.Math.Vector2(
-        player.x - npc.x,
-        player.y - npc.y
-      ).normalize();
-      npc.body.setVelocity(
-        direction.x * this.scene.npcChaseSpeed,
-        direction.y * this.scene.npcChaseSpeed
-      );
+    this.setSpriteAggro(npc, true);
+    const direction = new Phaser.Math.Vector2(
+      player.x - npc.x,
+      player.y - npc.y
+    ).normalize();
+    npc.body.setVelocity(
+      direction.x * this.scene.npcChaseSpeed,
+      direction.y * this.scene.npcChaseSpeed
+    );
 
-      if (behavior.canAttack && distance <= attackRange) {
-        this.handleNpcAttackForSprite(time, npc);
-      }
+    if (behavior.canAttack && inAttackRange) {
+      stateMachine.transition(NpcStates.COMBAT, { reason: "attack-range" });
+      this.handleNpcAttackForSprite(time, npc);
     } else {
-      npc.body.setVelocity(0, 0);
-      this.setSpriteAggro(npc, false);
+      stateMachine.transition(NpcStates.AGGRO, { reason: "chasing" });
     }
   }
 
@@ -199,6 +260,9 @@ export class NpcAggroSystem {
     if (!npc) {
       return;
     }
+    new NpcStateMachine(npc).transition(NpcStates.DISENGAGE, {
+      reason: "reset",
+    });
     npc.body?.setVelocity(0, 0);
     this.setSpriteAggro(npc, false);
     npc.setData("isProvoked", false);
@@ -236,6 +300,21 @@ export class NpcAggroSystem {
       this.scene.npcTween?.pause();
     } else {
       this.scene.npcTween?.resume();
+    }
+  }
+
+  triggerProvocation(npc, reason) {
+    if (!npc || npc.getData("type") !== "neutral") {
+      return;
+    }
+    npc.setData("isProvoked", true);
+    new NpcStateMachine(npc).transition(NpcStates.AGGRO, {
+      reason: reason ?? "provoked",
+    });
+    if (npc === this.scene.npc) {
+      this.updateNpcAggro(this.scene.time.now);
+    } else {
+      this.updateAggroForNpc(this.scene.time.now, npc);
     }
   }
 }

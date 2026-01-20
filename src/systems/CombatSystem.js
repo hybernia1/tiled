@@ -7,6 +7,7 @@ import {
   MAX_LEVEL,
 } from "../config/playerProgression.js";
 import { createSpell, spellRegistry } from "./spells/registry.js";
+import { NpcStateMachine } from "./npc/stateMachine.js";
 
 export class CombatSystem {
   constructor(scene) {
@@ -1039,8 +1040,7 @@ export class CombatSystem {
     this.showFloatingText(npc, `-${damage}`, "#f65a5a");
     const npcType = npc.getData("type");
     if (npcType === "neutral") {
-      npc.setData("isProvoked", true);
-      this.scene.npcAggroSystem?.updateNpcAggro(this.scene.time.now);
+      this.scene.npcAggroSystem?.triggerProvocation(npc, "hit");
     }
     if (npc === this.scene.npc) {
       this.updateNpcHealthDisplay();
@@ -1124,6 +1124,7 @@ export class CombatSystem {
           Number(npcDefinition?.maxHealth) || Number(npc.getData("maxHealth")) || 1;
         npc.setData("health", maxHealth);
         npc.setData("isProvoked", false);
+        new NpcStateMachine(npc).setPassiveState({ reason: "respawn" });
         npc.setData("respawnPending", false);
         npc.setData("lastHitAt", -Infinity);
         const nameplate = npc.getData("nameplate");

@@ -1,5 +1,6 @@
 import { TILE_HEIGHT, TILE_WIDTH } from "../config/constants.js";
 import { t } from "../config/localization.js";
+import { NpcStates } from "../systems/npc/stateMachine.js";
 
 export const applyNpcDefinition = (scene, sprite, npcDefinition, options = {}) => {
   const {
@@ -20,6 +21,7 @@ export const applyNpcDefinition = (scene, sprite, npcDefinition, options = {}) =
   sprite.setData("maxHealth", npcDefinition.maxHealth);
   sprite.setData("health", npcDefinition.maxHealth);
   sprite.setData("isProvoked", false);
+  sprite.setData("state", NpcStates.IDLE);
   sprite.setData("displayName", displayName);
   sprite.setData("isoOrigin", isoOrigin);
   sprite.setData("isoZ", isoZ);
