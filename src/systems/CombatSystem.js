@@ -14,7 +14,10 @@ export class CombatSystem {
     }
 
     const maxHealth = Number(player.getData("maxHealth")) || 1;
-    player.setData("health", maxHealth);
+    const storedHealth = Number(player.getData("health"));
+    if (!Number.isFinite(storedHealth)) {
+      player.setData("health", maxHealth);
+    }
 
     this.scene.playerHealthBar = this.scene.add
       .graphics()
@@ -80,6 +83,11 @@ export class CombatSystem {
     const newHealth = Math.max(0, currentHealth - amount);
     player.setData("health", newHealth);
     this.updatePlayerHealthDisplay();
+    if (this.scene.gameState?.player) {
+      this.scene.gameState.player.health = newHealth;
+      this.scene.gameState.player.maxHealth = maxHealth;
+      this.scene.persistGameState?.();
+    }
 
     if (newHealth === 0) {
       player.setActive(false);
