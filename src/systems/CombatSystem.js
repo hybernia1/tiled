@@ -180,6 +180,8 @@ export class CombatSystem {
     scene.pointerFireActive = false;
     scene.spellbarShotQueued = false;
 
+    this.ensureSpellbarShotZone();
+
     for (let index = 0; index < 6; index += 1) {
       const slotLabel = scene.add
         .text(0, 0, `${index + 1}`, {
@@ -204,27 +206,33 @@ export class CombatSystem {
         .setScrollFactor(0)
         .setOrigin(0.5, 0.5);
       scene.spellbarSlotNames.push(slotName);
-
-      if (index === 0) {
-        scene.spellbarShotZone = scene.add
-          .rectangle(0, 0, 1, 1, 0x000000, 0.001)
-          .setDepth(10002)
-          .setScrollFactor(0)
-          .setInteractive({ useHandCursor: true });
-        scene.spellbarShotZone.on("pointerdown", () => {
-          scene.pointerFireActive = true;
-          scene.spellbarShotQueued = true;
-        });
-        scene.spellbarShotZone.on("pointerup", () => {
-          scene.pointerFireActive = false;
-        });
-        scene.spellbarShotZone.on("pointerout", () => {
-          scene.pointerFireActive = false;
-        });
-      }
     }
 
     this.updateSpellbarDisplay();
+  }
+
+  ensureSpellbarShotZone() {
+    const { scene } = this;
+    const zone = scene.spellbarShotZone;
+    if (zone?.active && zone.scene && zone.geom) {
+      return;
+    }
+    zone?.destroy?.();
+    scene.spellbarShotZone = scene.add
+      .rectangle(0, 0, 1, 1, 0x000000, 0.001)
+      .setDepth(10002)
+      .setScrollFactor(0)
+      .setInteractive({ useHandCursor: true });
+    scene.spellbarShotZone.on("pointerdown", () => {
+      scene.pointerFireActive = true;
+      scene.spellbarShotQueued = true;
+    });
+    scene.spellbarShotZone.on("pointerup", () => {
+      scene.pointerFireActive = false;
+    });
+    scene.spellbarShotZone.on("pointerout", () => {
+      scene.pointerFireActive = false;
+    });
   }
 
   updateSpellbarDisplay() {
@@ -260,9 +268,10 @@ export class CombatSystem {
         name.setPosition(slotX + slotSize / 2, barY + slotSize / 2 + 6);
       }
 
-      if (index === 0 && scene.spellbarShotZone) {
+      if (index === 0) {
+        this.ensureSpellbarShotZone();
         scene.spellbarShotZone
-          .setPosition(slotX + slotSize / 2, barY + slotSize / 2)
+          ?.setPosition(slotX + slotSize / 2, barY + slotSize / 2)
           .setSize(slotSize, slotSize);
       }
     }
@@ -715,11 +724,18 @@ export class CombatSystem {
       return;
     }
     const { fireKey, nextFireTime } = this.scene;
+    const usingSpellbar =
+      this.scene.pointerFireActive || this.scene.spellbarShotQueued;
     const isFiring =
-      fireKey.isDown ||
-      this.scene.pointerFireActive ||
-      this.scene.spellbarShotQueued;
+      fireKey.isDown || this.scene.pointerFireActive || this.scene.spellbarShotQueued;
     if (!isFiring || time < nextFireTime) {
+      return;
+    }
+
+    const autoAimTarget = this.getAutoAimTarget();
+    if (usingSpellbar && !autoAimTarget) {
+      this.scene.pointerFireActive = false;
+      this.scene.spellbarShotQueued = false;
       return;
     }
 
@@ -738,8 +754,9 @@ export class CombatSystem {
     bullet.setData("hitNpc", false);
 
     const direction =
-      this.getAutoAimDirection() ??
-      this.scene.facing.clone().normalize();
+      (autoAimTarget
+        ? this.getAutoAimDirection()
+        : null) ?? this.scene.facing.clone().normalize();
     bullet.body.setVelocity(
       direction.x * this.scene.bulletSpeed,
       direction.y * this.scene.bulletSpeed
