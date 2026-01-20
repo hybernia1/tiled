@@ -73,10 +73,12 @@ const spellDefinitions = [
       spellId: "shot",
       name: "Shot",
       iconKey: "spell-shot",
+      description: "Quick ranged attack with a basic projectile.",
+      damage: "1-3",
       cooldownMs: ({ scene }) => scene.fireCooldownMs,
       globalCooldownMs: 350,
       castTimeMs: 0,
-      resourceCost: { type: "energy", amount: 5 },
+      resourceCost: { type: "mana", amount: 5 },
       onCast: (context, payload) => {
         const sceneTime = payload?.sceneTime ?? context.time;
         context.combatSystem.performShot(payload, sceneTime);
@@ -89,6 +91,8 @@ const spellDefinitions = [
       spellId: "shield",
       name: "Shield",
       iconKey: "spell-shield",
+      description: "Absorb incoming damage for a short duration.",
+      damage: 0,
       cooldownMs: ({ combatSystem }) => combatSystem.shieldCooldownMs,
       durationMs: ({ combatSystem }) => combatSystem.shieldDurationMs,
       globalCooldownMs: 800,

@@ -119,20 +119,6 @@ export class CombatSystem {
       })
       .setDepth(10001)
       .setScrollFactor(0);
-    this.scene.playerEnergyBar = this.scene.add
-      .graphics()
-      .setDepth(10000)
-      .setScrollFactor(0);
-    this.scene.playerEnergyValue = this.scene.add
-      .text(16, 0, "", {
-        fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
-        fontSize: "11px",
-        color: "#e7e2dc",
-        backgroundColor: "rgba(0, 0, 0, 0.45)",
-        padding: { x: 6, y: 3 },
-      })
-      .setDepth(10001)
-      .setScrollFactor(0);
 
     this.updatePlayerHealthDisplay();
     this.updatePlayerResourceDisplay();
@@ -142,6 +128,111 @@ export class CombatSystem {
     this.setupSpellUiListeners();
     this.startSpellUiTicker();
     this.updateActiveEffectsDisplay(this.getSpellTime());
+  }
+
+  formatCooldownMs(cooldownMs) {
+    const seconds = Number(cooldownMs) / 1000;
+    if (!Number.isFinite(seconds) || seconds <= 0) {
+      return "0";
+    }
+    const rounded = Math.round(seconds * 10) / 10;
+    return rounded % 1 === 0 ? rounded.toFixed(0) : rounded.toFixed(1);
+  }
+
+  resolveTooltipValue(value, context, fallback) {
+    if (typeof value === "function") {
+      return value(context);
+    }
+    return value ?? fallback;
+  }
+
+  getSpellTooltipText(spellId) {
+    const spell = this.getSpell(spellId);
+    const definition = spellRegistry.get(spellId);
+    if (!spell || !definition) {
+      return null;
+    }
+    const context = this.createSpellContext({ time: this.getSpellTime() });
+    const description = this.resolveTooltipValue(
+      definition.description,
+      context,
+      ""
+    );
+    const damage = this.resolveTooltipValue(definition.damage, context, 0);
+    const resource = this.resolveResourceCost(spell.resourceCost);
+    const manaCost = resource?.type === "mana" ? resource.amount : 0;
+    const cooldownText = this.formatCooldownMs(spell.cooldownMs);
+    return [
+      spell.name,
+      description,
+      `Cooldown: ${cooldownText}s`,
+      `Mana: ${manaCost}`,
+      `Damage: ${damage}`,
+    ]
+      .filter(Boolean)
+      .join("\n");
+  }
+
+  showSpellTooltip(index, pointer) {
+    const { scene } = this;
+    const slotConfig = this.getSpellbarSlotsConfig()[index] ?? null;
+    const spellId = slotConfig?.spellId ?? null;
+    const spellTooltipText = this.getSpellTooltipText(spellId);
+    const tooltipBox = scene.spellTooltipBox;
+    const tooltipText = scene.spellTooltipText;
+    const slotZone = scene.spellbarSlotZones?.[index] ?? null;
+    if (!spellTooltipText || !tooltipBox || !tooltipText || !slotZone) {
+      this.hideSpellTooltip();
+      return;
+    }
+
+    tooltipText.setText(spellTooltipText);
+    const padding = 8;
+    const tooltipWidth = tooltipText.width + padding * 2;
+    const tooltipHeight = tooltipText.height + padding * 2;
+    const pointerX = pointer?.x ?? slotZone.x;
+    const pointerY = pointer?.y ?? slotZone.y;
+    const desiredX = pointerX - tooltipWidth / 2;
+    const desiredY = pointerY - tooltipHeight - 12;
+    const clampedX = Phaser.Math.Clamp(
+      desiredX,
+      8,
+      scene.scale.width - tooltipWidth - 8
+    );
+    const clampedY = Phaser.Math.Clamp(
+      desiredY,
+      8,
+      scene.scale.height - tooltipHeight - 8
+    );
+
+    tooltipBox.clear();
+    tooltipBox.fillStyle(0x0b0c10, 0.92);
+    tooltipBox.fillRoundedRect(
+      clampedX,
+      clampedY,
+      tooltipWidth,
+      tooltipHeight,
+      6
+    );
+    tooltipBox.lineStyle(1, 0x2e2f36, 0.9);
+    tooltipBox.strokeRoundedRect(
+      clampedX,
+      clampedY,
+      tooltipWidth,
+      tooltipHeight,
+      6
+    );
+    tooltipBox.setVisible(true);
+
+    tooltipText
+      .setPosition(clampedX + padding, clampedY + padding)
+      .setVisible(true);
+  }
+
+  hideSpellTooltip() {
+    const { scene } = this;
+    scene.spellTooltipBox?.setVisible(false);
+    scene.spellTooltipText?.setVisible(false);
   }
 
   setupSpells() {
@@ -397,6 +488,22 @@ export class CombatSystem {
     scene.spellbarSlotIcons = [];
     scene.spellbarCooldownTexts = [];
     scene.spellbarSlotZones = [];
+    scene.spellTooltipBox = scene.add
+      .graphics()
+      .setDepth(10005)
+      .setScrollFactor(0)
+      .setVisible(false);
+    scene.spellTooltipText = scene.add
+      .text(0, 0, "", {
+        fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+        fontSize: "11px",
+        color: "#f6f2ee",
+        align: "left",
+        wordWrap: { width: 240 },
+      })
+      .setDepth(10006)
+      .setScrollFactor(0)
+      .setVisible(false);
     scene.pointerFireActive = false;
     scene.spellbarShotQueued = false;
 
@@ -464,6 +571,13 @@ export class CombatSystem {
       });
       slotZone.on("pointerout", () => {
         this.handleSpellbarPointerUp(index);
+        this.hideSpellTooltip();
+      });
+      slotZone.on("pointerover", (pointer) => {
+        this.showSpellTooltip(index, pointer);
+      });
+      slotZone.on("pointermove", (pointer) => {
+        this.showSpellTooltip(index, pointer);
       });
       scene.spellbarSlotZones.push(slotZone);
     }
@@ -1176,14 +1290,6 @@ export class CombatSystem {
         fillColor: 0x5dade2,
       };
     }
-    if (resourceType === "energy") {
-      return {
-        currentKey: "energy",
-        maxKey: "maxEnergy",
-        label: "EN",
-        fillColor: 0xf5b041,
-      };
-    }
     return null;
   }
 
@@ -1199,9 +1305,6 @@ export class CombatSystem {
     }
     if (Number.isFinite(Number(resourceCost.mana))) {
       return { type: "mana", amount: Number(resourceCost.mana) };
-    }
-    if (Number.isFinite(Number(resourceCost.energy))) {
-      return { type: "energy", amount: Number(resourceCost.energy) };
     }
     return null;
   }
@@ -1272,17 +1375,13 @@ export class CombatSystem {
       playerHealthValue,
       playerManaBar,
       playerManaValue,
-      playerEnergyBar,
-      playerEnergyValue,
     } = this.scene;
     if (
       !player ||
       !playerLevelValue ||
       !playerHealthValue ||
       !playerManaBar ||
-      !playerManaValue ||
-      !playerEnergyBar ||
-      !playerEnergyValue
+      !playerManaValue
     ) {
       return;
     }
@@ -1291,8 +1390,6 @@ export class CombatSystem {
     const barHeight = 10;
     const barX = baseX + playerLevelValue.width + 10;
     const startY = playerHealthValue.y + playerHealthValue.height + 6;
-    const barGap = 10;
-
     const drawResource = (definition, bar, label, y) => {
       if (!definition) {
         return;
@@ -1327,12 +1424,6 @@ export class CombatSystem {
       playerManaBar,
       playerManaValue,
       startY
-    );
-    drawResource(
-      this.getResourceDefinition("energy"),
-      playerEnergyBar,
-      playerEnergyValue,
-      startY + barHeight + barGap + playerManaValue.height
     );
   }
 
