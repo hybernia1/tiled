@@ -7,6 +7,13 @@ export const NPC_IDS = {
   pigLevel3: "pig_level_3",
 };
 
+const DEFAULT_RESPAWN_RULES = {
+  delay: 0,
+  resetHealth: true,
+  resetAggro: true,
+};
+const PIG_RESPAWN_DELAY_MS = 60_000;
+
 export const NPC_DEFINITIONS = {
   [NPC_IDS.hostileWanderer]: {
     id: NPC_IDS.hostileWanderer,
@@ -19,6 +26,7 @@ export const NPC_DEFINITIONS = {
     attackDamage: 1,
     aggroRange: 3,
     attackRange: 1,
+    respawnRules: { ...DEFAULT_RESPAWN_RULES },
   },
   [NPC_IDS.neutralWanderer]: {
     id: NPC_IDS.neutralWanderer,
@@ -31,6 +39,7 @@ export const NPC_DEFINITIONS = {
     attackDamage: 1,
     aggroRange: 3,
     attackRange: 1,
+    respawnRules: { ...DEFAULT_RESPAWN_RULES },
   },
   [NPC_IDS.friendlyGuide]: {
     id: NPC_IDS.friendlyGuide,
@@ -40,6 +49,7 @@ export const NPC_DEFINITIONS = {
     behaviorProfile: "friendly",
     level: 1,
     maxHealth: 3,
+    respawnRules: { ...DEFAULT_RESPAWN_RULES },
   },
   [NPC_IDS.pigLevel1]: {
     id: NPC_IDS.pigLevel1,
@@ -52,6 +62,10 @@ export const NPC_DEFINITIONS = {
     aggroRange: 3,
     attackRange: 1,
     xpReward: 10,
+    respawnRules: {
+      ...DEFAULT_RESPAWN_RULES,
+      delay: PIG_RESPAWN_DELAY_MS,
+    },
   },
   [NPC_IDS.pigLevel2]: {
     id: NPC_IDS.pigLevel2,
@@ -64,6 +78,10 @@ export const NPC_DEFINITIONS = {
     aggroRange: 3,
     attackRange: 1,
     xpReward: 12,
+    respawnRules: {
+      ...DEFAULT_RESPAWN_RULES,
+      delay: PIG_RESPAWN_DELAY_MS,
+    },
   },
   [NPC_IDS.pigLevel3]: {
     id: NPC_IDS.pigLevel3,
@@ -76,6 +94,10 @@ export const NPC_DEFINITIONS = {
     aggroRange: 3,
     attackRange: 1,
     xpReward: 15,
+    respawnRules: {
+      ...DEFAULT_RESPAWN_RULES,
+      delay: PIG_RESPAWN_DELAY_MS,
+    },
   },
 };
 

@@ -1049,7 +1049,8 @@ export class CombatSystem {
       if (nameplate) {
         nameplate.setVisible(false);
       }
-      const respawnDelay = Number(npc.getData("respawnDelayMs"));
+      const respawnRules = npcDefinition?.respawnRules ?? {};
+      const respawnDelay = Number(respawnRules.delay);
       if (Number.isFinite(respawnDelay) && respawnDelay > 0) {
         const spawnKey = npc.getData("spawnKey");
         if (spawnKey && this.scene.mapState) {
@@ -1059,10 +1060,7 @@ export class CombatSystem {
           }
           this.scene.mapState.pigRespawns[spawnKey] = respawnAt;
           this.scene.persistGameState?.();
-          this.scheduleNpcRespawn(
-            npc,
-            Math.max(0, respawnAt - Date.now())
-          );
+          this.scheduleNpcRespawn(npc, Math.max(0, respawnAt - Date.now()));
         } else {
           this.scheduleNpcRespawn(npc, respawnDelay);
         }
@@ -1095,6 +1093,8 @@ export class CombatSystem {
     if (!npc || npc.getData("respawnPending")) {
       return;
     }
+    const respawnRules = npc.getData("definition")?.respawnRules ?? {};
+    const { resetHealth = true, resetAggro = true } = respawnRules;
     npc.setData("respawnPending", true);
     const patrolTween = npc.getData("patrolTween");
     if (patrolTween?.isPlaying()) {
@@ -1114,8 +1114,14 @@ export class CombatSystem {
         if (respawnPoint) {
           npc.setPosition(respawnPoint.x, respawnPoint.y);
         }
-        npc.setData("health", getMaxHealth(npc));
-        npc.setData("isProvoked", false);
+        if (resetHealth) {
+          npc.setData("health", getMaxHealth(npc));
+        }
+        if (resetAggro) {
+          npc.setData("isProvoked", false);
+          npc.setData("isAggro", false);
+          npc.setData("nextAttackAt", 0);
+        }
         new NpcStateMachine(npc).setPassiveState({ reason: "respawn" });
         npc.setData("respawnPending", false);
         npc.setData("lastHitAt", -Infinity);

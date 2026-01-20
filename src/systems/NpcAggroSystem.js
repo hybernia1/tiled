@@ -154,9 +154,6 @@ export class NpcAggroSystem {
     const attackRange =
       attackRangeBase * (behavior.attackRangeMultiplier ?? 1);
     const combatLeashRange = Number(npc.getData("combatLeashRangePx"));
-    const resetHealthOnDisengage = Boolean(
-      npc.getData("resetHealthOnDisengage")
-    );
     const inAggroRange = distance <= aggroRange;
     const inAttackRange = distance <= attackRange;
     const hasCombatLeash = Number.isFinite(combatLeashRange);
@@ -173,7 +170,7 @@ export class NpcAggroSystem {
       case NpcStates.PATROL:
         if (isLeashCombat) {
           if (distance > combatLeashRange) {
-            this.resetNpcCombatState(npc, { resetHealthOnDisengage });
+            this.resetNpcCombatState(npc);
             stateMachine.transition(NpcStates.DISENGAGE, {
               reason: "leash-broken",
             });
@@ -190,7 +187,7 @@ export class NpcAggroSystem {
       case NpcStates.COMBAT:
         if (isLeashCombat) {
           if (distance > combatLeashRange) {
-            this.resetNpcCombatState(npc, { resetHealthOnDisengage });
+            this.resetNpcCombatState(npc);
             stateMachine.transition(NpcStates.DISENGAGE, {
               reason: "leash-broken",
             });
@@ -256,7 +253,7 @@ export class NpcAggroSystem {
     }
   }
 
-  resetNpcCombatState(npc, { resetHealthOnDisengage }) {
+  resetNpcCombatState(npc) {
     if (!npc) {
       return;
     }
@@ -267,7 +264,9 @@ export class NpcAggroSystem {
     this.setSpriteAggro(npc, false);
     npc.setData("isProvoked", false);
     npc.setData("nextAttackAt", 0);
-    if (resetHealthOnDisengage) {
+    const resetHealth =
+      npc.getData("definition")?.respawnRules?.resetHealth ?? false;
+    if (resetHealth) {
       npc.setData("health", getMaxHealth(npc));
       if (npc === this.scene.targetedNpc) {
         this.scene.combatSystem?.updateTargetHud?.();
