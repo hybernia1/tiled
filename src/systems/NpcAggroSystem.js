@@ -1,4 +1,5 @@
 import * as Phaser from "phaser";
+import { getNpcBehavior } from "./npc/behaviorProfiles";
 
 export class NpcAggroSystem {
   constructor(scene) {
@@ -19,14 +20,12 @@ export class NpcAggroSystem {
       return;
     }
 
-    const npcType = npc.getData("type") ?? "hostile";
+    const behavior = getNpcBehavior(npc);
     const isProvoked = Boolean(npc.getData("isProvoked"));
-    if (npcType === "friendly") {
-      npc.body.setVelocity(0, 0);
-      this.setNpcAggro(false);
-      return;
-    }
-    if (npcType === "neutral" && !isProvoked) {
+    const canEngage =
+      behavior.canAggro ||
+      (behavior.canRetaliate && (!behavior.requiresProvocation || isProvoked));
+    if (!canEngage) {
       npc.body.setVelocity(0, 0);
       this.setNpcAggro(false);
       return;
@@ -38,10 +37,14 @@ export class NpcAggroSystem {
       player.x,
       player.y
     );
-    const aggroRange =
+    const aggroRangeBase =
       Number(npc.getData("aggroRange")) || this.scene.npcAggroRangePx;
-    const attackRange =
+    const attackRangeBase =
       Number(npc.getData("attackRange")) || this.scene.npcAttackRangePx;
+    const aggroRange =
+      aggroRangeBase * (behavior.aggroRangeMultiplier ?? 1);
+    const attackRange =
+      attackRangeBase * (behavior.attackRangeMultiplier ?? 1);
 
     if (distance <= aggroRange) {
       this.setNpcAggro(true);
@@ -54,7 +57,7 @@ export class NpcAggroSystem {
         direction.y * this.scene.npcChaseSpeed
       );
 
-      if (distance <= attackRange) {
+      if (behavior.canAttack && distance <= attackRange) {
         this.handleNpcAttack(time);
       }
     } else {
@@ -86,14 +89,12 @@ export class NpcAggroSystem {
       return;
     }
 
-    const npcType = npc.getData("type") ?? "hostile";
+    const behavior = getNpcBehavior(npc);
     const isProvoked = Boolean(npc.getData("isProvoked"));
-    if (npcType === "friendly") {
-      npc.body.setVelocity(0, 0);
-      this.setSpriteAggro(npc, false);
-      return;
-    }
-    if (npcType === "neutral" && !isProvoked) {
+    const canEngage =
+      behavior.canAggro ||
+      (behavior.canRetaliate && (!behavior.requiresProvocation || isProvoked));
+    if (!canEngage) {
       npc.body.setVelocity(0, 0);
       this.setSpriteAggro(npc, false);
       return;
@@ -105,16 +106,24 @@ export class NpcAggroSystem {
       player.x,
       player.y
     );
-    const aggroRange =
+    const aggroRangeBase =
       Number(npc.getData("aggroRange")) || this.scene.npcAggroRangePx;
-    const attackRange =
+    const attackRangeBase =
       Number(npc.getData("attackRange")) || this.scene.npcAttackRangePx;
+    const aggroRange =
+      aggroRangeBase * (behavior.aggroRangeMultiplier ?? 1);
+    const attackRange =
+      attackRangeBase * (behavior.attackRangeMultiplier ?? 1);
     const combatLeashRange = Number(npc.getData("combatLeashRangePx"));
     const resetHealthOnDisengage = Boolean(
       npc.getData("resetHealthOnDisengage")
     );
 
-    if (isProvoked && Number.isFinite(combatLeashRange)) {
+    if (
+      behavior.canRetaliate &&
+      isProvoked &&
+      Number.isFinite(combatLeashRange)
+    ) {
       if (distance > combatLeashRange) {
         this.resetNpcCombatState(npc, { resetHealthOnDisengage });
         return;
@@ -129,7 +138,7 @@ export class NpcAggroSystem {
         direction.y * this.scene.npcChaseSpeed
       );
 
-      if (distance <= attackRange) {
+      if (behavior.canAttack && distance <= attackRange) {
         this.handleNpcAttackForSprite(time, npc);
       }
       return;
@@ -146,7 +155,7 @@ export class NpcAggroSystem {
         direction.y * this.scene.npcChaseSpeed
       );
 
-      if (distance <= attackRange) {
+      if (behavior.canAttack && distance <= attackRange) {
         this.handleNpcAttackForSprite(time, npc);
       }
     } else {
