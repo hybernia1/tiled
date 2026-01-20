@@ -103,6 +103,18 @@ export class InteractionSystem {
     }
   }
 
+  consumeTouchAction(action) {
+    const touchActions = this.scene?.touchActions;
+    if (!touchActions || typeof touchActions.has !== "function") {
+      return false;
+    }
+    if (!touchActions.has(action)) {
+      return false;
+    }
+    touchActions.delete(action);
+    return true;
+  }
+
   handleCollectiblePickup(player, collectible) {
     if (!collectible?.active) {
       return;
