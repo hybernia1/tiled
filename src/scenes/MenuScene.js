@@ -1,29 +1,11 @@
 import * as Phaser from "phaser";
-import {
-  getLanguageName,
-  getSupportedLocales,
-  resolveLocale,
-  setLocale,
-  t,
-} from "../config/localization.js";
 
 export class MenuScene extends Phaser.Scene {
   constructor() {
     super("menu");
-    this.localeIndex = 0;
   }
 
   create() {
-    const initialLocale =
-      this.registry.get("locale") || resolveLocale() || "en";
-    const supported = getSupportedLocales();
-    this.localeIndex = Math.max(
-      0,
-      supported.indexOf(initialLocale)
-    );
-    this.locale = supported[this.localeIndex] ?? "en";
-    this.registry.set("locale", this.locale);
-
     const { width, height } = this.scale;
     this.titleText = this.add
       .text(width / 2, height / 2 - 80, "", {
@@ -42,17 +24,8 @@ export class MenuScene extends Phaser.Scene {
       .setOrigin(0.5)
       .setInteractive({ useHandCursor: true });
 
-    this.languageText = this.add
-      .text(width / 2, height / 2 + 40, "", {
-        fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
-        fontSize: "18px",
-        color: "#cfc9c4",
-      })
-      .setOrigin(0.5)
-      .setInteractive({ useHandCursor: true });
-
     this.fullscreenText = this.add
-      .text(width / 2, height / 2 + 80, "", {
+      .text(width / 2, height / 2 + 40, "", {
         fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
         fontSize: "18px",
         color: "#cfc9c4",
@@ -63,12 +36,10 @@ export class MenuScene extends Phaser.Scene {
     this.updateTexts();
 
     this.startText.on("pointerdown", () => this.startGame());
-    this.languageText.on("pointerdown", () => this.toggleLanguage());
     this.fullscreenText.on("pointerdown", () => this.toggleFullscreen());
 
     this.input.keyboard.on("keydown-ENTER", () => this.startGame());
     this.input.keyboard.on("keydown-SPACE", () => this.startGame());
-    this.input.keyboard.on("keydown-L", () => this.toggleLanguage());
     this.input.keyboard.on("keydown-F", (event) => {
       if (event.repeat) {
         return;
@@ -81,21 +52,9 @@ export class MenuScene extends Phaser.Scene {
   }
 
   updateTexts() {
-    this.titleText.setText(t(this.locale, "menuTitle"));
-    this.startText.setText(t(this.locale, "menuStart"));
-    this.languageText.setText(
-      `${t(this.locale, "menuLanguage")}: ${getLanguageName(this.locale)}`
-    );
+    this.titleText.setText("Main Menu");
+    this.startText.setText("Start Game");
     this.updateFullscreenText();
-  }
-
-  toggleLanguage() {
-    const supported = getSupportedLocales();
-    this.localeIndex = (this.localeIndex + 1) % supported.length;
-    this.locale = supported[this.localeIndex];
-    this.registry.set("locale", this.locale);
-    setLocale(this.locale);
-    this.updateTexts();
   }
 
   startGame() {
@@ -104,10 +63,10 @@ export class MenuScene extends Phaser.Scene {
 
   updateFullscreenText() {
     const stateLabel = this.scale.isFullscreen
-      ? t(this.locale, "fullscreenOn")
-      : t(this.locale, "fullscreenOff");
+      ? "On"
+      : "Off";
     this.fullscreenText.setText(
-      `${t(this.locale, "menuFullscreen")}: ${stateLabel}`
+      `Fullscreen: ${stateLabel}`
     );
   }
 

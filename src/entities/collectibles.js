@@ -35,7 +35,7 @@ export const createCollectibles = (scene, onPickup, mapState) => {
       "apple"
     );
     apple.setData("collectibleId", collectibleId);
-    registerCollectible(apple, "jablko");
+    registerCollectible(apple, "apple");
   });
 
   pearSpots.forEach((spot, index) => {
@@ -49,7 +49,7 @@ export const createCollectibles = (scene, onPickup, mapState) => {
       "pear"
     );
     pear.setData("collectibleId", collectibleId);
-    registerCollectible(pear, "hruska");
+    registerCollectible(pear, "pear");
   });
 
   scene.physics.add.overlap(scene.player, scene.collectibles, onPickup, null, scene);

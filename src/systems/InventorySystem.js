@@ -9,8 +9,8 @@ export class InventorySystem {
   createInventoryUi() {
     const existingInventory = this.scene?.gameState?.inventory ?? {};
     this.inventory = {
-      jablko: existingInventory.jablko ?? 0,
-      hruska: existingInventory.hruska ?? 0,
+      apple: existingInventory.apple ?? 0,
+      pear: existingInventory.pear ?? 0,
     };
     this.inventoryOpen = false;
 
@@ -36,7 +36,7 @@ export class InventorySystem {
     this.scene.inventoryUi.add(this.panel);
 
     this.title = this.scene.add
-      .text(panelX + 18, panelY + 14, "Inventář", {
+      .text(panelX + 18, panelY + 14, "Inventory", {
         fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
         fontSize: "16px",
         color: "#f6f2ee",
@@ -101,8 +101,8 @@ export class InventorySystem {
       this.scene.inventorySlots[itemKey] = { icon, count };
     };
 
-    addItemSlot("jablko", "apple", 0);
-    addItemSlot("hruska", "pear", 1);
+    addItemSlot("apple", "apple", 0);
+    addItemSlot("pear", "pear", 1);
 
     this.updateInventoryPosition();
     this.scene.scale.on("resize", this.handleResize, this);

@@ -1,5 +1,4 @@
 import * as Phaser from "phaser";
-import { resolveLocale, t } from "../config/localization.js";
 
 export class LoadingScene extends Phaser.Scene {
   constructor() {
@@ -7,12 +6,9 @@ export class LoadingScene extends Phaser.Scene {
   }
 
   create() {
-    const locale = resolveLocale();
-    this.registry.set("locale", locale);
-
     const { width, height } = this.scale;
     const title = this.add
-      .text(width / 2, height / 2 - 30, t(locale, "loadingTitle"), {
+      .text(width / 2, height / 2 - 30, "Tiled", {
         fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
         fontSize: "48px",
         color: "#f6f2ee",
@@ -20,7 +16,7 @@ export class LoadingScene extends Phaser.Scene {
       .setOrigin(0.5);
 
     const prompt = this.add
-      .text(width / 2, height / 2 + 30, t(locale, "pressAnyKey"), {
+      .text(width / 2, height / 2 + 30, "Press any key to continue", {
         fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
         fontSize: "18px",
         color: "#cfc9c4",
