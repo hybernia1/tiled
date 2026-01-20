@@ -1,5 +1,4 @@
 import { TILE_HEIGHT, TILE_WIDTH } from "../config/constants.js";
-import { t } from "../config/localization.js";
 import { NpcStates } from "../systems/npc/stateMachine.js";
 
 export const applyNpcDefinition = (scene, sprite, npcDefinition, options = {}) => {
@@ -10,9 +9,7 @@ export const applyNpcDefinition = (scene, sprite, npcDefinition, options = {}) =
     nameplateOffsetY = 28,
   } = options;
 
-  const displayName = npcDefinition.displayNameKey
-    ? t(scene.locale, npcDefinition.displayNameKey)
-    : npcDefinition.displayName;
+  const displayName = npcDefinition.displayName;
 
   sprite.setData("definition", npcDefinition);
   sprite.setData("id", npcDefinition.id);

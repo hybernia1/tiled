@@ -22,7 +22,7 @@ import { createMap } from "../entities/map.js";
 import { createNpc } from "../entities/npc.js";
 import { createPigNpc } from "../entities/pigNpc.js";
 import { createPlayer } from "../entities/player.js";
-import { resolveLocale, t } from "../config/localization.js";
+import { en } from "../config/locales/en.js";
 import { getMaxHealthForLevel } from "../config/playerProgression.js";
 import {
   getMapState,
@@ -39,9 +39,14 @@ import { NpcAggroSystem } from "../systems/NpcAggroSystem.js";
 import { EffectSystem } from "../systems/effects/EffectSystem.js";
 import { getMapDefinition } from "../worlds/registry.js";
 
-const MAP_NAME_KEYS = {
-  pinewood: "mapNamePinewood",
-  "pinewood:cave": "mapNamePinewoodCave",
+const MAP_NAMES = {
+  pinewood: en.mapNamePinewood,
+  "pinewood:cave": en.mapNamePinewoodCave,
+};
+
+const PORTAL_PROMPTS = {
+  enterCave: en.enterCave,
+  exitCave: en.exitCave,
 };
 
 export class BaseMapScene extends Phaser.Scene {
@@ -83,7 +88,6 @@ export class BaseMapScene extends Phaser.Scene {
   }
 
   create() {
-    this.locale = this.registry.get("locale") ?? resolveLocale();
     this.gameState = loadGameState();
     this.mapState = getMapState(this.gameState, this.mapId);
     this.persistGameState = () => saveGameState(this.gameState);
@@ -118,7 +122,7 @@ export class BaseMapScene extends Phaser.Scene {
     this.inventorySystem.createInventoryUi();
     this.gameLogSystem.createLogUi();
     this.gameLogSystem.addEntry("logMapEntered", {
-      map: t(this.locale, MAP_NAME_KEYS[this.mapId] ?? this.mapId),
+      map: MAP_NAMES[this.mapId] ?? this.mapId,
     });
     this.setupIsometricSprites();
     this.physics.world.setBounds(0, 0, this.mapWidthPx, this.mapHeightPx);
@@ -503,7 +507,7 @@ export class BaseMapScene extends Phaser.Scene {
       .text(
         16,
         16,
-        t(this.locale, "demoInstructions"),
+        en.demoInstructions,
         {
           fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
           fontSize: "16px",
@@ -518,7 +522,7 @@ export class BaseMapScene extends Phaser.Scene {
 
   createPortalPrompt() {
     this.portalPrompt = this.add
-      .text(0, 0, t(this.locale, this.portalPromptKey), {
+      .text(0, 0, PORTAL_PROMPTS[this.portalPromptKey] ?? this.portalPromptKey, {
         fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
         fontSize: "16px",
         color: "#f6f2ee",
@@ -671,11 +675,11 @@ export class BaseMapScene extends Phaser.Scene {
   }
 
   updatePauseTexts() {
-    this.pauseTitleText.setText(t(this.locale, "pauseTitle"));
-    this.pauseResumeText.setText(t(this.locale, "pauseResume"));
-    this.pauseQuitText.setText(t(this.locale, "pauseQuit"));
+    this.pauseTitleText.setText(en.pauseTitle);
+    this.pauseResumeText.setText(en.pauseResume);
+    this.pauseQuitText.setText(en.pauseQuit);
     this.updateFullscreenText();
-    this.pauseHintText.setText(t(this.locale, "pauseHint"));
+    this.pauseHintText.setText(en.pauseHint);
   }
 
   setupPauseInput() {
@@ -724,10 +728,10 @@ export class BaseMapScene extends Phaser.Scene {
       return;
     }
     const stateLabel = this.scale.isFullscreen
-      ? t(this.locale, "fullscreenOn")
-      : t(this.locale, "fullscreenOff");
+      ? en.fullscreenOn
+      : en.fullscreenOff;
     this.pauseFullscreenText.setText(
-      `${t(this.locale, "pauseFullscreen")}: ${stateLabel}`
+      `${en.pauseFullscreen}: ${stateLabel}`
     );
   }
 

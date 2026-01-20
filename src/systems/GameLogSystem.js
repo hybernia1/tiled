@@ -1,4 +1,4 @@
-import { t } from "../config/localization.js";
+import { en } from "../config/locales/en.js";
 
 const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
 
@@ -51,7 +51,7 @@ export class GameLogSystem {
       .text(
         this.panelBounds.x + this.padding,
         this.panelBounds.y + this.padding,
-        t(this.scene.locale, "logTitle"),
+        en.logTitle,
         {
           fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
           fontSize: "14px",
@@ -174,7 +174,7 @@ export class GameLogSystem {
   }
 
   addEntry(key, params) {
-    const template = t(this.scene.locale, key);
+    const template = en[key] ?? key;
     const message = this.formatMessage(template, params);
     this.entries.push(message);
     if (this.entries.length > this.maxEntries) {

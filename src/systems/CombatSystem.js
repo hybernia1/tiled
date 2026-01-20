@@ -1,5 +1,5 @@
 import * as Phaser from "phaser";
-import { t } from "../config/localization.js";
+import { en } from "../config/locales/en.js";
 import { BULLET_RANGE_TILES, TILE_WIDTH } from "../config/constants.js";
 import {
   getMaxHealthForLevel,
@@ -961,7 +961,7 @@ export class CombatSystem {
     }
     const now = this.getSpellTime();
     if (this.isPlayerShielded(now)) {
-      this.showFloatingText(player, "BLOK", "#9fd7ff");
+      this.showFloatingText(player, "BLOCK", "#9fd7ff");
       return;
     }
     this.recordCombatActivity(this.scene.time?.now ?? Date.now());
@@ -985,7 +985,7 @@ export class CombatSystem {
       player.setVisible(false);
       player.body.enable = false;
       player.body.setVelocity(0, 0);
-      this.showCombatMessage(t(this.scene.locale, "combatPlayerDown"));
+      this.showCombatMessage(en.combatPlayerDown);
     }
   }
 
@@ -1145,8 +1145,7 @@ export class CombatSystem {
       if (npc === this.scene.targetedNpc) {
         this.scene.setTargetedNpc?.(null);
       }
-      const npcName =
-        npc.getData("displayName") ?? t(this.scene.locale, "npcName");
+      const npcName = npc.getData("displayName") ?? en.npcName;
       this.scene.gameLogSystem?.addEntry("logNpcDefeated", { npc: npcName });
       const xpReward = Number(npcDefinition?.xpReward);
       if (Number.isFinite(xpReward) && xpReward > 0) {

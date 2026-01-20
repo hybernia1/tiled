@@ -3,11 +3,9 @@ export const en = {
   pressAnyKey: "Press any key to continue",
   menuTitle: "Main Menu",
   menuStart: "Start Game",
-  menuLanguage: "Language",
   menuFullscreen: "Fullscreen",
   fullscreenOn: "On",
   fullscreenOff: "Off",
-  languageName: "English",
   demoInstructions:
     "WASD/Arrow keys: move | 1: shot | 2: shield | Mouse/Tab: target | Click: interact | F: fullscreen | Esc/P: pause",
   pauseTitle: "Paused",

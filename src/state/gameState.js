@@ -30,8 +30,8 @@ const DEFAULT_STATE = {
     shieldedUntil: 0,
   },
   inventory: {
-    jablko: 0,
-    hruska: 0,
+    apple: 0,
+    pear: 0,
   },
   maps: {},
 };
@@ -123,6 +123,19 @@ const normalizeState = (state) => {
     effects.push({ id: "shield", expiresAt: shieldedUntil, stacks: 1 });
   }
 
+  const rawInventory =
+    state?.inventory && typeof state.inventory === "object"
+      ? { ...state.inventory }
+      : {};
+  if ("jablko" in rawInventory && rawInventory.apple === undefined) {
+    rawInventory.apple = rawInventory.jablko;
+  }
+  if ("hruska" in rawInventory && rawInventory.pear === undefined) {
+    rawInventory.pear = rawInventory.hruska;
+  }
+  delete rawInventory.jablko;
+  delete rawInventory.hruska;
+
   const normalized = {
     ...DEFAULT_STATE,
     ...state,
@@ -140,7 +153,7 @@ const normalizeState = (state) => {
     },
     inventory: {
       ...DEFAULT_STATE.inventory,
-      ...(state?.inventory ?? {}),
+      ...rawInventory,
     },
     maps: { ...(state?.maps ?? {}) },
   };

@@ -1,9 +1,9 @@
 import * as Phaser from "phaser";
-import { t } from "../config/localization.js";
+import { en } from "../config/locales/en.js";
 
-const ITEM_LOG_KEYS = {
-  jablko: "itemApple",
-  hruska: "itemPear",
+const ITEM_LABELS = {
+  apple: en.itemApple,
+  pear: en.itemPear,
 };
 
 export class InteractionSystem {
@@ -70,8 +70,7 @@ export class InteractionSystem {
     }
     if (itemType) {
       this.inventorySystem.addItem(itemType);
-      const itemKey = ITEM_LOG_KEYS[itemType];
-      const itemName = itemKey ? t(this.scene.locale, itemKey) : itemType;
+      const itemName = ITEM_LABELS[itemType] ?? itemType;
       this.scene.gameLogSystem?.addEntry("logItemPicked", { item: itemName });
     }
 
@@ -110,9 +109,9 @@ export class InteractionSystem {
 
   showFriendlyNpcDialogue() {
     const jokes = [
-      "Víš, proč kostra nešla do baru? Neměla na to žaludek.",
-      "Říkám si: střela je rychlá, ale vtip je rychlejší!",
-      "Potkal jsem bug. Chtěl autogram, ale zmizel po jedné ráně.",
+      "Why didn’t the skeleton go to the tavern? It didn’t have the guts.",
+      "People say my shot is fast, but my punchlines are faster!",
+      "I met a bug once. It wanted an autograph, then vanished after one hit.",
     ];
     const joke = Phaser.Utils.Array.GetRandom(jokes);
     const friendlyNpcDisplay = this.scene.getDisplaySprite(this.scene.friendlyNpc);
