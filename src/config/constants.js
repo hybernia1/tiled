@@ -11,6 +11,8 @@ export const PLAYER_SPEED = 180;
 export const BULLET_SPEED = 360;
 export const FIRE_COOLDOWN_MS = 1000;
 export const BULLET_RANGE_TILES = 7;
+export const UI_MARGIN = 16;
+export const UI_PADDING = 12;
 
 // Legacy fallback for older UI or saved data; use getMaxHealthForLevel instead.
 export const PLAYER_MAX_HEALTH = 5;

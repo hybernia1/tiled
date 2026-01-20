@@ -1,3 +1,4 @@
+import { UI_MARGIN, UI_PADDING } from "../config/constants.js";
 import { uiTheme } from "../config/uiTheme.js";
 
 const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
@@ -20,13 +21,16 @@ export class GameLogSystem {
   createLogUi() {
     const { width, height } = this.scene.scale;
     this.panelHeight = 160;
-    this.panelWidth = Math.min(360, Math.max(220, width - 32));
-    this.padding = 12;
+    this.panelWidth = Math.min(
+      360,
+      Math.max(220, width - UI_MARGIN * 2)
+    );
+    this.padding = UI_PADDING;
     this.titleHeight = 20;
 
     this.panelBounds = {
-      x: 16,
-      y: height - this.panelHeight - 16,
+      x: UI_MARGIN,
+      y: height - this.panelHeight - UI_MARGIN,
       width: this.panelWidth,
       height: this.panelHeight,
     };
@@ -116,10 +120,13 @@ export class GameLogSystem {
       return;
     }
 
-    const nextWidth = Math.min(360, Math.max(220, gameSize.width - 32));
+    const nextWidth = Math.min(
+      360,
+      Math.max(220, gameSize.width - UI_MARGIN * 2)
+    );
     const nextBounds = {
-      x: 16,
-      y: gameSize.height - this.panelHeight - 16,
+      x: UI_MARGIN,
+      y: gameSize.height - this.panelHeight - UI_MARGIN,
       width: nextWidth,
       height: this.panelHeight,
     };
@@ -133,12 +140,7 @@ export class GameLogSystem {
     }
 
     this.panelWidth = nextWidth;
-    this.panelBounds = {
-      x: 16,
-      y: gameSize.height - this.panelHeight - 16,
-      width: this.panelWidth,
-      height: this.panelHeight,
-    };
+    this.panelBounds = nextBounds;
 
     this.panel.clear();
     this.panel.fillStyle(uiTheme.panelBackground, 0.8);
