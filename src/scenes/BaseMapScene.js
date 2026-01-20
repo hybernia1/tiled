@@ -13,7 +13,7 @@ import {
   PLAYER_SPEED,
   TILE_WIDTH,
 } from "../config/constants.js";
-import { createRegisteredTextures } from "../assets/textures/registry.js";
+import { TextureLoader } from "../assets/textures/TextureLoader.js";
 import { createBullets } from "../entities/bullets.js";
 import { createFriendlyNpc } from "../entities/friendlyNpc.js";
 import { createCollectibles } from "../entities/collectibles.js";
@@ -70,7 +70,7 @@ export class BaseMapScene extends Phaser.Scene {
   }
 
   preload() {
-    createRegisteredTextures(this);
+    new TextureLoader(this).load();
   }
 
   create() {
