@@ -34,7 +34,7 @@ import { createWallTexture } from "../assets/textures/terrain/wall.js";
 import { createBullets } from "../entities/bullets.js";
 import { createFriendlyNpc } from "../entities/friendlyNpc.js";
 import { createCollectibles } from "../entities/collectibles.js";
-import { createMap, MAP_PORTALS } from "../entities/map.js";
+import { createMap } from "../entities/map.js";
 import { createNpc } from "../entities/npc.js";
 import { createPigNpc } from "../entities/pigNpc.js";
 import { createPlayer } from "../entities/player.js";
@@ -52,6 +52,7 @@ import { InteractionSystem } from "../systems/InteractionSystem.js";
 import { GameLogSystem } from "../systems/GameLogSystem.js";
 import { MovementSystem } from "../systems/MovementSystem.js";
 import { NpcAggroSystem } from "../systems/NpcAggroSystem.js";
+import { getMapDefinition } from "../worlds/registry.js";
 
 const MAP_NAME_KEYS = {
   pinewood: "mapNamePinewood",
@@ -121,7 +122,8 @@ export class BaseMapScene extends Phaser.Scene {
     this.interactionSystem = new InteractionSystem(this, null, this.inventorySystem);
     this.gameLogSystem = new GameLogSystem(this);
 
-    createMap(this, { mapId: this.mapId });
+    const { portal } = createMap(this, { mapId: this.mapId });
+    this.portalTargetMapId = portal?.targetMapId ?? null;
     createPlayer(this, this.spawnPoint, playerState);
     this.syncPlayerState();
     createCollectibles(
@@ -409,7 +411,7 @@ export class BaseMapScene extends Phaser.Scene {
 
     this.syncPlayerState();
     this.scene.start(this.portalTargetKey, {
-      spawnPoint: this.getPortalSpawnPoint(this.portalTargetKey),
+      spawnPoint: this.getPortalSpawnPoint(this.portalTargetMapId),
     });
     return true;
   }
@@ -596,8 +598,11 @@ export class BaseMapScene extends Phaser.Scene {
     this.persistGameState?.();
   }
 
-  getPortalSpawnPoint(targetKey) {
-    const targetPortal = MAP_PORTALS[targetKey];
+  getPortalSpawnPoint(targetMapId) {
+    if (!targetMapId) {
+      return null;
+    }
+    const targetPortal = getMapDefinition(targetMapId)?.portal;
     if (!targetPortal) {
       return null;
     }
