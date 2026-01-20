@@ -38,6 +38,18 @@ const drawPlayerFrame = (ctx, offsetX, pose) => {
     ctx.fill();
     ctx.fillStyle = "#2d1b12";
     ctx.fillRect(12.5 + headOffsetX, 9 + headOffsetY, 7, 2);
+  } else if (facing === "side") {
+    ctx.fillStyle = "#4b2c20";
+    if (eyeOpen) {
+      ctx.beginPath();
+      ctx.arc(17 + headOffsetX, 8 + headOffsetY, 1.4, 0, Math.PI * 2);
+      ctx.fill();
+    } else {
+      ctx.fillRect(16 + headOffsetX, 8 + headOffsetY, 3, 1);
+    }
+
+    ctx.fillStyle = "#c66b5b";
+    ctx.fillRect(16 + headOffsetX, 11 + headOffsetY, 3, 1.5);
   } else {
     ctx.fillStyle = "#4b2c20";
     if (eyeOpen) {
@@ -183,6 +195,20 @@ const backWalkPoses = walkPoses.map((pose) => ({
   shoulderOffset: pose.shoulderOffset * 0.7,
 }));
 
+const sideIdlePoses = idlePoses.map((pose) => ({
+  ...pose,
+  facing: "side",
+  headOffsetX: pose.headOffsetX * 0.6,
+  shoulderOffset: pose.shoulderOffset * 0.8,
+}));
+
+const sideWalkPoses = walkPoses.map((pose) => ({
+  ...pose,
+  facing: "side",
+  headOffsetX: pose.headOffsetX * 0.6,
+  shoulderOffset: pose.shoulderOffset * 0.8,
+}));
+
 export const createPlayerTexture = (scene) => {
   if (scene.textures.exists("player")) {
     scene.textures.get("player").setFilter(Phaser.Textures.FilterMode.NEAREST);
@@ -194,7 +220,9 @@ export const createPlayerTexture = (scene) => {
     idlePoses.length +
     walkPoses.length +
     backIdlePoses.length +
-    backWalkPoses.length;
+    backWalkPoses.length +
+    sideIdlePoses.length +
+    sideWalkPoses.length;
   if (scene.textures.exists("player-sheet")) {
     return;
   }
@@ -230,6 +258,16 @@ export const createPlayerTexture = (scene) => {
   });
 
   backWalkPoses.forEach((pose) => {
+    drawPlayerFrame(ctx, frameIndex * frameWidth, pose);
+    frameIndex += 1;
+  });
+
+  sideIdlePoses.forEach((pose) => {
+    drawPlayerFrame(ctx, frameIndex * frameWidth, pose);
+    frameIndex += 1;
+  });
+
+  sideWalkPoses.forEach((pose) => {
     drawPlayerFrame(ctx, frameIndex * frameWidth, pose);
     frameIndex += 1;
   });

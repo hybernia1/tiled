@@ -20,7 +20,7 @@ import { createWallTexture } from "./terrain/wall.js";
 
 const playerFrameWidth = 32;
 const playerFrameHeight = 32;
-const playerFrameCount = 16;
+const playerFrameCount = 24;
 const playerSheetWidth = playerFrameWidth * playerFrameCount;
 const playerSheetHeight = playerFrameHeight;
 
