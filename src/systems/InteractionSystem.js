@@ -1,4 +1,5 @@
 import * as Phaser from "phaser";
+import { getItemDisplayName } from "../data/registries/items.js";
 
 export class InteractionSystem {
   constructor(scene, inventorySystem) {
@@ -68,7 +69,8 @@ export class InteractionSystem {
     }
     if (itemId) {
       this.inventorySystem.addItem(itemId);
-      this.scene.gameLogSystem?.addEntry("logItemPicked", { item: itemId });
+      const itemLabel = getItemDisplayName(itemId);
+      this.scene.gameLogSystem?.addEntry("logItemPicked", { item: itemLabel });
     }
 
     collectible.disableBody(true, true);
@@ -106,49 +108,6 @@ export class InteractionSystem {
 
   showFriendlyNpcDialogue() {
     const questId = "quest_boar_chunks_01";
-    const questSystem = this.scene.questSystem;
-    const questState =
-      questSystem?.getQuestState?.(questId) ??
-      questSystem?.getQuestStatus?.(questId) ??
-      questSystem?.getQuest?.(questId)?.status ??
-      "available";
-    const isReadyToTurnIn =
-      questSystem?.isQuestReadyToTurnIn?.(questId) ??
-      questSystem?.canTurnInQuest?.(questId) ??
-      questState === "ready_to_turn_in";
-    let dialogueText = "";
-
-    if (isReadyToTurnIn) {
-      dialogueText =
-        "To je úleva! Přinesl jsi 5 boar chunků? Díky, teď budu mít co jíst.";
-      questSystem?.turnInQuest?.(questId);
-      questSystem?.completeQuest?.(questId);
-    } else if (["active", "in_progress", "accepted"].includes(questState)) {
-      dialogueText =
-        "Prosím, přines mi 5 boar chunků. Bez nich se neuživím.";
-    } else {
-      dialogueText =
-        "Jsem starý a už se neuživím. Pomůžeš mi a doneseš 5 boar chunků?";
-      questSystem?.startQuest?.(questId);
-    }
-
-    const friendlyNpcDisplay = this.scene.getDisplaySprite(this.scene.friendlyNpc);
-    const bubbleDepth =
-      friendlyNpcDisplay?.depth !== undefined
-        ? friendlyNpcDisplay.depth + 3
-        : 13;
-
-    this.scene.friendlyNpcBubble
-      .setText(dialogueText)
-      .setPosition(friendlyNpcDisplay.x, friendlyNpcDisplay.y - 52)
-      .setDepth(bubbleDepth)
-      .setVisible(true);
-
-    if (this.scene.friendlyNpcBubbleTimer) {
-      this.scene.friendlyNpcBubbleTimer.remove(false);
-    }
-    this.scene.friendlyNpcBubbleTimer = this.scene.time.delayedCall(2200, () => {
-      this.scene.friendlyNpcBubble.setVisible(false);
-    });
+    this.scene.showQuestDialog?.(questId);
   }
 }

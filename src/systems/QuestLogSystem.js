@@ -1,6 +1,7 @@
 import * as Phaser from "phaser";
 import { UI_MARGIN, UI_PADDING } from "../config/constants.js";
 import { uiTheme } from "../config/uiTheme.js";
+import { getItemDisplayName } from "../data/registries/items.js";
 
 const formatReward = (reward) => {
   if (!reward || typeof reward !== "object") {
@@ -17,7 +18,7 @@ const formatReward = (reward) => {
   }
   if (reward.rewardType === "item") {
     const amount = Math.max(1, Number(reward.amount ?? 1));
-    const itemLabel = reward.itemId ?? "item";
+    const itemLabel = getItemDisplayName(reward.itemId);
     return `${itemLabel} x${amount}`;
   }
   return null;
@@ -140,8 +141,13 @@ export class QuestLogSystem {
 
     questIds.forEach((questId, index) => {
       const quest = questSystem?.getQuest?.(questId);
-      const definition = quest?.definition ?? questSystem?.getQuestDefinition?.(questId);
-      const questName = definition?.nameKey ?? definition?.id ?? questId;
+      const definition =
+        quest?.definition ?? questSystem?.getQuestDefinition?.(questId);
+      const questName =
+        questSystem?.getQuestDisplayName?.(questId) ??
+        definition?.nameKey ??
+        definition?.id ??
+        questId;
       questLines.push(`${index + 1}. ${questName}`);
 
       const status = quest?.status ?? activeQuests[questId]?.status ?? "active";
@@ -160,11 +166,16 @@ export class QuestLogSystem {
             objective?.targetId ??
             objective?.objectiveKey ??
             `objective_${objectiveIndex}`;
-          const label = objective?.objectiveKey ?? objective?.targetId ?? targetKey;
+          const label =
+            questSystem?.getTargetDisplayName?.(objective?.targetId) ??
+            objective?.objectiveKey ??
+            objective?.targetId ??
+            targetKey;
           const required = Math.max(1, Number(objective?.count ?? 1));
           const progress = Math.min(
             required,
-            Number(quest?.progress?.[targetKey] ?? 0)
+            questSystem?.getObjectiveProgress?.(questId, objective, targetKey) ??
+              Number(quest?.progress?.[targetKey] ?? 0)
           );
           questLines.push(`  • ${label}: ${progress}/${required}`);
         });

@@ -7,9 +7,7 @@ const resolveRegistry = () => {
   if (cachedRegistry) {
     return cachedRegistry;
   }
-  throw new Error(
-    "[registry] Registry loader must be awaited before resolveRegistry."
-  );
+  throw new Error("[registry] Registry data has not been loaded yet.");
 };
 
 export const getRegistryData = (key) => {

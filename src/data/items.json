@@ -1,6 +1,8 @@
 [
   {
     "id": "apple",
+    "nameKey": "item.apple",
+    "displayName": "Apple",
     "iconKey": "apple",
     "stackSize": 99,
     "rarity": "common",
@@ -8,6 +10,8 @@
   },
   {
     "id": "pear",
+    "nameKey": "item.pear",
+    "displayName": "Pear",
     "iconKey": "pear",
     "stackSize": 99,
     "rarity": "common",
@@ -15,6 +19,8 @@
   },
   {
     "id": "boar_chunk",
+    "nameKey": "item.boar_chunk",
+    "displayName": "Boar Chunk",
     "iconKey": "boar_chunk",
     "stackSize": 99,
     "rarity": "common",

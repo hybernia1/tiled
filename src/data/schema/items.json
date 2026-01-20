@@ -6,6 +6,8 @@
     "required": ["id", "iconKey", "stackSize", "rarity", "tags"],
     "properties": {
       "id": { "type": "string" },
+      "nameKey": { "type": "string" },
+      "displayName": { "type": "string" },
       "iconKey": { "type": "string" },
       "stackSize": { "type": "number" },
       "rarity": { "type": "string" },

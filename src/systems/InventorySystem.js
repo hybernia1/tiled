@@ -135,6 +135,24 @@ export class InventorySystem {
       this.scene.gameState.inventory[itemId] = this.inventory[itemId];
       this.scene.persistGameState?.();
     }
+    this.scene.questSystem?.syncItemObjectiveProgress?.(itemId);
+    this.updateInventoryUi();
+  }
+
+  removeItem(itemId, amount = 1) {
+    if (this.inventory[itemId] === undefined) {
+      return;
+    }
+    const safeAmount = Math.max(0, Number(amount ?? 0));
+    if (safeAmount <= 0) {
+      return;
+    }
+    this.inventory[itemId] = Math.max(0, this.inventory[itemId] - safeAmount);
+    if (this.scene?.gameState?.inventory) {
+      this.scene.gameState.inventory[itemId] = this.inventory[itemId];
+      this.scene.persistGameState?.();
+    }
+    this.scene.questSystem?.syncItemObjectiveProgress?.(itemId);
     this.updateInventoryUi();
   }
 

@@ -3,6 +3,16 @@ import { setRegistryData } from "./registries/baseRegistry.js";
 
 let cachedRegistry = null;
 
+const validateRegistryPayload = (registry) => {
+  if (!registry || typeof registry !== "object") {
+    throw new Error("[registry] Registry data has not been loaded yet.");
+  }
+
+  if (!registry.npcs || Array.isArray(registry.npcs)) {
+    throw new Error("[registry] NPC registry must be a keyed object.");
+  }
+};
+
 const fetchJson = async (url) => {
   const response = await fetch(url);
   if (!response.ok) {
@@ -91,6 +101,8 @@ export const loadRegistries = async () => {
     }
   );
 
+  validateRegistryPayload(cachedRegistry);
+  globalThis.gameRegistry = cachedRegistry;
   setRegistryData(cachedRegistry);
 
   return cachedRegistry;
