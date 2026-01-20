@@ -4,7 +4,6 @@ import {
   MAX_LEVEL,
 } from "../config/playerProgression.js";
 
-const STORAGE_KEY = "tiled:gameState";
 const SESSION_KEY = "tiled:sessionToken";
 export const API_BASE_URL =
   import.meta.env.VITE_API_URL ?? "http://localhost:4000";
@@ -276,34 +275,6 @@ const normalizeState = (state) => {
   return normalized;
 };
 
-const getOfflineState = () => {
-  if (typeof localStorage === "undefined") {
-    return normalizeState(DEFAULT_STATE);
-  }
-
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) {
-      return normalizeState(DEFAULT_STATE);
-    }
-    const parsed = JSON.parse(raw);
-    return normalizeState(parsed);
-  } catch (error) {
-    return normalizeState(DEFAULT_STATE);
-  }
-};
-
-const cacheOfflineState = (state) => {
-  if (typeof localStorage === "undefined") {
-    return;
-  }
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-  } catch (error) {
-    // Ignore storage errors (quota, private mode, etc.).
-  }
-};
-
 const getSessionToken = () => {
   if (typeof localStorage === "undefined") {
     return null;
@@ -323,14 +294,9 @@ export const setSessionToken = (token) => {
 };
 
 export const loadGameState = async () => {
-  const offlineState = getOfflineState();
-  if (typeof navigator !== "undefined" && navigator.onLine === false) {
-    return offlineState;
-  }
-
   const token = getSessionToken();
   if (!token) {
-    return offlineState;
+    return normalizeState(DEFAULT_STATE);
   }
 
   try {
@@ -340,23 +306,18 @@ export const loadGameState = async () => {
       },
     });
     if (!response.ok) {
-      return offlineState;
+      return normalizeState(DEFAULT_STATE);
     }
     const data = await response.json();
     const normalized = normalizeState(data?.state ?? data);
-    cacheOfflineState(normalized);
     return normalized;
   } catch (error) {
-    return offlineState;
+    return normalizeState(DEFAULT_STATE);
   }
 };
 
 export const saveGameState = async (state) => {
   const normalized = normalizeState(state);
-  cacheOfflineState(normalized);
-  if (typeof navigator !== "undefined" && navigator.onLine === false) {
-    return;
-  }
   const token = getSessionToken();
   if (!token) {
     return;

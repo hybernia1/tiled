@@ -2,6 +2,9 @@ import * as Phaser from "phaser";
 import { API_BASE_URL, setSessionToken } from "../state/gameState.js";
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const NICKNAME_PATTERN = /^[A-Za-z0-9_]+$/;
+const NICKNAME_MIN_LENGTH = 3;
+const NICKNAME_MAX_LENGTH = 16;
 
 export class AuthScene extends Phaser.Scene {
   constructor() {
@@ -34,6 +37,11 @@ export class AuthScene extends Phaser.Scene {
             <span class="auth-error" data-error="email"></span>
           </label>
           <label class="auth-field">
+            <span>Nickname</span>
+            <input name="nickname" type="text" autocomplete="nickname" placeholder="Hero name" />
+            <span class="auth-error" data-error="nickname"></span>
+          </label>
+          <label class="auth-field">
             <span>Password</span>
             <input name="password" type="password" autocomplete="current-password" placeholder="At least 6 characters" />
             <span class="auth-error" data-error="password"></span>
@@ -51,6 +59,7 @@ export class AuthScene extends Phaser.Scene {
     const subtitle = this.formWrapper.querySelector(".auth-subtitle");
     const form = this.formWrapper.querySelector(".auth-form");
     const emailInput = this.formWrapper.querySelector("input[name='email']");
+    const nicknameInput = this.formWrapper.querySelector("input[name='nickname']");
     const passwordInput = this.formWrapper.querySelector("input[name='password']");
     const submitButton = this.formWrapper.querySelector(".auth-submit");
     const status = this.formWrapper.querySelector(".auth-status");
@@ -90,7 +99,7 @@ export class AuthScene extends Phaser.Scene {
       }
     };
 
-    const validate = (email, password) => {
+    const validate = (email, password, nickname) => {
       clearErrors();
       let valid = true;
       if (!email) {
@@ -107,13 +116,53 @@ export class AuthScene extends Phaser.Scene {
         setError("password", "Password must be at least 6 characters.");
         valid = false;
       }
+      const shouldValidateNickname =
+        this.mode === "register" || (nickname && nickname.length > 0);
+      if (shouldValidateNickname) {
+        if (!nickname) {
+          setError("nickname", "Nickname is required.");
+          valid = false;
+        } else if (
+          nickname.length < NICKNAME_MIN_LENGTH ||
+          nickname.length > NICKNAME_MAX_LENGTH
+        ) {
+          setError(
+            "nickname",
+            `Nickname must be ${NICKNAME_MIN_LENGTH}-${NICKNAME_MAX_LENGTH} characters.`
+          );
+          valid = false;
+        } else if (!NICKNAME_PATTERN.test(nickname)) {
+          setError(
+            "nickname",
+            "Nickname can only contain letters, numbers, and underscores."
+          );
+          valid = false;
+        }
+      }
       return valid;
     };
 
     const setLoading = (loading) => {
       submitButton.disabled = loading;
       emailInput.disabled = loading;
+      nicknameInput.disabled = loading;
       passwordInput.disabled = loading;
+    };
+
+    const ensureCharacter = async (token, nickname) => {
+      const response = await fetch(`${API_BASE_URL}/characters`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ nickname }),
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        return { ok: false, error: payload?.error ?? "Character creation failed." };
+      }
+      return { ok: true };
     };
 
     tabs.forEach((tab) => {
@@ -123,8 +172,9 @@ export class AuthScene extends Phaser.Scene {
     form.addEventListener("submit", async (event) => {
       event.preventDefault();
       const email = emailInput.value.trim();
+      const nickname = nicknameInput.value.trim();
       const password = passwordInput.value;
-      if (!validate(email, password)) {
+      if (!validate(email, password, nickname)) {
         return;
       }
       setLoading(true);
@@ -153,6 +203,13 @@ export class AuthScene extends Phaser.Scene {
         setSessionToken(token);
         this.registry.set("sessionToken", token);
         status.textContent = "Authenticated! Preparing your hero...";
+        const characterResult = await ensureCharacter(token, nickname);
+        if (!characterResult.ok) {
+          status.textContent = characterResult.error;
+          setError("nickname", characterResult.error);
+          setLoading(false);
+          return;
+        }
         this.time.delayedCall(400, () => {
           this.scene.start("world");
         });
