@@ -3,4 +3,5 @@ export const TILE_TYPES = {
   WALL: 1,
   HARD_WALL: 2,
   POND: 3,
+  GRAVEYARD: 4,
 };

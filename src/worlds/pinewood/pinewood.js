@@ -50,11 +50,24 @@ const buildPinewoodTiles = () => {
     { x: 35, y: 15 },
   ];
 
+  const graveyard = { x: 29, y: 29, width: 3, height: 3 };
+  const graveyardTiles = [];
+  for (let y = graveyard.y; y < graveyard.y + graveyard.height; y += 1) {
+    for (let x = graveyard.x; x < graveyard.x + graveyard.width; x += 1) {
+      if (data[y]?.[x] !== undefined) {
+        data[y][x] = TILE_TYPES.GRAVEYARD;
+        graveyardTiles.push({ x, y });
+      }
+    }
+  }
+
   return {
     data,
     pondTiles,
     coniferTrees,
     deciduousTrees,
+    graveyardTiles,
+    graveyard,
   };
 };
 
@@ -66,4 +79,5 @@ export const pinewoodMap = {
   floorFramePrefix: "grass",
   portal: { x: 12, y: 44, targetMapId: "pinewood:cave" },
   tiles: buildPinewoodTiles(),
+  graveyard: { x: 29, y: 29, width: 3, height: 3 },
 };

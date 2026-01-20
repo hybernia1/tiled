@@ -42,9 +42,11 @@ export const createMap = (scene, options = {}) => {
     deciduousTrees.map(({ x, y }) => `${x},${y}`)
   );
   const textureLoader = scene.textureLoader ?? null;
+  const defaultFloorFramePrefix = floorFramePrefix;
 
   textureLoader?.ensureTexture("collision-tiles");
   textureLoader?.ensureTexture(floorTextureKey);
+  textureLoader?.ensureTexture("graveyard");
   textureLoader?.ensureTexture("wall");
   textureLoader?.ensureTexture("mountains");
   textureLoader?.ensureTexture("pond");
@@ -110,15 +112,20 @@ export const createMap = (scene, options = {}) => {
       const isoY = y * ISO_STEP;
 
       // podlaha všude
+      const isGraveyardTile = data[y][x] === TILE_TYPES.GRAVEYARD;
+      const tileFloorFramePrefix = isGraveyardTile
+        ? "graveyard"
+        : defaultFloorFramePrefix;
+      const tileTextureKey = isGraveyardTile ? "graveyard" : floorTextureKey;
       const floorFrame =
         (x + y) % 2 === 0
-          ? `${floorFramePrefix}-0`
-          : `${floorFramePrefix}-1`;
+          ? `${tileFloorFramePrefix}-0`
+          : `${tileFloorFramePrefix}-1`;
       const floorTile = scene.add.isoSprite(
         isoX,
         isoY,
         0,
-        floorTextureKey,
+        tileTextureKey,
         undefined,
         floorFrame
       );
