@@ -1,6 +1,15 @@
 export const createFriendlyNpcTexture = (scene) => {
+  if (scene.textures.exists("npcFriend")) {
+    return;
+  }
   const npc = scene.textures.createCanvas("npcFriend", 32, 32);
+  if (!npc) {
+    return;
+  }
   const ctx = npc.getContext();
+  if (!ctx) {
+    return;
+  }
 
   ctx.fillStyle = "#1d2c3b";
   ctx.fillRect(0, 0, 32, 32);

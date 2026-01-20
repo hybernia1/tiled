@@ -1,6 +1,15 @@
 export const createSwitchTexture = (scene) => {
+  if (scene.textures.exists("switch")) {
+    return;
+  }
   const switchTexture = scene.textures.createCanvas("switch", 18, 18);
+  if (!switchTexture) {
+    return;
+  }
   const ctx = switchTexture.getContext();
+  if (!ctx) {
+    return;
+  }
 
   ctx.fillStyle = "#1b1f2e";
   ctx.fillRect(0, 0, 18, 18);

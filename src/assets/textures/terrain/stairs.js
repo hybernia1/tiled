@@ -3,12 +3,22 @@ import { TILE_HEIGHT, TILE_WIDTH } from "../../../config/constants.js";
 import { drawDiamond } from "./drawUtils.js";
 
 export const createStairsTexture = (scene) => {
+  if (scene.textures.exists("stairs")) {
+    scene.textures.get("stairs").setFilter(Phaser.Textures.FilterMode.NEAREST);
+    return;
+  }
   const texture = scene.textures.createCanvas(
     "stairs",
     TILE_WIDTH,
     TILE_HEIGHT
   );
+  if (!texture) {
+    return;
+  }
   const ctx = texture.getContext();
+  if (!ctx) {
+    return;
+  }
 
   ctx.clearRect(0, 0, texture.width, texture.height);
 
