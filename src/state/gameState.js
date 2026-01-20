@@ -13,6 +13,10 @@ const DEFAULT_STATE = {
     xp: 0,
     maxHealth: getMaxHealthForLevel(1),
     health: getMaxHealthForLevel(1),
+    maxMana: 100,
+    mana: 100,
+    maxEnergy: 100,
+    energy: 100,
     spellCooldowns: {},
     effects: [],
     shieldedUntil: 0,
@@ -63,6 +67,20 @@ const normalizeState = (state) => {
   const health = clampNumber(rawPlayer.health, 0, maxHealth, maxHealth);
   const xpNeeded = getXpNeededForNextLevel(level);
   const clampedXp = xpNeeded > 0 ? Math.min(xp, xpNeeded) : 0;
+  const maxMana = clampNumber(
+    rawPlayer.maxMana,
+    0,
+    999,
+    DEFAULT_STATE.player.maxMana
+  );
+  const mana = clampNumber(rawPlayer.mana, 0, maxMana, maxMana);
+  const maxEnergy = clampNumber(
+    rawPlayer.maxEnergy,
+    0,
+    999,
+    DEFAULT_STATE.player.maxEnergy
+  );
+  const energy = clampNumber(rawPlayer.energy, 0, maxEnergy, maxEnergy);
   const rawSpellCooldowns =
     rawPlayer.spellCooldowns && typeof rawPlayer.spellCooldowns === "object"
       ? rawPlayer.spellCooldowns
@@ -100,6 +118,10 @@ const normalizeState = (state) => {
       xp: clampedXp,
       maxHealth,
       health,
+      maxMana,
+      mana,
+      maxEnergy,
+      energy,
       spellCooldowns,
       effects,
       shieldedUntil,

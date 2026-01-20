@@ -26,6 +26,20 @@ export const createPlayer = (scene, startPosition = null, playerState = null) =>
   const health = Number.isFinite(Number(playerState?.health))
     ? Number(playerState.health)
     : maxHealth;
+  const defaultMaxMana = 100;
+  const defaultMaxEnergy = 100;
+  const maxMana = Number.isFinite(Number(playerState?.maxMana))
+    ? Number(playerState.maxMana)
+    : defaultMaxMana;
+  const mana = Number.isFinite(Number(playerState?.mana))
+    ? Number(playerState.mana)
+    : maxMana;
+  const maxEnergy = Number.isFinite(Number(playerState?.maxEnergy))
+    ? Number(playerState.maxEnergy)
+    : defaultMaxEnergy;
+  const energy = Number.isFinite(Number(playerState?.energy))
+    ? Number(playerState.energy)
+    : maxEnergy;
   const xpNeeded = getXpNeededForNextLevel(level);
 
   scene.player = scene.physics.add.sprite(startX, startY, "player", 0);
@@ -38,6 +52,10 @@ export const createPlayer = (scene, startPosition = null, playerState = null) =>
   scene.player.setData("xpNeeded", xpNeeded);
   scene.player.setData("maxHealth", maxHealth);
   scene.player.setData("health", health);
+  scene.player.setData("maxMana", maxMana);
+  scene.player.setData("mana", mana);
+  scene.player.setData("maxEnergy", maxEnergy);
+  scene.player.setData("energy", energy);
   scene.player.setData("shieldedUntil", 0);
   scene.player.setData("isShielded", false);
   scene.facing = new Phaser.Math.Vector2(1, 0);

@@ -593,11 +593,21 @@ export class BaseMapScene extends Phaser.Scene {
     const health = Number.isFinite(storedHealth) ? storedHealth : maxHealth;
     const storedXp = Number(this.player.getData("xp"));
     const xp = Number.isFinite(storedXp) ? storedXp : 0;
+    const maxMana = Number(this.player.getData("maxMana"));
+    const mana = Number(this.player.getData("mana"));
+    const maxEnergy = Number(this.player.getData("maxEnergy"));
+    const energy = Number(this.player.getData("energy"));
 
     this.gameState.player.level = level;
     this.gameState.player.xp = xp;
     this.gameState.player.maxHealth = maxHealth;
     this.gameState.player.health = health;
+    this.gameState.player.maxMana = Number.isFinite(maxMana) ? maxMana : 0;
+    this.gameState.player.mana = Number.isFinite(mana) ? mana : 0;
+    this.gameState.player.maxEnergy = Number.isFinite(maxEnergy)
+      ? maxEnergy
+      : 0;
+    this.gameState.player.energy = Number.isFinite(energy) ? energy : 0;
     this.persistGameState?.();
   }
 
