@@ -4,6 +4,7 @@ export const NPC_IDS = {
   friendlyGuide: "friendlyGuide",
   pigLevel1: "pig_level_1",
   pigLevel2: "pig_level_2",
+  pigLevel3: "pig_level_3",
 };
 
 export const NPC_DEFINITIONS = {
@@ -43,6 +44,7 @@ export const NPC_DEFINITIONS = {
     type: "neutral",
     level: 1,
     maxHealth: 4,
+    xpReward: 10,
   },
   [NPC_IDS.pigLevel2]: {
     id: NPC_IDS.pigLevel2,
@@ -50,6 +52,15 @@ export const NPC_DEFINITIONS = {
     type: "neutral",
     level: 2,
     maxHealth: 6,
+    xpReward: 12,
+  },
+  [NPC_IDS.pigLevel3]: {
+    id: NPC_IDS.pigLevel3,
+    displayName: "Prasátko",
+    type: "neutral",
+    level: 3,
+    maxHealth: 8,
+    xpReward: 15,
   },
 };
 

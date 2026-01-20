@@ -1,6 +1,9 @@
 import * as Phaser from "phaser";
 import { TILE_HEIGHT, TILE_WIDTH } from "../config/constants.js";
-import { getMaxHealthForLevel } from "../config/playerProgression.js";
+import {
+  getMaxHealthForLevel,
+  getXpNeededForNextLevel,
+} from "../config/playerProgression.js";
 
 const IDLE_FRAMES = 4;
 const WALK_FRAMES = 4;
@@ -13,6 +16,9 @@ export const createPlayer = (scene, startPosition = null, playerState = null) =>
   const level = Number.isFinite(Number(playerState?.level))
     ? Number(playerState.level)
     : 1;
+  const xp = Number.isFinite(Number(playerState?.xp))
+    ? Number(playerState.xp)
+    : 0;
   const defaultMaxHealth = getMaxHealthForLevel(level);
   const maxHealth = Number.isFinite(Number(playerState?.maxHealth))
     ? Number(playerState.maxHealth)
@@ -20,6 +26,7 @@ export const createPlayer = (scene, startPosition = null, playerState = null) =>
   const health = Number.isFinite(Number(playerState?.health))
     ? Number(playerState.health)
     : maxHealth;
+  const xpNeeded = getXpNeededForNextLevel(level);
 
   scene.player = scene.physics.add.sprite(startX, startY, "player", 0);
   scene.player.setCollideWorldBounds(true);
@@ -27,6 +34,8 @@ export const createPlayer = (scene, startPosition = null, playerState = null) =>
   scene.player.setData("isoOrigin", { x: 0.5, y: 1 });
   scene.player.setData("isoZ", TILE_HEIGHT);
   scene.player.setData("level", level);
+  scene.player.setData("xp", Math.max(0, xp));
+  scene.player.setData("xpNeeded", xpNeeded);
   scene.player.setData("maxHealth", maxHealth);
   scene.player.setData("health", health);
   scene.facing = new Phaser.Math.Vector2(1, 0);

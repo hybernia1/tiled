@@ -7,11 +7,19 @@ const PIG_SPAWNS = {
   world: [
     { x: 8, y: 12, id: NPC_IDS.pigLevel1 },
     { x: 14, y: 18, id: NPC_IDS.pigLevel2 },
+    { x: 10, y: 22, id: NPC_IDS.pigLevel1 },
+    { x: 18, y: 14, id: NPC_IDS.pigLevel2 },
+    { x: 20, y: 20, id: NPC_IDS.pigLevel3 },
+    { x: 6, y: 16, id: NPC_IDS.pigLevel1 },
   ],
   cave: [
     { x: 26, y: 26, id: NPC_IDS.pigLevel1 },
+    { x: 24, y: 30, id: NPC_IDS.pigLevel2 },
+    { x: 28, y: 24, id: NPC_IDS.pigLevel3 },
   ],
 };
+
+const PIG_RESPAWN_MS = 60_000;
 
 export const createPigNpc = (scene) => {
   scene.pigNpcGroup = scene.physics.add.group({ allowGravity: false });
@@ -37,6 +45,8 @@ export const createPigNpc = (scene) => {
       showNameplate: true,
       nameplateOffsetY: 26,
     });
+    pig.setData("respawnDelayMs", PIG_RESPAWN_MS);
+    pig.setData("respawnPoint", { x: startPosition.x, y: startPosition.y });
 
     const baseTileX = Math.round(startPosition.x / TILE_WIDTH);
     const baseTileY = Math.round(startPosition.y / TILE_WIDTH);
