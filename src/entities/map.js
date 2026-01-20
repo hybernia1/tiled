@@ -26,7 +26,6 @@ export const createMap = (scene, options = {}) => {
     floorFramePrefix = "grass",
     portal,
     tiles = {},
-    tileHeights = {},
   } = mapDefinition ?? {};
   const {
     data = Array.from({ length: MAP_H }, () =>
@@ -43,20 +42,6 @@ export const createMap = (scene, options = {}) => {
     deciduousTrees.map(({ x, y }) => `${x},${y}`)
   );
   const textureLoader = scene.textureLoader ?? null;
-  const resolvedTileHeights = {
-    floor: 0,
-    pond: 1,
-    portal: 1,
-    wall: TILE_HEIGHT,
-    hardWall: TILE_HEIGHT,
-    ...tileHeights,
-  };
-  const tileTypeKeyMap = new Map([
-    [TILE_TYPES.FLOOR, "floor"],
-    [TILE_TYPES.POND, "pond"],
-    [TILE_TYPES.WALL, "wall"],
-    [TILE_TYPES.HARD_WALL, "hardWall"],
-  ]);
 
   textureLoader?.ensureTexture("collision-tiles");
   textureLoader?.ensureTexture(floorTextureKey);
@@ -95,10 +80,6 @@ export const createMap = (scene, options = {}) => {
   scene.isoTiles = [];
   scene.isoWalls = [];
   scene.isoWallsGrid = [];
-  scene.tileTypeGrid = data;
-  scene.isoHeightsGrid = Array.from({ length: MAP_H }, () =>
-    Array.from({ length: MAP_W }, () => 0)
-  );
 
   // iso render
   const ISO_STEP = getIsoStep(scene);
@@ -125,9 +106,6 @@ export const createMap = (scene, options = {}) => {
     for (let x = 0; x < MAP_W; x += 1) {
       const isoX = x * ISO_STEP;
       const isoY = y * ISO_STEP;
-      const tileTypeKey = tileTypeKeyMap.get(data[y][x]) ?? "floor";
-      const tileHeight = resolvedTileHeights[tileTypeKey] ?? 0;
-      scene.isoHeightsGrid[y][x] = tileHeight;
 
       // podlaha všude
       const floorFrame =
@@ -153,14 +131,13 @@ export const createMap = (scene, options = {}) => {
       scene.isoTiles[y][x] = floorTile;
 
       if (data[y][x] === TILE_TYPES.POND) {
-        const pondHeight = resolvedTileHeights.pond ?? 1;
         const pondTile = scene.add.isoSprite(isoX, isoY, 1, "pond");
         pondTile.setOrigin(0.5, 1);
         pondTile.setScale(pondScale);
         pondTile.isoX = isoX;
         pondTile.isoY = isoY;
-        pondTile.isoZ = pondHeight;
-        pondTile.setDepth(pondTile.isoX + pondTile.isoY + pondHeight);
+        pondTile.isoZ = 1;
+        pondTile.setDepth(pondTile.isoX + pondTile.isoY + 1);
       }
 
       // zdi jen okolo
@@ -224,10 +201,6 @@ export const createMap = (scene, options = {}) => {
   }
 
   if (portal) {
-    const portalHeight = resolvedTileHeights.portal ?? 1;
-    if (scene.isoHeightsGrid[portal.y]?.[portal.x] !== undefined) {
-      scene.isoHeightsGrid[portal.y][portal.x] = portalHeight;
-    }
     const portalIsoX = portal.x * ISO_STEP;
     const portalIsoY = portal.y * ISO_STEP;
     const portalTile = scene.add.isoSprite(
@@ -240,8 +213,8 @@ export const createMap = (scene, options = {}) => {
     portalTile.setScale(stairsScale);
     portalTile.isoX = portalIsoX;
     portalTile.isoY = portalIsoY;
-    portalTile.isoZ = portalHeight;
-    portalTile.setDepth(portalTile.isoX + portalTile.isoY + portalHeight);
+    portalTile.isoZ = 1;
+    portalTile.setDepth(portalTile.isoX + portalTile.isoY + TILE_HEIGHT);
     scene.portalSprite = portalTile;
     scene.portalTile = portal;
   }
