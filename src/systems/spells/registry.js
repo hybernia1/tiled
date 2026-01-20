@@ -1,1 +1,1 @@
-export { createSpell, spellRegistry } from "../../data/registries/spells.js";
+export { createSpell, getSpellRegistry } from "../../data/registries/spells.js";

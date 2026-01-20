@@ -86,15 +86,38 @@ const hydrateDefinition = (definition, registryKey) => {
   };
 };
 
-const spellDefinitions = getRegistryData("spells");
+let cachedSpellRegistry = null;
 
-if (!spellDefinitions || Array.isArray(spellDefinitions)) {
-  throw new Error("[spells] Registry data must be a keyed object.");
-}
+const describeRegistryFormat = (value) => {
+  if (value === null) {
+    return "null";
+  }
+  if (Array.isArray(value)) {
+    return "array";
+  }
+  return typeof value;
+};
 
-const spellEntries = Object.entries(spellDefinitions).map(([key, definition]) => [
-  key,
-  hydrateDefinition(definition, key),
-]);
+export const getSpellRegistry = () => {
+  if (cachedSpellRegistry) {
+    return cachedSpellRegistry;
+  }
 
-export const spellRegistry = new Map(spellEntries);
+  const spellDefinitions = getRegistryData("spells");
+
+  if (!spellDefinitions || Array.isArray(spellDefinitions)) {
+    console.error(
+      `[spells] Expected keyed object, received ${describeRegistryFormat(
+        spellDefinitions
+      )}.`
+    );
+    throw new Error("[spells] Registry data must be a keyed object.");
+  }
+
+  const spellEntries = Object.entries(spellDefinitions).map(
+    ([key, definition]) => [key, hydrateDefinition(definition, key)]
+  );
+
+  cachedSpellRegistry = new Map(spellEntries);
+  return cachedSpellRegistry;
+};

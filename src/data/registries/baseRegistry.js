@@ -1,5 +1,4 @@
 let cachedRegistry = null;
-let hasWarned = false;
 
 const resolveRegistry = () => {
   if (globalThis.gameRegistry) {
@@ -8,11 +7,9 @@ const resolveRegistry = () => {
   if (cachedRegistry) {
     return cachedRegistry;
   }
-  if (!hasWarned) {
-    console.warn("[registry] Registry data has not been loaded yet.");
-    hasWarned = true;
-  }
-  return null;
+  throw new Error(
+    "[registry] Registry loader must be awaited before resolveRegistry."
+  );
 };
 
 export const getRegistryData = (key) => {
@@ -23,4 +20,8 @@ export const getRegistryData = (key) => {
 export const getRegistryIndex = (key) => {
   const registry = resolveRegistry();
   return registry?.index?.[key];
+};
+
+export const setRegistryData = (registry) => {
+  cachedRegistry = registry;
 };

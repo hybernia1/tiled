@@ -14,7 +14,7 @@ import {
   getTextureIdByEffectTag,
   getTextureProperties,
 } from "../assets/textures/registry.js";
-import { createSpell, spellRegistry } from "../data/registries/spells.js";
+import { createSpell, getSpellRegistry } from "../data/registries/spells.js";
 import { getMaxHealth } from "./npc/stats.js";
 import { NpcStateMachine } from "./npc/stateMachine.js";
 import { uiTheme } from "../config/uiTheme.js";
@@ -201,7 +201,7 @@ export class CombatSystem {
 
   getSpellTooltipText(spellId) {
     const spell = this.getSpell(spellId);
-    const definition = spellRegistry.get(spellId);
+    const definition = getSpellRegistry().get(spellId);
     if (!spell || !definition) {
       return null;
     }
@@ -298,7 +298,7 @@ export class CombatSystem {
     }
 
     const context = this.createSpellContext({ time: this.getSpellTime() });
-    this.spells = Array.from(spellRegistry.values())
+    this.spells = Array.from(getSpellRegistry().values())
       .map((definition) => createSpell(definition, context))
       .filter(Boolean);
     this.spellMap = new Map(
@@ -312,7 +312,7 @@ export class CombatSystem {
   }
 
   getSpellIconKey(spellId) {
-    const definition = spellRegistry.get(spellId);
+    const definition = getSpellRegistry().get(spellId);
     if (!definition) {
       return null;
     }
