@@ -16,6 +16,9 @@ export class InputSystem {
     this.scene.fireKey = this.scene.input.keyboard.addKey(
       Phaser.Input.Keyboard.KeyCodes.ONE
     );
+    this.scene.shieldKey = this.scene.input.keyboard.addKey(
+      Phaser.Input.Keyboard.KeyCodes.TWO
+    );
     this.scene.tabKey = this.scene.input.keyboard.addKey(
       Phaser.Input.Keyboard.KeyCodes.TAB
     );

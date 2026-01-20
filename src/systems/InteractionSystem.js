@@ -41,45 +41,6 @@ export class InteractionSystem {
       .setVisible(isClose);
   }
 
-  updateSwitchInteraction() {
-    if (!this.scene.switches || !this.scene.player) {
-      return;
-    }
-
-    let closestSwitch = null;
-    let closestDistance = Infinity;
-    this.scene.switches.children.iterate((switchSprite) => {
-      if (!switchSprite) {
-        return;
-      }
-      const distance = Phaser.Math.Distance.Between(
-        this.scene.player.x,
-        this.scene.player.y,
-        switchSprite.x,
-        switchSprite.y
-      );
-      if (distance < closestDistance) {
-        closestDistance = distance;
-        closestSwitch = switchSprite;
-      }
-    });
-
-    const isClose = closestSwitch && closestDistance < 70;
-    if (!isClose) {
-      this.scene.switchPrompt.setVisible(false);
-      return;
-    }
-
-    const zoneId = closestSwitch.getData("zoneId");
-    const isOn = closestSwitch.getData("isOn");
-    const actionLabel = isOn ? "zhasni" : "rozsviť";
-    const switchDisplay = this.scene.getDisplaySprite(closestSwitch);
-    this.scene.switchPrompt
-      .setText(`Klikni pro ${actionLabel} světlo`)
-      .setPosition(switchDisplay.x, switchDisplay.y - 18)
-      .setVisible(true);
-  }
-
   consumeTouchAction(action) {
     const touchActions = this.scene?.touchActions;
     if (!touchActions || typeof touchActions.has !== "function") {
@@ -144,56 +105,6 @@ export class InteractionSystem {
     }
 
     this.showFriendlyNpcDialogue();
-    return true;
-  }
-
-  handleSwitchClick(worldPoint) {
-    if (!this.scene.switches || !this.scene.player) {
-      return false;
-    }
-
-    let closestSwitch = null;
-    let closestDistance = Infinity;
-    this.scene.switches.children.iterate((switchSprite) => {
-      if (!switchSprite) {
-        return;
-      }
-      const distance = Phaser.Math.Distance.Between(
-        this.scene.player.x,
-        this.scene.player.y,
-        switchSprite.x,
-        switchSprite.y
-      );
-      if (distance < closestDistance) {
-        closestDistance = distance;
-        closestSwitch = switchSprite;
-      }
-    });
-
-    const isClose = closestSwitch && closestDistance < 70;
-    if (!isClose) {
-      return false;
-    }
-
-    const switchDisplay = this.scene.getDisplaySprite(closestSwitch);
-    const clickDistance = Phaser.Math.Distance.Between(
-      worldPoint.x,
-      worldPoint.y,
-      switchDisplay.x,
-      switchDisplay.y
-    );
-    if (clickDistance > 28) {
-      return false;
-    }
-
-    const zoneId = closestSwitch.getData("zoneId");
-    const isOn = closestSwitch.getData("isOn");
-    closestSwitch.setData("isOn", !isOn);
-    const zone = this.scene.lightZones.find((entry) => entry.id === zoneId);
-    if (zone) {
-      zone.enabled = !isOn;
-      this.lightingSystem.updateLightingMask();
-    }
     return true;
   }
 

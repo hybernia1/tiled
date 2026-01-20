@@ -65,7 +65,6 @@ export class BaseMapScene extends Phaser.Scene {
     this.mapHeightPx = TILE_WIDTH * MAP_H;
     this.bulletSpeed = BULLET_SPEED;
     this.fireCooldownMs = FIRE_COOLDOWN_MS;
-    this.nextFireTime = 0;
     this.npcAggroRangePx = NPC_AGGRO_RANGE_TILES * TILE_WIDTH;
     this.npcAttackRangePx = NPC_ATTACK_RANGE_TILES * TILE_WIDTH;
     this.npcChaseSpeed = NPC_CHASE_SPEED;
@@ -157,6 +156,7 @@ export class BaseMapScene extends Phaser.Scene {
     this.movementSystem.updatePlayerMovement();
     this.npcAggroSystem.updateNpcAggro(time);
     this.npcAggroSystem.updateNpcGroupAggro(time, this.pigNpcGroup);
+    this.combatSystem.updateSpells(time);
     this.combatSystem.updateShooting(time);
     this.combatSystem.updatePlayerRegen(time);
     this.combatSystem.cleanupBullets(time);
@@ -365,9 +365,6 @@ export class BaseMapScene extends Phaser.Scene {
     if (this.interactionSystem?.handleFriendlyNpcClick?.(worldPoint)) {
       return true;
     }
-    if (this.interactionSystem?.handleSwitchClick?.(worldPoint)) {
-      return true;
-    }
 
     return false;
   }
@@ -509,21 +506,6 @@ export class BaseMapScene extends Phaser.Scene {
     if (isoTile) {
       isoTile.destroy();
       this.isoTiles[y][x] = null;
-    }
-  }
-
-  removeIsoWallAt(x, y) {
-    const isoWall = this.isoWallsGrid?.[y]?.[x];
-    if (!isoWall) {
-      return;
-    }
-
-    isoWall.destroy();
-    this.isoWallsGrid[y][x] = null;
-
-    const wallIndex = this.isoWalls?.indexOf(isoWall);
-    if (wallIndex !== undefined && wallIndex >= 0) {
-      this.isoWalls.splice(wallIndex, 1);
     }
   }
 

@@ -9,7 +9,7 @@ export const en = {
   fullscreenOff: "Off",
   languageName: "English",
   demoInstructions:
-    "WASD/Arrow keys: move | 1: shot | Mouse/Tab: target | Click: interact | F: fullscreen | Esc/P: pause",
+    "WASD/Arrow keys: move | 1: shot | 2: shield | Mouse/Tab: target | Click: interact | F: fullscreen | Esc/P: pause",
   pauseTitle: "Paused",
   pauseResume: "Resume",
   pauseQuit: "Exit to Menu",
