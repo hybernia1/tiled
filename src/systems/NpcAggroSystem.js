@@ -19,14 +19,29 @@ export class NpcAggroSystem {
       return;
     }
 
+    const npcType = npc.getData("type") ?? "hostile";
+    const isProvoked = Boolean(npc.getData("isProvoked"));
+    if (npcType === "friendly") {
+      npc.body.setVelocity(0, 0);
+      this.setNpcAggro(false);
+      return;
+    }
+    if (npcType === "neutral" && !isProvoked) {
+      npc.body.setVelocity(0, 0);
+      this.setNpcAggro(false);
+      return;
+    }
+
     const distance = Phaser.Math.Distance.Between(
       npc.x,
       npc.y,
       player.x,
       player.y
     );
-    const aggroRange = this.scene.npcAggroRangePx;
-    const attackRange = this.scene.npcAttackRangePx;
+    const aggroRange =
+      Number(npc.getData("aggroRange")) || this.scene.npcAggroRangePx;
+    const attackRange =
+      Number(npc.getData("attackRange")) || this.scene.npcAttackRangePx;
 
     if (distance <= aggroRange) {
       this.setNpcAggro(true);
@@ -55,7 +70,9 @@ export class NpcAggroSystem {
       return;
     }
     npc.setData("nextAttackAt", time + this.scene.npcAttackCooldownMs);
-    this.scene.combatSystem.damagePlayer(this.scene.npcAttackDamage);
+    const attackDamage =
+      Number(npc.getData("attackDamage")) || this.scene.npcAttackDamage;
+    this.scene.combatSystem.damagePlayer(attackDamage);
   }
 
   setNpcAggro(isAggro) {
