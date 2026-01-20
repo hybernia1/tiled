@@ -2,6 +2,8 @@ import crypto from "crypto";
 import path from "path";
 import express from "express";
 import { db, runMigrations } from "./db.js";
+import { createCharacter, findCharacterByUserId } from "./models/characters.js";
+import { createUser, findUserByEmail } from "./models/users.js";
 import { DEFAULT_STATE, normalizeState } from "./state/normalizeGameState.js";
 
 const PORT = Number(process.env.PORT) || 4000;
@@ -24,12 +26,25 @@ app.use((req, res, next) => {
   next();
 });
 
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const PASSWORD_MIN_LENGTH = 6;
+const NICKNAME_MIN_LENGTH = 3;
+const NICKNAME_MAX_LENGTH = 16;
+const NICKNAME_PATTERN = /^[A-Za-z0-9_]+$/;
+
 const hashPassword = (password, salt = crypto.randomBytes(16).toString("hex")) => {
   const hash = crypto.pbkdf2Sync(password, salt, 100000, 64, "sha512").toString("hex");
-  return { salt, hash };
+  return `${salt}:${hash}`;
 };
 
-const verifyPassword = (password, salt, hash) => {
+const verifyPassword = (password, storedHash) => {
+  if (typeof storedHash !== "string") {
+    return false;
+  }
+  const [salt, hash] = storedHash.split(":");
+  if (!salt || !hash) {
+    return false;
+  }
   const candidate = crypto.pbkdf2Sync(password, salt, 100000, 64, "sha512").toString("hex");
   return crypto.timingSafeEqual(Buffer.from(candidate, "hex"), Buffer.from(hash, "hex"));
 };
@@ -46,10 +61,22 @@ const createSession = (userId) => {
 };
 
 const getCharacterIdForUser = (userId) => {
-  const row = db
-    .prepare("SELECT id FROM characters WHERE user_id = ? ORDER BY id ASC LIMIT 1")
-    .get(userId);
+  const row = findCharacterByUserId(db, userId);
   return row?.id ?? null;
+};
+
+const validateNickname = (nickname) => {
+  if (typeof nickname !== "string") {
+    return "Nickname is required.";
+  }
+  const trimmed = nickname.trim();
+  if (trimmed.length < NICKNAME_MIN_LENGTH || trimmed.length > NICKNAME_MAX_LENGTH) {
+    return `Nickname must be ${NICKNAME_MIN_LENGTH}-${NICKNAME_MAX_LENGTH} characters long.`;
+  }
+  if (!NICKNAME_PATTERN.test(trimmed)) {
+    return "Nickname can only contain letters, numbers, and underscores.";
+  }
+  return null;
 };
 
 const authMiddleware = (req, res, next) => {
@@ -75,26 +102,20 @@ const authMiddleware = (req, res, next) => {
 };
 
 app.post("/auth/register", (req, res) => {
-  const { email, password, displayName } = req.body ?? {};
-  if (typeof email !== "string" || !email.includes("@")) {
+  const { email, password } = req.body ?? {};
+  if (typeof email !== "string" || !EMAIL_PATTERN.test(email)) {
     res.status(400).json({ error: "Email is required" });
     return;
   }
-  if (typeof password !== "string" || password.length < 6) {
-    res.status(400).json({ error: "Password must be at least 6 characters" });
+  if (typeof password !== "string" || password.length < PASSWORD_MIN_LENGTH) {
+    res
+      .status(400)
+      .json({ error: `Password must be at least ${PASSWORD_MIN_LENGTH} characters` });
     return;
   }
-  const { salt, hash } = hashPassword(password);
+  const passwordHash = hashPassword(password);
   try {
-    const insertUser = db.prepare(
-      "INSERT INTO users (email, password_hash, password_salt, display_name) VALUES (?, ?, ?, ?)"
-    );
-    const result = insertUser.run(email, hash, salt, displayName ?? null);
-    const userId = result.lastInsertRowid;
-    db.prepare("INSERT INTO characters (user_id, name) VALUES (?, ?)").run(
-      userId,
-      displayName || "Adventurer"
-    );
+    const userId = createUser(db, { email, passwordHash });
     const session = createSession(userId);
     res.status(201).json({ token: session.token, expiresAt: session.expiresAt });
   } catch (error) {
@@ -112,15 +133,39 @@ app.post("/auth/login", (req, res) => {
     res.status(400).json({ error: "Email and password are required" });
     return;
   }
-  const user = db
-    .prepare("SELECT id, password_hash, password_salt FROM users WHERE email = ?")
-    .get(email);
-  if (!user || !verifyPassword(password, user.password_salt, user.password_hash)) {
+  const user = findUserByEmail(db, email);
+  if (!user || !verifyPassword(password, user.password_hash)) {
     res.status(401).json({ error: "Invalid credentials" });
     return;
   }
   const session = createSession(user.id);
   res.json({ token: session.token, expiresAt: session.expiresAt });
+});
+
+app.post("/characters", authMiddleware, (req, res) => {
+  const userId = req.userId;
+  const existing = findCharacterByUserId(db, userId);
+  if (existing) {
+    res.json({ character: existing });
+    return;
+  }
+  const nickname = req.body?.nickname;
+  const validationError = validateNickname(nickname);
+  if (validationError) {
+    res.status(400).json({ error: validationError });
+    return;
+  }
+  try {
+    createCharacter(db, { userId, nickname: nickname.trim() });
+    const character = findCharacterByUserId(db, userId);
+    res.status(201).json({ character });
+  } catch (error) {
+    if (error?.code === "SQLITE_CONSTRAINT_UNIQUE") {
+      res.status(409).json({ error: "Nickname already taken" });
+      return;
+    }
+    res.status(500).json({ error: "Character creation failed" });
+  }
 });
 
 app.get("/player/state", authMiddleware, (req, res) => {
