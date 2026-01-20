@@ -1,5 +1,10 @@
 import * as Phaser from "phaser";
-import { BULLET_RANGE_TILES, TILE_WIDTH } from "../config/constants.js";
+import {
+  BULLET_RANGE_TILES,
+  TILE_WIDTH,
+  UI_MARGIN,
+  UI_PADDING,
+} from "../config/constants.js";
 import {
   getMaxHealthForLevel,
   getXpNeededForNextLevel,
@@ -826,12 +831,7 @@ export class CombatSystem {
 
   updateTargetHud() {
     const { scene } = this;
-    const {
-      playerLevelValue,
-      targetHealthBar,
-      targetHealthValue,
-      targetNameValue,
-    } = scene;
+    const { targetHealthBar, targetHealthValue, targetNameValue } = scene;
     if (!targetHealthBar || !targetHealthValue || !targetNameValue) {
       return;
     }
@@ -852,15 +852,15 @@ export class CombatSystem {
       ? storedHealth
       : maxHealth;
 
-    const baseX = 16;
-    const barWidth = 180;
-    const barHeight = 12;
-    const barX = baseX + (playerLevelValue?.width ?? 0) + 10;
-    const barY = 18;
-    const targetBarWidth = 150;
+    const screenWidth = scene.scale?.width ?? 0;
+    const targetBarWidth = 180;
     const targetBarHeight = 10;
-    const targetBarX = barX + barWidth + 24;
-    const targetBarY = barY;
+    const targetBarX = Math.max(
+      UI_MARGIN,
+      Math.round(screenWidth / 2 - targetBarWidth / 2)
+    );
+    const targetBarY = UI_MARGIN;
+    const targetCenterX = targetBarX + targetBarWidth / 2;
     const fillWidth = (currentHealth / maxHealth) * (targetBarWidth - 2);
 
     targetHealthBar.clear();
@@ -892,11 +892,13 @@ export class CombatSystem {
 
     targetNameValue
       .setText(`[${level}] ${displayName}`)
-      .setPosition(targetBarX, targetBarY - 6)
+      .setPosition(targetCenterX, targetBarY - UI_PADDING)
+      .setOrigin(0.5, 0.5)
       .setVisible(true);
     targetHealthValue
       .setText(`HP ${currentHealth}/${maxHealth}`)
-      .setPosition(targetBarX, targetBarY + targetBarHeight + 6)
+      .setPosition(targetCenterX, targetBarY + targetBarHeight + UI_PADDING)
+      .setOrigin(0.5, 0.5)
       .setVisible(true);
   }
 

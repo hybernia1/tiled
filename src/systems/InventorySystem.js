@@ -1,4 +1,5 @@
 import * as Phaser from "phaser";
+import { UI_MARGIN, UI_PADDING } from "../config/constants.js";
 import { uiTheme } from "../config/uiTheme.js";
 
 export class InventorySystem {
@@ -17,8 +18,12 @@ export class InventorySystem {
 
     this.panelWidth = 280;
     this.panelHeight = 190;
+    this.inventoryAnchor =
+      this.scene?.gameState?.ui?.inventoryAnchor ?? "bottom-right";
     const panelX = 0;
     const panelY = 0;
+    const contentPadding = UI_PADDING;
+    const titleHeight = 22;
 
     this.scene.inventoryUi = this.scene.add
       .container(0, 0)
@@ -37,7 +42,7 @@ export class InventorySystem {
     this.scene.inventoryUi.add(this.panel);
 
     this.title = this.scene.add
-      .text(panelX + 18, panelY + 14, "Inventory", {
+      .text(panelX + contentPadding, panelY + contentPadding, "Inventory", {
         fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
         fontSize: "16px",
         color: uiTheme.textPrimary,
@@ -46,9 +51,9 @@ export class InventorySystem {
     this.scene.inventoryUi.add(this.title);
 
     const slotSize = 46;
-    const slotPadding = 12;
-    const gridX = panelX + 20;
-    const gridY = panelY + 48;
+    const slotPadding = UI_PADDING;
+    const gridX = panelX + contentPadding;
+    const gridY = panelY + contentPadding + titleHeight + UI_PADDING;
     const slotStroke = uiTheme.panelBorder;
 
     this.scene.inventorySlots = {};
@@ -145,9 +150,11 @@ export class InventorySystem {
       return;
     }
     const { width, height } = this.scene.scale;
-    const margin = 16;
-    const panelX = width - this.panelWidth - margin;
-    const panelY = height - this.panelHeight - margin;
+    const panelX = width - this.panelWidth - UI_MARGIN;
+    const panelY =
+      this.inventoryAnchor === "top-right"
+        ? UI_MARGIN
+        : height - this.panelHeight - UI_MARGIN;
     this.scene.inventoryUi.setPosition(panelX, panelY);
   }
 
