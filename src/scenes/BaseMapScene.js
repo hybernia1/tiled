@@ -52,6 +52,7 @@ import { InteractionSystem } from "../systems/InteractionSystem.js";
 import { GameLogSystem } from "../systems/GameLogSystem.js";
 import { MovementSystem } from "../systems/MovementSystem.js";
 import { NpcAggroSystem } from "../systems/NpcAggroSystem.js";
+import { EffectSystem } from "../systems/effects/EffectSystem.js";
 import { getMapDefinition } from "../worlds/registry.js";
 
 const MAP_NAME_KEYS = {
@@ -116,6 +117,7 @@ export class BaseMapScene extends Phaser.Scene {
     this.iso.projector.origin.setTo(0.5, 0.2);
     this.movementSystem = new MovementSystem(this);
     this.inputSystem = new InputSystem(this);
+    this.effectSystem = new EffectSystem(this);
     this.combatSystem = new CombatSystem(this);
     this.npcAggroSystem = new NpcAggroSystem(this);
     this.inventorySystem = new InventorySystem(this);
@@ -126,6 +128,7 @@ export class BaseMapScene extends Phaser.Scene {
     this.portalTargetMapId = portal?.targetMapId ?? null;
     createPlayer(this, this.spawnPoint, playerState);
     this.syncPlayerState();
+    this.effectSystem.restoreEffects();
     createCollectibles(
       this,
       this.interactionSystem.handleCollectiblePickup,

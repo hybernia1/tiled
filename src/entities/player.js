@@ -27,12 +27,6 @@ export const createPlayer = (scene, startPosition = null, playerState = null) =>
     ? Number(playerState.health)
     : maxHealth;
   const xpNeeded = getXpNeededForNextLevel(level);
-  const now = Date.now();
-  const storedShieldedUntil = Number(playerState?.shieldedUntil);
-  const shieldedUntil =
-    Number.isFinite(storedShieldedUntil) && storedShieldedUntil > now
-      ? storedShieldedUntil
-      : 0;
 
   scene.player = scene.physics.add.sprite(startX, startY, "player", 0);
   scene.player.setCollideWorldBounds(true);
@@ -44,8 +38,8 @@ export const createPlayer = (scene, startPosition = null, playerState = null) =>
   scene.player.setData("xpNeeded", xpNeeded);
   scene.player.setData("maxHealth", maxHealth);
   scene.player.setData("health", health);
-  scene.player.setData("shieldedUntil", shieldedUntil);
-  scene.player.setData("isShielded", shieldedUntil > now);
+  scene.player.setData("shieldedUntil", 0);
+  scene.player.setData("isShielded", false);
   scene.facing = new Phaser.Math.Vector2(1, 0);
 
   if (!scene.anims.exists("player-idle-front")) {
