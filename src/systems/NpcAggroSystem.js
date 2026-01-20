@@ -1,5 +1,11 @@
 import * as Phaser from "phaser";
 import { getNpcBehavior } from "./npc/behaviorProfiles";
+import {
+  getAggroRange,
+  getAttackDamage,
+  getAttackRange,
+  getMaxHealth,
+} from "./npc/stats.js";
 import { NpcStateMachine, NpcStates } from "./npc/stateMachine.js";
 
 export class NpcAggroSystem {
@@ -41,10 +47,8 @@ export class NpcAggroSystem {
       player.x,
       player.y
     );
-    const aggroRangeBase =
-      Number(npc.getData("aggroRange")) || this.scene.npcAggroRangePx;
-    const attackRangeBase =
-      Number(npc.getData("attackRange")) || this.scene.npcAttackRangePx;
+    const aggroRangeBase = getAggroRange(npc);
+    const attackRangeBase = getAttackRange(npc);
     const aggroRange =
       aggroRangeBase * (behavior.aggroRangeMultiplier ?? 1);
     const attackRange =
@@ -143,10 +147,8 @@ export class NpcAggroSystem {
       player.x,
       player.y
     );
-    const aggroRangeBase =
-      Number(npc.getData("aggroRange")) || this.scene.npcAggroRangePx;
-    const attackRangeBase =
-      Number(npc.getData("attackRange")) || this.scene.npcAttackRangePx;
+    const aggroRangeBase = getAggroRange(npc);
+    const attackRangeBase = getAttackRange(npc);
     const aggroRange =
       aggroRangeBase * (behavior.aggroRangeMultiplier ?? 1);
     const attackRange =
@@ -234,9 +236,7 @@ export class NpcAggroSystem {
       return;
     }
     npc.setData("nextAttackAt", time + this.scene.npcAttackCooldownMs);
-    const attackDamage =
-      Number(npc.getData("attackDamage")) || this.scene.npcAttackDamage;
-    this.scene.combatSystem.damagePlayer(attackDamage);
+    this.scene.combatSystem.damagePlayer(getAttackDamage(npc));
   }
 
   setSpriteAggro(npc, isAggro) {
@@ -268,11 +268,7 @@ export class NpcAggroSystem {
     npc.setData("isProvoked", false);
     npc.setData("nextAttackAt", 0);
     if (resetHealthOnDisengage) {
-      const maxHealth =
-        Number(npc.getData("maxHealth")) ||
-        Number(npc.getData("definition")?.maxHealth) ||
-        1;
-      npc.setData("health", maxHealth);
+      npc.setData("health", getMaxHealth(npc));
       if (npc === this.scene.targetedNpc) {
         this.scene.combatSystem?.updateTargetHud?.();
       }
@@ -286,9 +282,7 @@ export class NpcAggroSystem {
       return;
     }
     npc.setData("nextAttackAt", time + this.scene.npcAttackCooldownMs);
-    const attackDamage =
-      Number(npc.getData("attackDamage")) || this.scene.npcAttackDamage;
-    this.scene.combatSystem.damagePlayer(attackDamage);
+    this.scene.combatSystem.damagePlayer(getAttackDamage(npc));
   }
 
   setNpcAggro(isAggro) {

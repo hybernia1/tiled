@@ -7,6 +7,7 @@ import {
   MAX_LEVEL,
 } from "../config/playerProgression.js";
 import { createSpell, spellRegistry } from "./spells/registry.js";
+import { getMaxHealth } from "./npc/stats.js";
 import { NpcStateMachine } from "./npc/stateMachine.js";
 
 export class CombatSystem {
@@ -789,10 +790,7 @@ export class CombatSystem {
 
     const level = Number(target.getData("level")) || 1;
     const displayName = target.getData("displayName") ?? "NPC";
-    const maxHealth =
-      Number(target.getData("maxHealth")) ||
-      Number(target.getData("definition")?.maxHealth) ||
-      1;
+    const maxHealth = getMaxHealth(target);
     const storedHealth = Number(target.getData("health"));
     const currentHealth = Number.isFinite(storedHealth)
       ? storedHealth
@@ -973,9 +971,7 @@ export class CombatSystem {
       return;
     }
 
-    const npcDefinition = npc.getData("definition");
-    const maxHealth =
-      Number(npc.getData("maxHealth")) || npcDefinition?.maxHealth || 1;
+    const maxHealth = getMaxHealth(npc);
     const storedHealth = Number(npc.getData("health"));
     const npcHealth = Number.isFinite(storedHealth) ? storedHealth : maxHealth;
     const barWidth = 44;
@@ -1030,8 +1026,7 @@ export class CombatSystem {
     bullet.disableBody(true, true);
 
     const npcDefinition = npc.getData("definition");
-    const maxHealth =
-      Number(npc.getData("maxHealth")) || npcDefinition?.maxHealth || 1;
+    const maxHealth = getMaxHealth(npc);
     const storedHealth = Number(npc.getData("health"));
     const currentHealth = Number.isFinite(storedHealth) ? storedHealth : maxHealth;
     const damage = Phaser.Math.Between(1, 3);
@@ -1113,16 +1108,13 @@ export class CombatSystem {
           return;
         }
         const respawnPoint = npc.getData("respawnPoint");
-        const npcDefinition = npc.getData("definition");
         npc.setActive(true);
         npc.setVisible(true);
         npc.body.enable = true;
         if (respawnPoint) {
           npc.setPosition(respawnPoint.x, respawnPoint.y);
         }
-        const maxHealth =
-          Number(npcDefinition?.maxHealth) || Number(npc.getData("maxHealth")) || 1;
-        npc.setData("health", maxHealth);
+        npc.setData("health", getMaxHealth(npc));
         npc.setData("isProvoked", false);
         new NpcStateMachine(npc).setPassiveState({ reason: "respawn" });
         npc.setData("respawnPending", false);
