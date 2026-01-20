@@ -161,6 +161,7 @@ export class BaseMapScene extends Phaser.Scene {
     this.inventorySystem.updateInventoryToggle();
     this.updatePortalInteraction();
     this.syncIsometricSprites();
+    this.updateNpcNameplates();
   }
 
   setupIsometricSprites() {
@@ -247,6 +248,35 @@ export class BaseMapScene extends Phaser.Scene {
     this.syncIsoSprite(this.friendlyNpc);
     this.syncIsoGroup(this.bullets, { createIfMissing: true });
     this.syncIsoGroup(this.collectibles, { createIfMissing: true });
+    this.syncIsoGroup(this.pigNpcGroup, { createIfMissing: true });
+  }
+
+  updateNpcNameplates() {
+    const updateForSprite = (sprite) => {
+      if (!sprite) {
+        return;
+      }
+      const nameplate = sprite.getData("nameplate");
+      if (!nameplate) {
+        return;
+      }
+      const displaySprite = this.getDisplaySprite(sprite);
+      const offsetY = sprite.getData("nameplateOffsetY") ?? 28;
+      const isVisible = sprite.active && sprite.visible;
+      nameplate.setVisible(isVisible);
+      if (!isVisible) {
+        return;
+      }
+      nameplate
+        .setPosition(displaySprite.x, displaySprite.y - offsetY)
+        .setDepth(displaySprite.depth + 2);
+    };
+
+    updateForSprite(this.npc);
+    updateForSprite(this.friendlyNpc);
+    if (this.pigNpcGroup) {
+      this.pigNpcGroup.children.iterate((child) => updateForSprite(child));
+    }
   }
 
   syncIsoGroup(group, options = {}) {

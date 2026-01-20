@@ -1,6 +1,6 @@
 import { MAP_H, MAP_W, TILE_HEIGHT, TILE_WIDTH } from "../config/constants.js";
-import { t } from "../config/localization.js";
 import { getNpcDefinition, NPC_IDS } from "../config/npcs.js";
+import { applyNpcDefinition } from "./npcBuilder.js";
 import { findNearestOpenTilePosition } from "./spawnUtils.js";
 
 export const createNpc = (scene) => {
@@ -14,34 +14,12 @@ export const createNpc = (scene) => {
   scene.npc.setOrigin(0.5, 0.5);
   scene.npc.body.setAllowGravity(false);
   scene.npc.setCollideWorldBounds(true);
-  scene.npc.setData("isoOrigin", { x: 0.5, y: 1 });
-  scene.npc.setData("isoZ", TILE_HEIGHT);
   scene.npc.setData("lastHitAt", -Infinity);
-  scene.npc.setData("definition", npcDefinition);
-  scene.npc.setData("id", npcDefinition.id);
-  scene.npc.setData("type", npcDefinition.type);
-  scene.npc.setData("level", npcDefinition.level);
-  scene.npc.setData("maxHealth", npcDefinition.maxHealth);
-  scene.npc.setData("health", npcDefinition.maxHealth);
-  scene.npc.setData("attackDamage", npcDefinition.attackDamage);
-  scene.npc.setData(
-    "aggroRange",
-    Number.isFinite(npcDefinition.aggroRange)
-      ? npcDefinition.aggroRange * TILE_WIDTH
-      : undefined
-  );
-  scene.npc.setData(
-    "attackRange",
-    Number.isFinite(npcDefinition.attackRange)
-      ? npcDefinition.attackRange * TILE_WIDTH
-      : undefined
-  );
+  applyNpcDefinition(scene, scene.npc, npcDefinition, {
+    isoOrigin: { x: 0.5, y: 1 },
+    isoZ: TILE_HEIGHT,
+  });
   scene.npc.setData("nextAttackAt", 0);
-  scene.npc.setData("isProvoked", false);
-  const displayName = npcDefinition.displayNameKey
-    ? t(scene.locale, npcDefinition.displayNameKey)
-    : npcDefinition.displayName;
-  scene.npc.setData("displayName", displayName);
 
   scene.npcHealthBar = scene.add.graphics().setDepth(9);
   scene.npcHealthValue = scene.add
