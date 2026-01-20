@@ -1,16 +1,6 @@
-import {
-  MAP_H,
-  MAP_W,
-  TILE_HEIGHT,
-  TILE_WIDTH,
-} from "../config/constants.js";
-
-const TILE_TYPES = {
-  FLOOR: 0,
-  WALL: 1,
-  HARD_WALL: 2,
-  POND: 3,
-};
+import { MAP_H, MAP_W, TILE_HEIGHT, TILE_WIDTH } from "../config/constants.js";
+import { getMapDefinition } from "../worlds/registry.js";
+import { TILE_TYPES } from "../worlds/tiles.js";
 
 // ISO krok musí sedět na kolizní grid, jinak jde hráč mimo viditelnou mapu.
 function getIsoStep() {
@@ -28,108 +18,23 @@ function getFrameWidth(scene, key, preferredFrame = null) {
   return frame.width || frame.cutWidth || 0;
 }
 
-export const MAP_PORTALS = {
-  world: { x: 12, y: 44 },
-  cave: { x: 30, y: 30 },
-};
-
-const generateMapData = (type = "world") => {
-  // vše floor
-  const data = Array.from({ length: MAP_H }, () =>
-    Array.from({ length: MAP_W }, () => TILE_TYPES.FLOOR)
-  );
-
-  // jen okraj wall
-  for (let x = 0; x < MAP_W; x += 1) {
-    data[0][x] = TILE_TYPES.HARD_WALL;
-    data[MAP_H - 1][x] = TILE_TYPES.HARD_WALL;
-  }
-  for (let y = 0; y < MAP_H; y += 1) {
-    data[y][0] = TILE_TYPES.HARD_WALL;
-    data[y][MAP_W - 1] = TILE_TYPES.HARD_WALL;
-  }
-
-  const pondTiles = [
-    { x: 26, y: 27 },
-    { x: 27, y: 27 },
-    { x: 26, y: 28 },
-    { x: 27, y: 28 },
-  ];
-
-  pondTiles.forEach(({ x, y }) => {
-    if (data[y]?.[x] !== undefined) {
-      data[y][x] = TILE_TYPES.POND;
-    }
-  });
-
-  const coniferTrees = [
-    { x: 6, y: 8 },
-    { x: 7, y: 8 },
-    { x: 8, y: 9 },
-    { x: 9, y: 10 },
-    { x: 13, y: 6 },
-    { x: 14, y: 7 },
-    { x: 15, y: 8 },
-    { x: 17, y: 6 },
-  ];
-
-  const deciduousTrees = [
-    { x: 22, y: 12 },
-    { x: 23, y: 13 },
-    { x: 24, y: 12 },
-    { x: 28, y: 18 },
-    { x: 29, y: 18 },
-    { x: 30, y: 19 },
-    { x: 34, y: 14 },
-    { x: 35, y: 15 },
-  ];
-
-  if (type === "cave") {
-    for (let y = 0; y < MAP_H; y += 1) {
-      for (let x = 0; x < MAP_W; x += 1) {
-        data[y][x] = TILE_TYPES.HARD_WALL;
-      }
-    }
-
-    const room = {
-      x: 20,
-      y: 20,
-      width: 20,
-      height: 20,
-    };
-    for (let y = room.y; y < room.y + room.height; y += 1) {
-      for (let x = room.x; x < room.x + room.width; x += 1) {
-        data[y][x] = TILE_TYPES.FLOOR;
-      }
-    }
-
-    return {
-      data,
-      pondTiles: [],
-      coniferTrees: [],
-      deciduousTrees: [],
-      portal: MAP_PORTALS.cave,
-    };
-  }
-
-  return {
-    data,
-    pondTiles,
-    coniferTrees,
-    deciduousTrees,
-    portal: MAP_PORTALS.world,
-  };
-};
-
 export const createMap = (scene, options = {}) => {
-  const { type = "world" } = options;
+  const { mapId = "pinewood" } = options;
+  const mapDefinition = getMapDefinition(mapId);
   const {
-    data,
-    pondTiles,
-    coniferTrees,
-    deciduousTrees,
+    floorTextureKey = "grass",
+    floorFramePrefix = "grass",
     portal,
-  } = generateMapData(type);
+    tiles = {},
+  } = mapDefinition ?? {};
+  const {
+    data = Array.from({ length: MAP_H }, () =>
+      Array.from({ length: MAP_W }, () => TILE_TYPES.FLOOR)
+    ),
+    pondTiles = [],
+    coniferTrees = [],
+    deciduousTrees = [],
+  } = tiles;
   const coniferTreeSet = new Set(
     coniferTrees.map(({ x, y }) => `${x},${y}`)
   );
@@ -170,8 +75,6 @@ export const createMap = (scene, options = {}) => {
   const ISO_STEP = getIsoStep(scene);
 
   // iso dlaždice mají šířku 2× krok, jinak vzniknou optické mezery
-  const floorTextureKey = type === "cave" ? "rock" : "grass";
-  const floorFramePrefix = type === "cave" ? "rock" : "grass";
   const floorW =
     getFrameWidth(scene, floorTextureKey, `${floorFramePrefix}-0`) ||
     ISO_STEP * 2;

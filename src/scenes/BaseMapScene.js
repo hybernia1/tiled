@@ -54,14 +54,14 @@ import { MovementSystem } from "../systems/MovementSystem.js";
 import { NpcAggroSystem } from "../systems/NpcAggroSystem.js";
 
 const MAP_NAME_KEYS = {
-  world: "mapNameWorld",
-  cave: "mapNameCave",
+  pinewood: "mapNamePinewood",
+  "pinewood:cave": "mapNamePinewoodCave",
 };
 
 export class BaseMapScene extends Phaser.Scene {
-  constructor({ key, mapType, portalTargetKey, portalPromptKey }) {
+  constructor({ key, mapId, portalTargetKey, portalPromptKey }) {
     super({ key, mapAdd: { isoPlugin: "iso" } });
-    this.mapType = mapType;
+    this.mapId = mapId;
     this.portalTargetKey = portalTargetKey;
     this.portalPromptKey = portalPromptKey;
     this.playerSpeed = PLAYER_SPEED;
@@ -107,7 +107,7 @@ export class BaseMapScene extends Phaser.Scene {
   create() {
     this.locale = this.registry.get("locale") ?? resolveLocale();
     this.gameState = loadGameState();
-    this.mapState = getMapState(this.gameState, this.mapType);
+    this.mapState = getMapState(this.gameState, this.mapId);
     this.persistGameState = () => saveGameState(this.gameState);
     const playerState = this.gameState.player;
     this.isPaused = false;
@@ -121,7 +121,7 @@ export class BaseMapScene extends Phaser.Scene {
     this.interactionSystem = new InteractionSystem(this, null, this.inventorySystem);
     this.gameLogSystem = new GameLogSystem(this);
 
-    createMap(this, { type: this.mapType });
+    createMap(this, { mapId: this.mapId });
     createPlayer(this, this.spawnPoint, playerState);
     this.syncPlayerState();
     createCollectibles(
@@ -136,7 +136,7 @@ export class BaseMapScene extends Phaser.Scene {
     this.inventorySystem.createInventoryUi();
     this.gameLogSystem.createLogUi();
     this.gameLogSystem.addEntry("logMapEntered", {
-      map: t(this.locale, MAP_NAME_KEYS[this.mapType] ?? this.mapType),
+      map: t(this.locale, MAP_NAME_KEYS[this.mapId] ?? this.mapId),
     });
     this.setupIsometricSprites();
     this.physics.world.setBounds(0, 0, this.mapWidthPx, this.mapHeightPx);
