@@ -1112,6 +1112,7 @@ export class CombatSystem {
     }
 
     if (newHealth === 0) {
+      this.scene.dropSystem?.handleNpcDeath(npc);
       npc.setActive(false);
       npc.setVisible(false);
       npc.body.enable = false;

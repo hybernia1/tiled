@@ -37,6 +37,7 @@ import { MovementSystem } from "../systems/MovementSystem.js";
 import { NpcAggroSystem } from "../systems/NpcAggroSystem.js";
 import { EffectSystem } from "../systems/effects/EffectSystem.js";
 import { QuestSystem } from "../systems/QuestSystem.js";
+import { DropSystem } from "../systems/DropSystem.js";
 import { getMapDefinition } from "../worlds/registry.js";
 
 const MAP_NAMES = {
@@ -104,6 +105,7 @@ export class BaseMapScene extends Phaser.Scene {
     this.npcAggroSystem = new NpcAggroSystem(this);
     this.inventorySystem = new InventorySystem(this);
     this.questSystem = new QuestSystem(this);
+    this.dropSystem = new DropSystem(this);
     this.interactionSystem = new InteractionSystem(this, this.inventorySystem);
     this.gameLogSystem = new GameLogSystem(this);
 

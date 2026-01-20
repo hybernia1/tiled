@@ -1,6 +1,10 @@
 import { TILE_HEIGHT, TILE_WIDTH } from "../../config/constants.js";
 import { createBulletTexture } from "./bullet.js";
-import { createAppleTexture, createPearTexture } from "./items.js";
+import {
+  createAppleTexture,
+  createBoarChunkTexture,
+  createPearTexture,
+} from "./items.js";
 import { createNpcTexture } from "./npc.js";
 import { createFriendlyNpcTexture } from "./npcFriend.js";
 import { createPigTexture } from "./pig.js";
@@ -339,6 +343,22 @@ export const textureRegistry = [
     lightEmission: 0,
     version: 1,
     create: createPearTexture,
+  },
+  {
+    id: "boar_chunk",
+    type: "item",
+    size: { width: 20, height: 20 },
+    palette: ["#b06a5b", "#7a3f36", "#f0d8c4"],
+    rarity: "common",
+    isAnimated: false,
+    tags: ["food", "collectible"],
+    effectTag: "item",
+    materialType: "organic",
+    impactVFX: "item-pop",
+    soundId: "item-pickup",
+    lightEmission: 0,
+    version: 1,
+    create: createBoarChunkTexture,
   },
   {
     id: "spell-shot",

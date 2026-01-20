@@ -46,3 +46,36 @@ export const createPearTexture = (scene) => {
 
   pear.refresh();
 };
+
+export const createBoarChunkTexture = (scene) => {
+  if (scene.textures.exists("boar_chunk")) {
+    return;
+  }
+  const boarChunk = scene.textures.createCanvas("boar_chunk", 20, 20);
+  if (!boarChunk) {
+    return;
+  }
+  const ctx = boarChunk.getContext();
+  if (!ctx) {
+    return;
+  }
+
+  ctx.fillStyle = "#b06a5b";
+  ctx.beginPath();
+  ctx.moveTo(4, 12);
+  ctx.lineTo(10, 5);
+  ctx.lineTo(16, 10);
+  ctx.lineTo(12, 16);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.fillStyle = "#7a3f36";
+  ctx.fillRect(8, 11, 6, 4);
+
+  ctx.fillStyle = "#f0d8c4";
+  ctx.beginPath();
+  ctx.arc(6, 13, 2, 0, Math.PI * 2);
+  ctx.fill();
+
+  boarChunk.refresh();
+};

@@ -12,5 +12,12 @@
     "stackSize": 99,
     "rarity": "common",
     "tags": ["food", "fruit"]
+  },
+  {
+    "id": "boar_chunk",
+    "iconKey": "boar_chunk",
+    "stackSize": 99,
+    "rarity": "common",
+    "tags": ["food", "meat"]
   }
 ]

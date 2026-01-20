@@ -30,5 +30,47 @@
         "chance": 0.15
       }
     ]
+  },
+  {
+    "id": "drop_pig_level_1",
+    "type": "drop",
+    "nameKey": "drop.pig.level.1",
+    "tags": ["enemy", "pig"],
+    "version": 1,
+    "sourceId": "pig_level_1",
+    "dropTable": [
+      {
+        "itemId": "boar_chunk",
+        "chance": 0.9
+      }
+    ]
+  },
+  {
+    "id": "drop_pig_level_2",
+    "type": "drop",
+    "nameKey": "drop.pig.level.2",
+    "tags": ["enemy", "pig"],
+    "version": 1,
+    "sourceId": "pig_level_2",
+    "dropTable": [
+      {
+        "itemId": "boar_chunk",
+        "chance": 0.9
+      }
+    ]
+  },
+  {
+    "id": "drop_pig_level_3",
+    "type": "drop",
+    "nameKey": "drop.pig.level.3",
+    "tags": ["enemy", "pig"],
+    "version": 1,
+    "sourceId": "pig_level_3",
+    "dropTable": [
+      {
+        "itemId": "boar_chunk",
+        "chance": 0.9
+      }
+    ]
   }
 ]
