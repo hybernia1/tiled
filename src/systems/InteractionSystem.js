@@ -1,9 +1,8 @@
 import * as Phaser from "phaser";
 
 export class InteractionSystem {
-  constructor(scene, lightingSystem, inventorySystem) {
+  constructor(scene, inventorySystem) {
     this.scene = scene;
-    this.lightingSystem = lightingSystem;
     this.inventorySystem = inventorySystem;
     this.handleCollectiblePickup = this.handleCollectiblePickup.bind(this);
   }

@@ -102,7 +102,7 @@ export class BaseMapScene extends Phaser.Scene {
     this.combatSystem = new CombatSystem(this);
     this.npcAggroSystem = new NpcAggroSystem(this);
     this.inventorySystem = new InventorySystem(this);
-    this.interactionSystem = new InteractionSystem(this, null, this.inventorySystem);
+    this.interactionSystem = new InteractionSystem(this, this.inventorySystem);
     this.gameLogSystem = new GameLogSystem(this);
 
     const { portal } = createMap(this, { mapId: this.mapId });
