@@ -92,13 +92,13 @@ export class CombatSystem {
     this.scene.playerHealthValue = this.scene.add
       .text(16, 44, "", {
         fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
-        fontSize: "13px",
+        fontSize: "12px",
         color: uiTheme.textPrimary,
-        backgroundColor: "rgba(0, 0, 0, 0.45)",
-        padding: { x: 6, y: 3 },
       })
       .setDepth(10001)
-      .setScrollFactor(0);
+      .setScrollFactor(0)
+      .setOrigin(0.5);
+    this.scene.playerHealthValue.setShadow(0, 1, "rgba(0, 0, 0, 0.6)", 2);
     const shieldIconKey =
       this.getSpellIconKey("shield") ?? getTextureIdByEffectTag("spell");
     this.scene.playerShieldIcon = this.scene.add
@@ -128,11 +128,11 @@ export class CombatSystem {
         fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
         fontSize: "11px",
         color: uiTheme.textSecondary,
-        backgroundColor: "rgba(0, 0, 0, 0.45)",
-        padding: { x: 6, y: 3 },
       })
       .setDepth(10001)
-      .setScrollFactor(0);
+      .setScrollFactor(0)
+      .setOrigin(0.5);
+    this.scene.playerManaValue.setShadow(0, 1, "rgba(0, 0, 0, 0.6)", 2);
 
     this.updatePlayerHealthDisplay();
     this.updatePlayerResourceDisplay();
@@ -403,7 +403,7 @@ export class CombatSystem {
     playerLevelValue.setText(`[${level}]`);
     const baseX = 16;
     const barWidth = 180;
-    const barHeight = 12;
+    const barHeight = 18;
     const barX = baseX + playerLevelValue.width + 10;
     const barY = 18;
     const fillWidth = (currentHealth / maxHealth) * (barWidth - 2);
@@ -425,16 +425,16 @@ export class CombatSystem {
     playerLevelValue.setPosition(baseX, barY - 6);
     playerHealthValue
       .setText(`HP ${currentHealth}/${maxHealth}`)
-      .setPosition(barX, barY + barHeight + 6);
+      .setPosition(barX + barWidth / 2, barY + barHeight / 2);
 
     this.updatePlayerResourceDisplay();
     this.updateActiveEffectsDisplay(this.getSpellTime());
   }
 
   updateActiveEffectsDisplay(time) {
-    const { player, playerShieldIcon, playerShieldTimer, playerHealthValue } =
+    const { player, playerShieldIcon, playerShieldTimer, playerLevelValue } =
       this.scene;
-    if (!player || !playerShieldIcon || !playerShieldTimer || !playerHealthValue) {
+    if (!player || !playerShieldIcon || !playerShieldTimer || !playerLevelValue) {
       return;
     }
     const effects = this.effectSystem?.getActiveEffects(time) ?? [];
@@ -448,8 +448,13 @@ export class CombatSystem {
       activeEffect.expiresAt > 0 ? activeEffect.expiresAt - time : 0;
     const seconds = remainingMs > 0 ? Math.ceil(remainingMs / 1000) : 0;
     const stacks = Math.max(1, activeEffect.stacks ?? 1);
-    const iconX = playerHealthValue.x + playerHealthValue.width + 10;
-    const iconY = playerHealthValue.y + playerHealthValue.height / 2;
+    const baseX = 16;
+    const barWidth = 180;
+    const barHeight = 18;
+    const barX = baseX + playerLevelValue.width + 10;
+    const barY = 18;
+    const iconX = barX + barWidth + 10;
+    const iconY = barY + barHeight / 2;
     if (activeEffect.iconKey) {
       playerShieldIcon.setTexture(activeEffect.iconKey);
     }
@@ -472,14 +477,13 @@ export class CombatSystem {
     this.scene.playerXpValue = this.scene.add
       .text(0, 0, "", {
         fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
-        fontSize: "12px",
+        fontSize: "11px",
         color: uiTheme.textSecondary,
-        backgroundColor: "rgba(0, 0, 0, 0.45)",
-        padding: { x: 6, y: 3 },
       })
       .setDepth(10001)
       .setScrollFactor(0)
-      .setOrigin(0.5, 1);
+      .setOrigin(0.5);
+    this.scene.playerXpValue.setShadow(0, 1, "rgba(0, 0, 0, 0.6)", 2);
 
     this.updatePlayerProgressDisplay();
   }
@@ -499,7 +503,7 @@ export class CombatSystem {
       : getXpNeededForNextLevel(level);
     const { height, width } = this.scene.scale;
     const barWidth = 260;
-    const barHeight = 8;
+    const barHeight = 14;
     const barX = Math.round((width - barWidth) / 2);
     const barY = height - 18;
     const effectiveNeeded = xpNeeded > 0 ? xpNeeded : 0;
@@ -528,7 +532,7 @@ export class CombatSystem {
         : "XP MAX";
     playerXpValue
       .setText(xpText)
-      .setPosition(barX + barWidth / 2, barY - 6);
+      .setPosition(barX + barWidth / 2, barY + barHeight / 2);
 
     this.updatePlayerResourceDisplay();
     this.updateSpellbarDisplay();
@@ -1439,14 +1443,12 @@ export class CombatSystem {
     const {
       player,
       playerLevelValue,
-      playerHealthValue,
       playerManaBar,
       playerManaValue,
     } = this.scene;
     if (
       !player ||
       !playerLevelValue ||
-      !playerHealthValue ||
       !playerManaBar ||
       !playerManaValue
     ) {
@@ -1454,9 +1456,11 @@ export class CombatSystem {
     }
     const baseX = 16;
     const barWidth = 180;
-    const barHeight = 10;
+    const barHeight = 16;
     const barX = baseX + playerLevelValue.width + 10;
-    const startY = playerHealthValue.y + playerHealthValue.height + 6;
+    const healthBarY = 18;
+    const healthBarHeight = 18;
+    const startY = healthBarY + healthBarHeight + 6;
     const drawResource = (definition, bar, label, y) => {
       if (!definition) {
         return;
@@ -1483,7 +1487,7 @@ export class CombatSystem {
 
       label
         .setText(`${definition.label} ${safeCurrent}/${safeMax}`)
-        .setPosition(barX, y + barHeight + 4);
+        .setPosition(barX + barWidth / 2, y + barHeight / 2);
     };
 
     drawResource(
