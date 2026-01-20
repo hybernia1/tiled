@@ -6,17 +6,27 @@ const WALK_FRAMES = 4;
 const BACK_IDLE_FRAMES = 4;
 const BACK_WALK_FRAMES = 4;
 
-export const createPlayer = (scene, startPosition = null) => {
+export const createPlayer = (scene, startPosition = null, playerState = null) => {
   const startX = startPosition?.x ?? 4 * TILE_WIDTH;
   const startY = startPosition?.y ?? 6 * TILE_WIDTH;
+  const maxHealth = Number.isFinite(Number(playerState?.maxHealth))
+    ? Number(playerState.maxHealth)
+    : PLAYER_MAX_HEALTH;
+  const health = Number.isFinite(Number(playerState?.health))
+    ? Number(playerState.health)
+    : maxHealth;
+  const level = Number.isFinite(Number(playerState?.level))
+    ? Number(playerState.level)
+    : 1;
 
   scene.player = scene.physics.add.sprite(startX, startY, "player", 0);
   scene.player.setCollideWorldBounds(true);
   scene.player.setDepth(2);
   scene.player.setData("isoOrigin", { x: 0.5, y: 1 });
   scene.player.setData("isoZ", TILE_HEIGHT);
-  scene.player.setData("maxHealth", PLAYER_MAX_HEALTH);
-  scene.player.setData("health", PLAYER_MAX_HEALTH);
+  scene.player.setData("level", level);
+  scene.player.setData("maxHealth", maxHealth);
+  scene.player.setData("health", health);
   scene.facing = new Phaser.Math.Vector2(1, 0);
 
   if (!scene.anims.exists("player-idle-front")) {

@@ -1,7 +1,14 @@
+import { PLAYER_MAX_HEALTH } from "../config/constants.js";
+
 const STORAGE_KEY = "tiled:gameState";
 
 const DEFAULT_STATE = {
   version: 1,
+  player: {
+    level: 1,
+    maxHealth: PLAYER_MAX_HEALTH,
+    health: PLAYER_MAX_HEALTH,
+  },
   inventory: {
     jablko: 0,
     hruska: 0,
@@ -19,10 +26,33 @@ const safeNumber = (value, fallback = 0) => {
   return Number.isFinite(parsed) ? parsed : fallback;
 };
 
+const clampNumber = (value, min, max, fallback) => {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) {
+    return fallback;
+  }
+  return Math.min(max, Math.max(min, parsed));
+};
+
 const normalizeState = (state) => {
+  const rawPlayer = state?.player ?? {};
+  const maxHealth = clampNumber(
+    rawPlayer.maxHealth,
+    1,
+    999,
+    DEFAULT_STATE.player.maxHealth
+  );
+  const health = clampNumber(rawPlayer.health, 0, maxHealth, maxHealth);
+  const level = clampNumber(rawPlayer.level, 1, 99, DEFAULT_STATE.player.level);
+
   const normalized = {
     ...DEFAULT_STATE,
     ...state,
+    player: {
+      level,
+      maxHealth,
+      health,
+    },
     inventory: {
       ...DEFAULT_STATE.inventory,
       ...(state?.inventory ?? {}),

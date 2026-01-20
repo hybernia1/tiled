@@ -99,6 +99,7 @@ export class BaseMapScene extends Phaser.Scene {
     this.gameState = loadGameState();
     this.mapState = getMapState(this.gameState, this.mapType);
     this.persistGameState = () => saveGameState(this.gameState);
+    const playerState = this.gameState.player;
     this.isPaused = false;
     this.game.renderer.config.roundPixels = true;
     this.iso.projector.origin.setTo(0.5, 0.2);
@@ -111,7 +112,7 @@ export class BaseMapScene extends Phaser.Scene {
     this.gameLogSystem = new GameLogSystem(this);
 
     createMap(this, { type: this.mapType });
-    createPlayer(this, this.spawnPoint);
+    createPlayer(this, this.spawnPoint, playerState);
     createCollectibles(
       this,
       this.interactionSystem.handleCollectiblePickup,
