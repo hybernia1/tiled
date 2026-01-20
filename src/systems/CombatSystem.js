@@ -535,7 +535,7 @@ export class CombatSystem {
       const spell = this.spells[index];
       if (icon && spell) {
         const iconKey = this.getSpellIconKey(spell.id);
-        if (iconKey) {
+        if (iconKey && icon.scene?.sys && scene.textures.exists(iconKey)) {
           icon.setTexture(iconKey);
           icon.setVisible(true);
           icon.setPosition(slotX + slotSize / 2, barY + slotSize / 2 - 4);
