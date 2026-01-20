@@ -13,6 +13,8 @@ export class CombatSystem {
     this.handleNpcHit = this.handleNpcHit.bind(this);
     this.handleWallHit = this.handleWallHit.bind(this);
     this.bulletRangePx = BULLET_RANGE_TILES * TILE_WIDTH;
+    this.lastCombatAt = -Infinity;
+    this.lastRegenAt = null;
   }
 
   setupPlayerHealth() {
@@ -449,6 +451,7 @@ export class CombatSystem {
     if (!player?.active) {
       return;
     }
+    this.recordCombatActivity(this.scene.time?.now ?? Date.now());
     const maxHealth = Number(player.getData("maxHealth")) || 1;
     const storedHealth = Number(player.getData("health"));
     const currentHealth = Number.isFinite(storedHealth)
@@ -556,6 +559,7 @@ export class CombatSystem {
     }
 
     const now = this.scene.time.now;
+    this.recordCombatActivity(now);
     const lastHitAt = npc.getData("lastHitAt") ?? -Infinity;
     if (now - lastHitAt < 120) {
       return;
@@ -732,40 +736,14 @@ export class CombatSystem {
       return;
     }
 
-    const spellbarTarget = usingSpellbar ? this.getSpellbarTarget() : null;
-    if (usingSpellbar && !spellbarTarget) {
+    const targetedNpc = this.getSpellbarTarget();
+    if (!targetedNpc) {
       this.scene.pointerFireActive = false;
       this.scene.spellbarShotQueued = false;
       return;
     }
 
-    const targetedNpc = this.isKillableNpc(this.scene.targetedNpc)
-      ? this.scene.targetedNpc
-      : null;
-    let direction = null;
-    if (targetedNpc) {
-      const distance = Phaser.Math.Distance.Between(
-        this.scene.player.x,
-        this.scene.player.y,
-        targetedNpc.x,
-        targetedNpc.y
-      );
-      if (distance > this.bulletRangePx) {
-        if (usingSpellbar) {
-          this.scene.pointerFireActive = false;
-          this.scene.spellbarShotQueued = false;
-        }
-        return;
-      }
-      direction = this.getSpellbarDirection(targetedNpc);
-    } else if (usingSpellbar) {
-      direction = this.getSpellbarDirection(spellbarTarget);
-    } else {
-      const autoAimTarget = this.getAutoAimTarget();
-      direction =
-        (autoAimTarget ? this.getAutoAimDirection() : null) ??
-        this.scene.facing.clone().normalize();
-    }
+    const direction = this.getSpellbarDirection(targetedNpc);
     if (!direction) {
       if (usingSpellbar) {
         this.scene.pointerFireActive = false;
@@ -795,6 +773,7 @@ export class CombatSystem {
       time + (this.bulletRangePx / this.scene.bulletSpeed) * 1000;
 
     this.scene.nextFireTime = time + this.scene.fireCooldownMs;
+    this.recordCombatActivity(time);
     if (this.scene.spellbarShotQueued) {
       this.scene.spellbarShotQueued = false;
     }
@@ -953,5 +932,92 @@ export class CombatSystem {
       return null;
     }
     return direction.normalize();
+  }
+
+  updatePlayerRegen(time) {
+    const { player } = this.scene;
+    if (!player?.active) {
+      return;
+    }
+
+    const maxHealth = Number(player.getData("maxHealth")) || 1;
+    const storedHealth = Number(player.getData("health"));
+    const currentHealth = Number.isFinite(storedHealth)
+      ? storedHealth
+      : maxHealth;
+    if (currentHealth >= maxHealth) {
+      this.lastRegenAt = time;
+      return;
+    }
+
+    if (this.isInCombat(time)) {
+      this.lastRegenAt = time;
+      return;
+    }
+
+    if (!Number.isFinite(this.lastRegenAt)) {
+      this.lastRegenAt = time;
+    }
+    const regenIntervalMs = 1000;
+    const elapsed = time - this.lastRegenAt;
+    if (elapsed < regenIntervalMs) {
+      return;
+    }
+
+    const ticks = Math.floor(elapsed / regenIntervalMs);
+    const newHealth = Math.min(maxHealth, currentHealth + ticks);
+    if (newHealth === currentHealth) {
+      this.lastRegenAt = time;
+      return;
+    }
+
+    player.setData("health", newHealth);
+    this.updatePlayerHealthDisplay();
+    if (this.scene.gameState?.player) {
+      this.scene.gameState.player.health = newHealth;
+      this.scene.gameState.player.maxHealth = maxHealth;
+      this.scene.persistGameState?.();
+    }
+    this.lastRegenAt += ticks * regenIntervalMs;
+  }
+
+  recordCombatActivity(time) {
+    if (!Number.isFinite(time)) {
+      return;
+    }
+    this.lastCombatAt = time;
+  }
+
+  isInCombat(time) {
+    if (this.hasAggroedNpc()) {
+      return true;
+    }
+    return Number.isFinite(this.lastCombatAt) && time - this.lastCombatAt < 1500;
+  }
+
+  hasAggroedNpc() {
+    const { scene } = this;
+    if (scene.npcIsAggro) {
+      return true;
+    }
+    let isAggro = false;
+    const checkNpc = (npc) => {
+      if (
+        isAggro ||
+        !npc?.active ||
+        !npc.getData("isNpc") ||
+        npc.getData("type") === "friendly"
+      ) {
+        return;
+      }
+      if (npc.getData("isAggro")) {
+        isAggro = true;
+      }
+    };
+    checkNpc(scene.npc);
+    if (scene.pigNpcGroup) {
+      scene.pigNpcGroup.children.iterate((npc) => checkNpc(npc));
+    }
+    return isAggro;
   }
 }
