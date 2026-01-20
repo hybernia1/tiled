@@ -1,6 +1,6 @@
 export class Spell {
   constructor({
-    id,
+    spellId,
     name,
     cooldownMs = 0,
     durationMs = 0,
@@ -11,7 +11,7 @@ export class Spell {
     onCast,
     onExpire,
   }) {
-    this.id = id;
+    this.spellId = spellId;
     this.name = name;
     this.cooldownMs = cooldownMs;
     this.durationMs = durationMs;

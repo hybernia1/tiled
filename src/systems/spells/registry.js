@@ -13,6 +13,30 @@ const resolveNumber = (value, context, fallback) => {
   return Number.isFinite(parsed) ? parsed : fallback;
 };
 
+const REQUIRED_SPELL_FIELDS = ["spellId", "name", "onCast"];
+
+const validateSpellDefinition = (definition, registryKey) => {
+  if (!definition || typeof definition !== "object") {
+    console.error("[spells] Invalid spell definition:", registryKey);
+    return false;
+  }
+
+  const missingFields = REQUIRED_SPELL_FIELDS.filter(
+    (field) => !definition[field]
+  );
+
+  if (missingFields.length) {
+    console.error(
+      `[spells] Spell definition "${registryKey}" is missing required fields: ${missingFields.join(
+        ", "
+      )}`
+    );
+    return false;
+  }
+
+  return true;
+};
+
 export const createSpell = (definition, context = {}) => {
   if (!definition) {
     return null;
@@ -29,7 +53,7 @@ export const createSpell = (definition, context = {}) => {
   );
 
   return new Spell({
-    id: definition.id,
+    spellId: definition.spellId,
     name: definition.name,
     cooldownMs,
     durationMs,
@@ -42,11 +66,11 @@ export const createSpell = (definition, context = {}) => {
   });
 };
 
-export const spellRegistry = new Map([
+const spellDefinitions = [
   [
     "shot",
     {
-      id: "shot",
+      spellId: "shot",
       name: "Shot",
       iconKey: "spell-shot",
       cooldownMs: ({ scene }) => scene.fireCooldownMs,
@@ -62,7 +86,7 @@ export const spellRegistry = new Map([
   [
     "shield",
     {
-      id: "shield",
+      spellId: "shield",
       name: "Shield",
       iconKey: "spell-shield",
       cooldownMs: ({ combatSystem }) => combatSystem.shieldCooldownMs,
@@ -75,4 +99,10 @@ export const spellRegistry = new Map([
       },
     },
   ],
-]);
+];
+
+spellDefinitions.forEach(([key, definition]) =>
+  validateSpellDefinition(definition, key)
+);
+
+export const spellRegistry = new Map(spellDefinitions);

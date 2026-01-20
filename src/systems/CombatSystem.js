@@ -154,13 +154,13 @@ export class CombatSystem {
       .map((definition) => createSpell(definition, context))
       .filter(Boolean);
     this.spellMap = new Map(
-      this.spells.map((spell) => [spell.id, spell])
+      this.spells.map((spell) => [spell.spellId, spell])
     );
     this.restoreSpellCooldowns();
   }
 
-  getSpell(id) {
-    return this.spellMap.get(id);
+  getSpell(spellId) {
+    return this.spellMap.get(spellId);
   }
 
   getSpellIconKey(spellId) {
@@ -180,7 +180,7 @@ export class CombatSystem {
   restoreSpellCooldowns() {
     const storedCooldowns = this.scene.gameState?.player?.spellCooldowns ?? {};
     this.spells.forEach((spell) => {
-      const lastCastAt = Number(storedCooldowns[spell.id]);
+      const lastCastAt = Number(storedCooldowns[spell.spellId]);
       if (Number.isFinite(lastCastAt)) {
         spell.lastCastAt = lastCastAt;
       }
@@ -194,7 +194,7 @@ export class CombatSystem {
     if (!this.scene.gameState.player.spellCooldowns) {
       this.scene.gameState.player.spellCooldowns = {};
     }
-    this.scene.gameState.player.spellCooldowns[spell.id] = time;
+    this.scene.gameState.player.spellCooldowns[spell.spellId] = time;
     this.scene.persistGameState?.();
     this.emitSpellEvent("spell:cooldownRecorded", { spell, time });
   }
@@ -481,7 +481,7 @@ export class CombatSystem {
     if (!spell) {
       return;
     }
-    if (spell.id === "shot") {
+    if (spell.spellId === "shot") {
       this.scene.pointerFireActive = true;
       this.scene.spellbarShotQueued = true;
       return;
@@ -499,7 +499,7 @@ export class CombatSystem {
     const slotConfig = this.getSpellbarSlotsConfig()[index] ?? null;
     const spellId = slotConfig?.spellId ?? null;
     const spell = spellId ? this.getSpell(spellId) : null;
-    if (!spell || spell.id !== "shot") {
+    if (!spell || spell.spellId !== "shot") {
       return;
     }
     this.scene.pointerFireActive = false;
@@ -563,7 +563,7 @@ export class CombatSystem {
       }
       const icon = spellbarSlotIcons[index];
       if (icon && spell) {
-        const iconKey = this.getSpellIconKey(spell.id);
+        const iconKey = this.getSpellIconKey(spell.spellId);
         if (iconKey && icon.scene?.sys && scene.textures.exists(iconKey)) {
           icon.setTexture(iconKey);
           icon.setVisible(true);
