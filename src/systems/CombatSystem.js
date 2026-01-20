@@ -822,13 +822,12 @@ export class CombatSystem {
         fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
         fontSize: "12px",
         color: uiTheme.textPrimary,
-        backgroundColor: "rgba(0, 0, 0, 0.45)",
-        padding: { x: 6, y: 3 },
       })
       .setDepth(10001)
       .setScrollFactor(0)
-      .setOrigin(0, 0.5)
+      .setOrigin(0.5)
       .setVisible(false);
+    scene.targetHealthValue.setShadow(0, 1, "rgba(0, 0, 0, 0.6)", 2);
 
     this.updateTargetHud();
   }
@@ -858,7 +857,7 @@ export class CombatSystem {
 
     const screenWidth = scene.scale?.width ?? 0;
     const targetBarWidth = 180;
-    const targetBarHeight = 10;
+    const targetBarHeight = 18;
     const targetBarX = Math.max(
       UI_MARGIN,
       Math.round(screenWidth / 2 - targetBarWidth / 2)
@@ -901,8 +900,7 @@ export class CombatSystem {
       .setVisible(true);
     targetHealthValue
       .setText(`HP ${currentHealth}/${maxHealth}`)
-      .setPosition(targetCenterX, targetBarY + targetBarHeight + UI_PADDING)
-      .setOrigin(0.5, 0.5)
+      .setPosition(targetCenterX, targetBarY + targetBarHeight / 2)
       .setVisible(true);
   }
 
