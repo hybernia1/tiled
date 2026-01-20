@@ -106,6 +106,15 @@ export class CombatSystem {
       null,
       this.scene
     );
+    if (this.scene.pigNpcGroup) {
+      this.scene.physics.add.overlap(
+        this.scene.bullets,
+        this.scene.pigNpcGroup,
+        this.handleNpcHit,
+        null,
+        this.scene
+      );
+    }
     this.scene.physics.add.collider(
       this.scene.bullets,
       this.scene.mapLayer,
@@ -162,10 +171,13 @@ export class CombatSystem {
     if (bullet?.texture?.key !== "bullet" && npc?.texture?.key === "bullet") {
       [bullet, npc] = [npc, bullet];
     }
-    if (bullet?.texture?.key !== "bullet" || npc?.texture?.key !== "npc") {
+    if (bullet?.texture?.key !== "bullet" || !npc?.getData("isNpc")) {
       return;
     }
     if (!npc.active || !bullet.active || bullet.getData("hitNpc")) {
+      return;
+    }
+    if (npc.getData("type") === "friendly") {
       return;
     }
 
@@ -191,20 +203,28 @@ export class CombatSystem {
       npc.setData("isProvoked", true);
       this.scene.npcAggroSystem?.updateNpcAggro(this.scene.time.now);
     }
-    this.updateNpcHealthDisplay();
+    if (npc === this.scene.npc) {
+      this.updateNpcHealthDisplay();
+    }
 
     if (newHealth === 0) {
       npc.setActive(false);
       npc.setVisible(false);
       npc.body.enable = false;
-      if (this.scene.npcTween) {
-        this.scene.npcTween.stop();
+      const nameplate = npc.getData("nameplate");
+      if (nameplate) {
+        nameplate.setVisible(false);
       }
-      this.scene.npcHealthBar.setVisible(false);
-      this.scene.npcHealthValue.setVisible(false);
-      if (this.scene.mapState) {
-        this.scene.mapState.npcDefeated = true;
-        this.scene.persistGameState?.();
+      if (npc === this.scene.npc) {
+        if (this.scene.npcTween) {
+          this.scene.npcTween.stop();
+        }
+        this.scene.npcHealthBar.setVisible(false);
+        this.scene.npcHealthValue.setVisible(false);
+        if (this.scene.mapState) {
+          this.scene.mapState.npcDefeated = true;
+          this.scene.persistGameState?.();
+        }
       }
       const npcName =
         npc.getData("displayName") ?? t(this.scene.locale, "npcName");
