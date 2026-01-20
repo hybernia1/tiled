@@ -158,6 +158,7 @@ export class BaseMapScene extends Phaser.Scene {
     this.npcAggroSystem.updateNpcAggro(time);
     this.npcAggroSystem.updateNpcGroupAggro(time, this.pigNpcGroup);
     this.combatSystem.updateShooting(time);
+    this.combatSystem.updatePlayerRegen(time);
     this.combatSystem.cleanupBullets(time);
     this.combatSystem.updateNpcHealthDisplay();
     this.combatSystem.updateTargetHud();
