@@ -1,5 +1,6 @@
 import {
   getMaxHealthForLevel,
+  getXpNeededForNextLevel,
   MAX_LEVEL,
 } from "../config/playerProgression.js";
 
@@ -9,6 +10,7 @@ const DEFAULT_STATE = {
   version: 1,
   player: {
     level: 1,
+    xp: 0,
     maxHealth: getMaxHealthForLevel(1),
     health: getMaxHealthForLevel(1),
   },
@@ -46,6 +48,7 @@ const normalizeState = (state) => {
     DEFAULT_STATE.player.level
   );
   const derivedMaxHealth = getMaxHealthForLevel(level);
+  const xp = Math.max(0, safeNumber(rawPlayer.xp));
   const maxHealth = clampNumber(
     rawPlayer.maxHealth,
     1,
@@ -53,12 +56,15 @@ const normalizeState = (state) => {
     derivedMaxHealth
   );
   const health = clampNumber(rawPlayer.health, 0, maxHealth, maxHealth);
+  const xpNeeded = getXpNeededForNextLevel(level);
+  const clampedXp = xpNeeded > 0 ? Math.min(xp, xpNeeded) : 0;
 
   const normalized = {
     ...DEFAULT_STATE,
     ...state,
     player: {
       level,
+      xp: clampedXp,
       maxHealth,
       health,
     },
