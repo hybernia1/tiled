@@ -15,7 +15,8 @@
     "rewards": [
       {
         "rewardType": "currency",
-        "amount": 50
+        "amount": 50,
+        "unit": "silver"
       }
     ]
   },
@@ -37,6 +38,31 @@
         "rewardType": "item",
         "itemId": "item_health_potion_01",
         "amount": 2
+      }
+    ]
+  },
+  {
+    "id": "quest_training_01",
+    "type": "quest",
+    "nameKey": "quest.training.01",
+    "tags": ["starter"],
+    "version": 1,
+    "objectives": [
+      {
+        "objectiveKey": "quest.objective.defeat_bats",
+        "targetId": "npc_bat_01",
+        "count": 1
+      }
+    ],
+    "rewards": [
+      {
+        "rewardType": "xp",
+        "amount": 50
+      },
+      {
+        "rewardType": "currency",
+        "amount": 1,
+        "unit": "silver"
       }
     ]
   }

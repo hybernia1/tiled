@@ -133,6 +133,18 @@ export class CombatSystem {
       .setScrollFactor(0)
       .setOrigin(0.5);
     this.scene.playerManaValue.setShadow(0, 1, "rgba(0, 0, 0, 0.6)", 2);
+    this.scene.playerCurrencyValue = this.scene.add
+      .text(16, 0, "", {
+        fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+        fontSize: "11px",
+        color: uiTheme.textMuted,
+        backgroundColor: "rgba(0, 0, 0, 0.45)",
+        padding: { x: 6, y: 3 },
+      })
+      .setDepth(10001)
+      .setScrollFactor(0)
+      .setOrigin(0, 0.5);
+    this.scene.playerCurrencyValue.setShadow(0, 1, "rgba(0, 0, 0, 0.6)", 2);
 
     this.updatePlayerHealthDisplay();
     this.updatePlayerResourceDisplay();
@@ -1444,12 +1456,14 @@ export class CombatSystem {
       playerLevelValue,
       playerManaBar,
       playerManaValue,
+      playerCurrencyValue,
     } = this.scene;
     if (
       !player ||
       !playerLevelValue ||
       !playerManaBar ||
-      !playerManaValue
+      !playerManaValue ||
+      !playerCurrencyValue
     ) {
       return;
     }
@@ -1495,6 +1509,14 @@ export class CombatSystem {
       playerManaValue,
       startY
     );
+
+    const currency = this.scene.gameState?.player?.currency ?? {};
+    const gold = Math.max(0, Math.floor(Number(currency.gold ?? 0)));
+    const silver = Math.max(0, Math.floor(Number(currency.silver ?? 0)));
+    const currencyY = startY + barHeight + 10;
+    playerCurrencyValue
+      .setText(`Gold ${gold}  Silver ${silver}`)
+      .setPosition(barX, currencyY);
   }
 
   performShot(payload, time) {

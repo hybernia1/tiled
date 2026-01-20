@@ -40,9 +40,16 @@
           "type": "object",
           "required": ["rewardType", "amount"],
           "properties": {
-            "rewardType": { "type": "string" },
+            "rewardType": {
+              "type": "string",
+              "enum": ["item", "currency", "xp"]
+            },
             "itemId": { "type": "string" },
-            "amount": { "type": "number" }
+            "amount": { "type": "number" },
+            "unit": {
+              "type": "string",
+              "enum": ["silver", "gold"]
+            }
           },
           "additionalProperties": false
         }
