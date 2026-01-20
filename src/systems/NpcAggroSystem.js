@@ -1,5 +1,5 @@
 import * as Phaser from "phaser";
-import { getNpcBehavior } from "./npc/behaviorProfiles";
+import { getNpcBehavior } from "./npc/behaviorProfiles.js";
 import {
   getAggroRange,
   getAttackDamage,
