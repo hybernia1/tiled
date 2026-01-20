@@ -36,6 +36,8 @@ export const createPlayer = (scene, startPosition = null, playerState = null) =>
     ? Number(playerState.mana)
     : maxMana;
   const xpNeeded = getXpNeededForNextLevel(level);
+  const nickname =
+    typeof playerState?.nickname === "string" ? playerState.nickname.trim() : "";
 
   scene.textureLoader?.ensureTexture("player");
   scene.player = scene.physics.add.sprite(startX, startY, "player", 0);
@@ -44,6 +46,7 @@ export const createPlayer = (scene, startPosition = null, playerState = null) =>
   scene.player.setData("isoOrigin", { x: 0.5, y: 1 });
   scene.player.setData("isoZ", TILE_HEIGHT);
   scene.player.setData("level", level);
+  scene.player.setData("nickname", nickname);
   scene.player.setData("xp", Math.max(0, xp));
   scene.player.setData("xpNeeded", xpNeeded);
   scene.player.setData("maxHealth", maxHealth);
