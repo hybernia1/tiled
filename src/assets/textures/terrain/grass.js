@@ -7,12 +7,22 @@ const GRASS_ALT_FILL = "#4a824c";
 const GRASS_STROKE = "#3a6b3e";
 
 export const createGrassTexture = (scene) => {
+  if (scene.textures.exists("grass")) {
+    scene.textures.get("grass").setFilter(Phaser.Textures.FilterMode.NEAREST);
+    return;
+  }
   const texture = scene.textures.createCanvas(
     "grass",
     TILE_WIDTH * 2,
     TILE_HEIGHT
   );
+  if (!texture) {
+    return;
+  }
   const ctx = texture.getContext();
+  if (!ctx) {
+    return;
+  }
 
   ctx.clearRect(0, 0, texture.width, texture.height);
 
