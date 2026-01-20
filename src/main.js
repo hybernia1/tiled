@@ -1,5 +1,6 @@
 import * as Phaser from "phaser";
 import { createGameConfig } from "./config/gameConfig.js";
+import { validateNpcDefinitions } from "./config/npcs.js";
 import { CaveScene } from "./scenes/CaveScene.js";
 import { WorldScene } from "./scenes/WorldScene.js";
 import { LoadingScene } from "./scenes/LoadingScene.js";
@@ -11,5 +12,7 @@ const config = createGameConfig([
   WorldScene,
   CaveScene,
 ]);
+
+validateNpcDefinitions();
 
 new Phaser.Game(config);
