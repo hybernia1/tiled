@@ -19,7 +19,6 @@ import { createBullets } from "../entities/bullets.js";
 import { createFriendlyNpc } from "../entities/friendlyNpc.js";
 import { createCollectibles } from "../entities/collectibles.js";
 import { createMap } from "../entities/map.js";
-import { createNpc } from "../entities/npc.js";
 import { createPigNpc } from "../entities/pigNpc.js";
 import { createPlayer } from "../entities/player.js";
 import { getMaxHealthForLevel } from "../config/playerProgression.js";
@@ -83,7 +82,6 @@ export class BaseMapScene extends Phaser.Scene {
     this.textureLoader.prefetch([
       "spell-shot",
       "spell-shield",
-      "npc",
       "npcFriend",
       "pig",
     ]);
@@ -118,7 +116,6 @@ export class BaseMapScene extends Phaser.Scene {
       this.mapState
     );
     createBullets(this);
-    createNpc(this);
     createFriendlyNpc(this);
     createPigNpc(this);
     this.inventorySystem.createInventoryUi();
