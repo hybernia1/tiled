@@ -73,6 +73,7 @@ const startPigWander = (scene, pig) => {
 };
 
 export const createPigNpc = (scene) => {
+  scene.textureLoader?.ensureTexture("pig");
   scene.pigNpcGroup = scene.physics.add.group({ allowGravity: false });
   const spawns = PIG_SPAWNS[scene.mapId] ?? [];
   const respawnState = scene.mapState?.pigRespawns ?? {};

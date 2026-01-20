@@ -71,7 +71,15 @@ export class BaseMapScene extends Phaser.Scene {
   }
 
   preload() {
-    new TextureLoader(this).load();
+    this.textureLoader = new TextureLoader(this);
+    this.textureLoader.load();
+    this.textureLoader.prefetch([
+      "spell-shot",
+      "spell-shield",
+      "npc",
+      "npcFriend",
+      "pig",
+    ]);
   }
 
   create() {

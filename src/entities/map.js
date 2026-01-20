@@ -41,6 +41,16 @@ export const createMap = (scene, options = {}) => {
   const deciduousTreeSet = new Set(
     deciduousTrees.map(({ x, y }) => `${x},${y}`)
   );
+  const textureLoader = scene.textureLoader ?? null;
+
+  textureLoader?.ensureTexture("collision-tiles");
+  textureLoader?.ensureTexture(floorTextureKey);
+  textureLoader?.ensureTexture("wall");
+  textureLoader?.ensureTexture("mountains");
+  textureLoader?.ensureTexture("pond");
+  textureLoader?.ensureTexture("stairs");
+  textureLoader?.ensureTexture("tree-conifer");
+  textureLoader?.ensureTexture("tree-deciduous");
 
   // collision tilemap (grid)
   const map = scene.make.tilemap({

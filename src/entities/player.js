@@ -35,6 +35,7 @@ export const createPlayer = (scene, startPosition = null, playerState = null) =>
     : maxMana;
   const xpNeeded = getXpNeededForNextLevel(level);
 
+  scene.textureLoader?.ensureTexture("player");
   scene.player = scene.physics.add.sprite(startX, startY, "player", 0);
   scene.player.setCollideWorldBounds(true);
   scene.player.setDepth(2);
