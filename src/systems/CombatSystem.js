@@ -406,13 +406,17 @@ export class CombatSystem {
     }
 
     const level = Number(player.getData("level")) || 1;
+    const rawNickname = player.getData("nickname");
+    const nickname =
+      typeof rawNickname === "string" ? rawNickname.trim() : "";
     const maxHealth = Number(player.getData("maxHealth")) || 1;
     const storedHealth = Number(player.getData("health"));
     const currentHealth = Number.isFinite(storedHealth)
       ? storedHealth
       : maxHealth;
 
-    playerLevelValue.setText(`[${level}]`);
+    const levelLabel = nickname ? `[${level}] ${nickname}` : `[${level}]`;
+    playerLevelValue.setText(levelLabel);
     const baseX = 16;
     const barWidth = 180;
     const barHeight = 18;

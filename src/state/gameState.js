@@ -20,6 +20,7 @@ const DEFAULT_SPELLBAR_SLOTS = [
 const DEFAULT_STATE = {
   version: 1,
   player: {
+    nickname: "",
     level: 1,
     xp: 0,
     maxHealth: getMaxHealthForLevel(1),
@@ -97,9 +98,17 @@ const normalizeSpellbarSlots = (slots) => {
   });
 };
 
+const normalizeNickname = (value) => {
+  if (typeof value !== "string") {
+    return "";
+  }
+  return value.trim();
+};
+
 const normalizeState = (state) => {
   const now = Date.now();
   const rawPlayer = state?.player ?? {};
+  const nickname = normalizeNickname(rawPlayer.nickname);
   const level = clampNumber(
     rawPlayer.level,
     1,
@@ -181,6 +190,7 @@ const normalizeState = (state) => {
     ...DEFAULT_STATE,
     ...state,
     player: {
+      nickname,
       level,
       xp: clampedXp,
       maxHealth,

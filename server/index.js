@@ -60,9 +60,8 @@ const createSession = (userId) => {
   return { token, expiresAt };
 };
 
-const getCharacterIdForUser = (userId) => {
-  const row = findCharacterByUserId(db, userId);
-  return row?.id ?? null;
+const getCharacterForUser = (userId) => {
+  return findCharacterByUserId(db, userId);
 };
 
 const validateNickname = (nickname) => {
@@ -170,16 +169,23 @@ app.post("/characters", authMiddleware, (req, res) => {
 
 app.get("/player/state", authMiddleware, (req, res) => {
   const userId = req.userId;
-  const characterId = getCharacterIdForUser(userId);
-  if (!characterId) {
+  const character = getCharacterForUser(userId);
+  if (!character) {
     res.status(404).json({ error: "Character not found" });
     return;
   }
+  const characterId = character.id;
   const row = db
     .prepare("SELECT state_json FROM player_state WHERE character_id = ?")
     .get(characterId);
   if (!row) {
-    const normalized = normalizeState(DEFAULT_STATE);
+    const normalized = normalizeState({
+      ...DEFAULT_STATE,
+      player: {
+        ...DEFAULT_STATE.player,
+        nickname: character.nickname,
+      },
+    });
     db.prepare("INSERT INTO player_state (character_id, state_json) VALUES (?, ?)").run(
       characterId,
       JSON.stringify(normalized)
@@ -193,18 +199,22 @@ app.get("/player/state", authMiddleware, (req, res) => {
   } catch (error) {
     parsed = DEFAULT_STATE;
   }
-  res.json({ state: normalizeState(parsed) });
+  const normalized = normalizeState(parsed);
+  normalized.player.nickname = character.nickname;
+  res.json({ state: normalized });
 });
 
 app.put("/player/state", authMiddleware, (req, res) => {
   const userId = req.userId;
-  const characterId = getCharacterIdForUser(userId);
-  if (!characterId) {
+  const character = getCharacterForUser(userId);
+  if (!character) {
     res.status(404).json({ error: "Character not found" });
     return;
   }
+  const characterId = character.id;
   const payload = req.body?.state ?? req.body;
   const normalized = normalizeState(payload);
+  normalized.player.nickname = character.nickname;
   db.prepare(
     "INSERT INTO player_state (character_id, state_json, updated_at) VALUES (?, ?, CURRENT_TIMESTAMP) ON CONFLICT(character_id) DO UPDATE SET state_json = excluded.state_json, updated_at = CURRENT_TIMESTAMP"
   ).run(characterId, JSON.stringify(normalized));
