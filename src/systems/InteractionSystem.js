@@ -39,21 +39,10 @@ export class InteractionSystem {
     friendlyNpcPrompt
       .setPosition(friendlyNpcDisplay.x, friendlyNpcDisplay.y - 30)
       .setVisible(isClose);
-
-    if (!isClose) {
-      return;
-    }
-
-    const interactTriggered = Phaser.Input.Keyboard.JustDown(
-      this.scene.interactKey
-    );
-    if (interactTriggered) {
-      this.showFriendlyNpcDialogue();
-    }
   }
 
   updateSwitchInteraction() {
-    if (!this.scene.switches || !this.scene.player || !this.scene.interactKey) {
+    if (!this.scene.switches || !this.scene.player) {
       return;
     }
 
@@ -86,21 +75,9 @@ export class InteractionSystem {
     const actionLabel = isOn ? "zhasni" : "rozsviť";
     const switchDisplay = this.scene.getDisplaySprite(closestSwitch);
     this.scene.switchPrompt
-      .setText(`Stiskni E pro ${actionLabel} světlo`)
+      .setText(`Klikni pro ${actionLabel} světlo`)
       .setPosition(switchDisplay.x, switchDisplay.y - 18)
       .setVisible(true);
-
-    const interactTriggered = Phaser.Input.Keyboard.JustDown(
-      this.scene.interactKey
-    );
-    if (interactTriggered) {
-      closestSwitch.setData("isOn", !isOn);
-      const zone = this.scene.lightZones.find((entry) => entry.id === zoneId);
-      if (zone) {
-        zone.enabled = !isOn;
-        this.lightingSystem.updateLightingMask();
-      }
-    }
   }
 
   consumeTouchAction(action) {
@@ -138,6 +115,86 @@ export class InteractionSystem {
     }
 
     collectible.disableBody(true, true);
+  }
+
+  handleFriendlyNpcClick(worldPoint) {
+    const { friendlyNpc, player } = this.scene;
+    if (!friendlyNpc?.active || !player) {
+      return false;
+    }
+    const distanceToPlayer = Phaser.Math.Distance.Between(
+      player.x,
+      player.y,
+      friendlyNpc.x,
+      friendlyNpc.y
+    );
+    if (distanceToPlayer >= 70) {
+      return false;
+    }
+
+    const friendlyNpcDisplay = this.scene.getDisplaySprite(friendlyNpc);
+    const clickDistance = Phaser.Math.Distance.Between(
+      worldPoint.x,
+      worldPoint.y,
+      friendlyNpcDisplay.x,
+      friendlyNpcDisplay.y
+    );
+    if (clickDistance > 28) {
+      return false;
+    }
+
+    this.showFriendlyNpcDialogue();
+    return true;
+  }
+
+  handleSwitchClick(worldPoint) {
+    if (!this.scene.switches || !this.scene.player) {
+      return false;
+    }
+
+    let closestSwitch = null;
+    let closestDistance = Infinity;
+    this.scene.switches.children.iterate((switchSprite) => {
+      if (!switchSprite) {
+        return;
+      }
+      const distance = Phaser.Math.Distance.Between(
+        this.scene.player.x,
+        this.scene.player.y,
+        switchSprite.x,
+        switchSprite.y
+      );
+      if (distance < closestDistance) {
+        closestDistance = distance;
+        closestSwitch = switchSprite;
+      }
+    });
+
+    const isClose = closestSwitch && closestDistance < 70;
+    if (!isClose) {
+      return false;
+    }
+
+    const switchDisplay = this.scene.getDisplaySprite(closestSwitch);
+    const clickDistance = Phaser.Math.Distance.Between(
+      worldPoint.x,
+      worldPoint.y,
+      switchDisplay.x,
+      switchDisplay.y
+    );
+    if (clickDistance > 28) {
+      return false;
+    }
+
+    const zoneId = closestSwitch.getData("zoneId");
+    const isOn = closestSwitch.getData("isOn");
+    closestSwitch.setData("isOn", !isOn);
+    const zone = this.scene.lightZones.find((entry) => entry.id === zoneId);
+    if (zone) {
+      zone.enabled = !isOn;
+      this.lightingSystem.updateLightingMask();
+    }
+    return true;
   }
 
   showFriendlyNpcDialogue() {

@@ -286,6 +286,9 @@ export class BaseMapScene extends Phaser.Scene {
 
   setupTargetingInput() {
     this.input.on("pointerdown", (pointer) => {
+      if (this.handlePointerInteraction(pointer)) {
+        return;
+      }
       this.selectTargetByPointer(pointer);
     });
   }
@@ -347,6 +350,63 @@ export class BaseMapScene extends Phaser.Scene {
     } else {
       this.setTargetedNpc(null);
     }
+  }
+
+  handlePointerInteraction(pointer) {
+    if (!pointer) {
+      return false;
+    }
+    const worldPoint = this.cameras.main.getWorldPoint(pointer.x, pointer.y);
+
+    if (this.handlePortalClick(worldPoint)) {
+      return true;
+    }
+    if (this.interactionSystem?.handleFriendlyNpcClick?.(worldPoint)) {
+      return true;
+    }
+    if (this.interactionSystem?.handleSwitchClick?.(worldPoint)) {
+      return true;
+    }
+
+    return false;
+  }
+
+  handlePortalClick(worldPoint) {
+    if (!this.portalSprite || !this.player) {
+      return false;
+    }
+
+    const portalWorldX = this.portalTile
+      ? this.portalTile.x * TILE_WIDTH
+      : this.portalSprite.isoX ?? this.portalSprite.x;
+    const portalWorldY = this.portalTile
+      ? this.portalTile.y * TILE_WIDTH
+      : this.portalSprite.isoY ?? this.portalSprite.y;
+    const distanceToPlayer = Phaser.Math.Distance.Between(
+      this.player.x,
+      this.player.y,
+      portalWorldX,
+      portalWorldY
+    );
+    if (distanceToPlayer >= 70) {
+      return false;
+    }
+
+    const clickDistance = Phaser.Math.Distance.Between(
+      worldPoint.x,
+      worldPoint.y,
+      this.portalSprite.x,
+      this.portalSprite.y
+    );
+    if (clickDistance > 32) {
+      return false;
+    }
+
+    this.syncPlayerState();
+    this.scene.start(this.portalTargetKey, {
+      spawnPoint: this.getPortalSpawnPoint(this.portalTargetKey),
+    });
+    return true;
   }
 
   cycleTarget() {
@@ -525,15 +585,6 @@ export class BaseMapScene extends Phaser.Scene {
       return;
     }
 
-    const interactTriggered =
-      Phaser.Input.Keyboard.JustDown(this.interactKey) ||
-      this.interactionSystem.consumeTouchAction("interact");
-    if (interactTriggered) {
-      this.syncPlayerState();
-      this.scene.start(this.portalTargetKey, {
-        spawnPoint: this.getPortalSpawnPoint(this.portalTargetKey),
-      });
-    }
   }
 
   syncPlayerState() {
