@@ -95,6 +95,13 @@ export const NPC_DEFINITIONS = {
   ),
 };
 
+export const getNpcId = (npcKey, level) => {
+  const baseId = NPC_IDS[npcKey] ?? npcKey;
+  const normalizedLevel =
+    Number.isFinite(level) && level > 0 ? Math.floor(level) : 1;
+  return NPC_IDS.withLevel(baseId, normalizedLevel);
+};
+
 export const validateNpcDefinitions = () => {
   const issues = [];
 

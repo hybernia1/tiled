@@ -1,21 +1,21 @@
 import { TILE_HEIGHT, TILE_WIDTH } from "../config/constants.js";
-import { getNpcDefinition, NPC_IDS } from "../config/npcs.js";
+import { getNpcDefinition, getNpcId } from "../config/npcs.js";
 import { applyNpcDefinition } from "./npcBuilder.js";
 import { findNearestOpenTilePosition } from "./spawnUtils.js";
 
 const PIG_SPAWNS = {
   pinewood: [
-    { x: 8, y: 12, id: NPC_IDS.pigLevel(1) },
-    { x: 14, y: 18, id: NPC_IDS.pigLevel(2) },
-    { x: 10, y: 22, id: NPC_IDS.pigLevel(1) },
-    { x: 18, y: 14, id: NPC_IDS.pigLevel(2) },
-    { x: 20, y: 20, id: NPC_IDS.pigLevel(3) },
-    { x: 6, y: 16, id: NPC_IDS.pigLevel(1) },
+    { x: 8, y: 12, npcKey: "piglet", level: 1 },
+    { x: 14, y: 18, npcKey: "piglet", level: 2 },
+    { x: 10, y: 22, npcKey: "piglet", level: 1 },
+    { x: 18, y: 14, npcKey: "piglet", level: 2 },
+    { x: 20, y: 20, npcKey: "piglet", level: 3 },
+    { x: 6, y: 16, npcKey: "piglet", level: 1 },
   ],
   "pinewood:cave": [
-    { x: 26, y: 26, id: NPC_IDS.pigLevel(1) },
-    { x: 24, y: 30, id: NPC_IDS.pigLevel(2) },
-    { x: 28, y: 24, id: NPC_IDS.pigLevel(3) },
+    { x: 26, y: 26, npcKey: "piglet", level: 1 },
+    { x: 24, y: 30, npcKey: "piglet", level: 2 },
+    { x: 28, y: 24, npcKey: "piglet", level: 3 },
   ],
 };
 
@@ -89,7 +89,7 @@ export const createPigNpc = (scene) => {
       delete respawnState[spawnKey];
       scene.persistGameState?.();
     }
-    const npcDefinition = getNpcDefinition(spawn.id);
+    const npcDefinition = getNpcDefinition(getNpcId(spawn.npcKey, spawn.level));
     const startPosition = findNearestOpenTilePosition(
       scene,
       spawn.x * TILE_WIDTH,
