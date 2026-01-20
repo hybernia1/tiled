@@ -6,9 +6,10 @@ export class InventorySystem {
   }
 
   createInventoryUi() {
+    const existingInventory = this.scene?.gameState?.inventory ?? {};
     this.inventory = {
-      jablko: 0,
-      hruska: 0,
+      jablko: existingInventory.jablko ?? 0,
+      hruska: existingInventory.hruska ?? 0,
     };
     this.inventoryOpen = false;
 
@@ -107,6 +108,10 @@ export class InventorySystem {
       return;
     }
     this.inventory[itemType] += 1;
+    if (this.scene?.gameState?.inventory) {
+      this.scene.gameState.inventory[itemType] = this.inventory[itemType];
+      this.scene.persistGameState?.();
+    }
     this.updateInventoryUi();
   }
 

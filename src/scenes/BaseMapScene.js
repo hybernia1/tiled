@@ -33,6 +33,11 @@ import { createMap, MAP_PORTALS } from "../entities/map.js";
 import { createNpc } from "../entities/npc.js";
 import { createPlayer } from "../entities/player.js";
 import { resolveLocale, t } from "../config/localization.js";
+import {
+  getMapState,
+  loadGameState,
+  saveGameState,
+} from "../state/gameState.js";
 import { CombatSystem } from "../systems/CombatSystem.js";
 import { InputSystem } from "../systems/InputSystem.js";
 import { InventorySystem } from "../systems/InventorySystem.js";
@@ -91,6 +96,9 @@ export class BaseMapScene extends Phaser.Scene {
 
   create() {
     this.locale = this.registry.get("locale") ?? resolveLocale();
+    this.gameState = loadGameState();
+    this.mapState = getMapState(this.gameState, this.mapType);
+    this.persistGameState = () => saveGameState(this.gameState);
     this.isPaused = false;
     this.game.renderer.config.roundPixels = true;
     this.iso.projector.origin.setTo(0.5, 0.2);
@@ -104,7 +112,11 @@ export class BaseMapScene extends Phaser.Scene {
 
     createMap(this, { type: this.mapType });
     createPlayer(this, this.spawnPoint);
-    createCollectibles(this, this.interactionSystem.handleCollectiblePickup);
+    createCollectibles(
+      this,
+      this.interactionSystem.handleCollectiblePickup,
+      this.mapState
+    );
     createBullets(this);
     createNpc(this);
     createFriendlyNpc(this);

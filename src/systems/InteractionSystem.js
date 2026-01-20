@@ -121,6 +121,15 @@ export class InteractionSystem {
     }
 
     const itemType = collectible.getData("itemType");
+    const collectibleId = collectible.getData("collectibleId");
+    if (collectibleId && this.scene?.mapState) {
+      const collectedItems = this.scene.mapState.collectedItems ?? [];
+      if (!collectedItems.includes(collectibleId)) {
+        collectedItems.push(collectibleId);
+      }
+      this.scene.mapState.collectedItems = collectedItems;
+      this.scene.persistGameState?.();
+    }
     if (itemType) {
       this.inventorySystem.addItem(itemType);
       const itemKey = ITEM_LOG_KEYS[itemType];
