@@ -3,6 +3,7 @@ import * as Phaser from "phaser";
 export class InventorySystem {
   constructor(scene) {
     this.scene = scene;
+    this.handleResize = this.handleResize.bind(this);
   }
 
   createInventoryUi() {
@@ -13,31 +14,35 @@ export class InventorySystem {
     };
     this.inventoryOpen = false;
 
-    const panelWidth = 280;
-    const panelHeight = 190;
-    const offsetX = 40;
-    const offsetY = 30;
-    const panelX = (this.scene.scale.width - panelWidth) / 2 + offsetX;
-    const panelY = (this.scene.scale.height - panelHeight) / 2 + offsetY;
+    this.panelWidth = 280;
+    this.panelHeight = 190;
+    const panelX = 0;
+    const panelY = 0;
 
     this.scene.inventoryUi = this.scene.add
       .container(0, 0)
       .setDepth(10000)
       .setScrollFactor(0);
 
-    const panel = this.scene.add.graphics().setScrollFactor(0);
-    panel.fillStyle(0x0f0f14, 0.92);
-    panel.fillRoundedRect(panelX, panelY, panelWidth, panelHeight, 12);
-    this.scene.inventoryUi.add(panel);
+    this.panel = this.scene.add.graphics().setScrollFactor(0);
+    this.panel.fillStyle(0x0f0f14, 0.92);
+    this.panel.fillRoundedRect(
+      panelX,
+      panelY,
+      this.panelWidth,
+      this.panelHeight,
+      12
+    );
+    this.scene.inventoryUi.add(this.panel);
 
-    const title = this.scene.add
+    this.title = this.scene.add
       .text(panelX + 18, panelY + 14, "Inventář", {
         fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
         fontSize: "16px",
         color: "#f6f2ee",
       })
       .setScrollFactor(0);
-    this.scene.inventoryUi.add(title);
+    this.scene.inventoryUi.add(this.title);
 
     const slotSize = 46;
     const slotPadding = 12;
@@ -99,6 +104,8 @@ export class InventorySystem {
     addItemSlot("jablko", "apple", 0);
     addItemSlot("hruska", "pear", 1);
 
+    this.updateInventoryPosition();
+    this.scene.scale.on("resize", this.handleResize, this);
     this.updateInventoryUi();
     this.setInventoryUiVisible(false);
   }
@@ -130,6 +137,21 @@ export class InventorySystem {
 
   setInventoryUiVisible(isVisible) {
     this.scene.inventoryUi.setVisible(isVisible);
+  }
+
+  updateInventoryPosition() {
+    if (!this.scene.inventoryUi || !this.panelWidth || !this.panelHeight) {
+      return;
+    }
+    const { width, height } = this.scene.scale;
+    const margin = 16;
+    const panelX = width - this.panelWidth - margin;
+    const panelY = height - this.panelHeight - margin;
+    this.scene.inventoryUi.setPosition(panelX, panelY);
+  }
+
+  handleResize() {
+    this.updateInventoryPosition();
   }
 
   updateInventoryToggle() {

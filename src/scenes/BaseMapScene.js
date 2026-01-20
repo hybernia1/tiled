@@ -160,6 +160,7 @@ export class BaseMapScene extends Phaser.Scene {
     this.combatSystem.updateShooting(time);
     this.combatSystem.updatePlayerRegen(time);
     this.combatSystem.cleanupBullets(time);
+    this.combatSystem.updateSpellbarCooldowns(time);
     this.combatSystem.updateNpcHealthDisplay();
     this.combatSystem.updateTargetHud();
     this.interactionSystem.updateFriendlyNpcInteraction();
