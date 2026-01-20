@@ -242,6 +242,7 @@ export class BaseMapScene extends Phaser.Scene {
     isoSprite.setFlip(sprite.flipX, sprite.flipY);
     sprite.setAlpha(0);
     sprite.setData("isoSprite", isoSprite);
+    this.setupNpcPointerInteractions(sprite, isoSprite);
   }
 
   syncIsometricSprites() {
@@ -436,18 +437,16 @@ export class BaseMapScene extends Phaser.Scene {
     if (this.targetedNpc === npc) {
       return;
     }
-    if (this.targetedNpc) {
-      const previousDisplay = this.getDisplaySprite(this.targetedNpc);
-      previousDisplay?.clearTint?.();
-    }
-
+    const previousTarget = this.targetedNpc;
     this.targetedNpc = npc;
+    if (previousTarget) {
+      this.updateNpcHighlight(previousTarget);
+    }
     if (this.targetedNpc) {
-      const displaySprite = this.getDisplaySprite(this.targetedNpc);
-      displaySprite?.setTint?.(0xffd54f);
       this.createTargetRing();
       this.targetRing?.setVisible(true);
       this.updateTargetRing();
+      this.updateNpcHighlight(this.targetedNpc);
     } else if (this.targetRing) {
       this.targetRing.setVisible(false);
     }
@@ -491,6 +490,52 @@ export class BaseMapScene extends Phaser.Scene {
       .setVisible(displaySprite.visible)
       .setPosition(displaySprite.x, displaySprite.y + ringOffsetY)
       .setDepth(displaySprite.depth - 1);
+  }
+
+  setupNpcPointerInteractions(sprite, displaySprite) {
+    if (!sprite?.getData("isNpc")) {
+      return;
+    }
+    const targetSprite = displaySprite ?? this.getDisplaySprite(sprite);
+    if (!targetSprite || targetSprite.getData("npcPointerBound")) {
+      return;
+    }
+    targetSprite.setData("npcPointerBound", true);
+    if (!Number.isFinite(targetSprite.getData("baseAlpha"))) {
+      targetSprite.setData("baseAlpha", targetSprite.alpha ?? 1);
+    }
+    targetSprite.setInteractive({ useHandCursor: true });
+    targetSprite.on("pointerover", () => {
+      if (this.isPaused || !sprite.active) {
+        return;
+      }
+      sprite.setData("isHovered", true);
+      this.updateNpcHighlight(sprite);
+    });
+    targetSprite.on("pointerout", () => {
+      sprite.setData("isHovered", false);
+      this.updateNpcHighlight(sprite);
+    });
+  }
+
+  updateNpcHighlight(sprite) {
+    if (!sprite) {
+      return;
+    }
+    const displaySprite = this.getDisplaySprite(sprite);
+    if (!displaySprite) {
+      return;
+    }
+    const baseAlpha = displaySprite.getData("baseAlpha") ?? 1;
+    const isTargeted = this.targetedNpc === sprite;
+    const isHovered = sprite.getData("isHovered");
+    if (isTargeted || isHovered) {
+      displaySprite.setTint(uiTheme.manaFill);
+      displaySprite.setAlpha(isTargeted ? baseAlpha : Math.min(baseAlpha, 0.82));
+    } else {
+      displaySprite.clearTint?.();
+      displaySprite.setAlpha(baseAlpha);
+    }
   }
 
   syncIsoGroup(group, options = {}) {
