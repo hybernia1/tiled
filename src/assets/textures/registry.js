@@ -15,7 +15,7 @@ import { createGrassTexture } from "./terrain/grass.js";
 import { createMountainTexture } from "./terrain/mountain.js";
 import { createPondTexture } from "./terrain/pond.js";
 import { createRockTexture } from "./terrain/rock.js";
-import { createStairsTexture } from "./terrain/stairs.js";
+import { createCaveEntranceTexture } from "./terrain/caveEntrance.js";
 import {
   createConiferTexture,
   createDeciduousTexture,
@@ -109,20 +109,20 @@ export const textureRegistry = [
     create: createMountainTexture,
   },
   {
-    id: "stairs",
+    id: "cave-entrance",
     type: "terrain",
     size: { width: TILE_WIDTH, height: TILE_HEIGHT },
-    palette: ["#7d6aa8", "#56467a", "#4b3c6d"],
+    palette: ["#3f4248", "#2b2f33", "#6b6f78", "#1b1d20"],
     rarity: "common",
     isAnimated: false,
-    tags: ["structure", "tile"],
+    tags: ["structure", "tile", "portal"],
     effectTag: "structure",
     materialType: "stone",
     impactVFX: "stone-chip",
     soundId: "step-stone",
     lightEmission: 0,
     version: 1,
-    create: createStairsTexture,
+    create: createCaveEntranceTexture,
   },
   {
     id: "pond",
