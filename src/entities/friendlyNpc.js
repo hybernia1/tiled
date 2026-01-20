@@ -25,7 +25,7 @@ export const createFriendlyNpc = (scene) => {
   });
 
   scene.friendlyNpcPrompt = scene.add
-    .text(0, 0, "Click to talk", {
+    .text(0, 0, "Click to help with quest", {
       fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
       fontSize: "12px",
       color: "#f6f2ee",

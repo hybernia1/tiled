@@ -105,12 +105,33 @@ export class InteractionSystem {
   }
 
   showFriendlyNpcDialogue() {
-    const jokes = [
-      "Why didn’t the skeleton go to the tavern? It didn’t have the guts.",
-      "People say my shot is fast, but my punchlines are faster!",
-      "I met a bug once. It wanted an autograph, then vanished after one hit.",
-    ];
-    const joke = Phaser.Utils.Array.GetRandom(jokes);
+    const questId = "quest_boar_chunks_01";
+    const questSystem = this.scene.questSystem;
+    const questState =
+      questSystem?.getQuestState?.(questId) ??
+      questSystem?.getQuestStatus?.(questId) ??
+      questSystem?.getQuest?.(questId)?.status ??
+      "available";
+    const isReadyToTurnIn =
+      questSystem?.isQuestReadyToTurnIn?.(questId) ??
+      questSystem?.canTurnInQuest?.(questId) ??
+      questState === "ready_to_turn_in";
+    let dialogueText = "";
+
+    if (isReadyToTurnIn) {
+      dialogueText =
+        "To je úleva! Přinesl jsi 5 boar chunků? Díky, teď budu mít co jíst.";
+      questSystem?.turnInQuest?.(questId);
+      questSystem?.completeQuest?.(questId);
+    } else if (["active", "in_progress", "accepted"].includes(questState)) {
+      dialogueText =
+        "Prosím, přines mi 5 boar chunků. Bez nich se neuživím.";
+    } else {
+      dialogueText =
+        "Jsem starý a už se neuživím. Pomůžeš mi a doneseš 5 boar chunků?";
+      questSystem?.startQuest?.(questId);
+    }
+
     const friendlyNpcDisplay = this.scene.getDisplaySprite(this.scene.friendlyNpc);
     const bubbleDepth =
       friendlyNpcDisplay?.depth !== undefined
@@ -118,7 +139,7 @@ export class InteractionSystem {
         : 13;
 
     this.scene.friendlyNpcBubble
-      .setText(joke)
+      .setText(dialogueText)
       .setPosition(friendlyNpcDisplay.x, friendlyNpcDisplay.y - 52)
       .setDepth(bubbleDepth)
       .setVisible(true);
