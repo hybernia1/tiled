@@ -1,9 +1,22 @@
 export class Spell {
-  constructor({ id, name, cooldownMs = 0, durationMs = 0, onCast, onExpire }) {
+  constructor({
+    id,
+    name,
+    cooldownMs = 0,
+    durationMs = 0,
+    iconKey = null,
+    resourceCost = 0,
+    castTime = 0,
+    onCast,
+    onExpire,
+  }) {
     this.id = id;
     this.name = name;
     this.cooldownMs = cooldownMs;
     this.durationMs = durationMs;
+    this.iconKey = iconKey;
+    this.resourceCost = resourceCost;
+    this.castTime = castTime;
     this.onCast = onCast;
     this.onExpire = onExpire;
     this.lastCastAt = -Infinity;

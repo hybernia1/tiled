@@ -6,7 +6,7 @@ import {
   getXpNeededForNextLevel,
   MAX_LEVEL,
 } from "../config/playerProgression.js";
-import { Spell } from "./spells/Spell.js";
+import { createSpell, spellRegistry } from "./spells/registry.js";
 
 export class CombatSystem {
   constructor(scene) {
@@ -95,31 +95,13 @@ export class CombatSystem {
       return;
     }
 
-    const shotSpell = new Spell({
-      id: "shot",
-      name: "Shot",
-      cooldownMs: this.scene.fireCooldownMs,
-      onCast: (context, payload, time) => {
-        const sceneTime = payload?.sceneTime ?? time;
-        context.combatSystem.performShot(payload, sceneTime);
-      },
-    });
-
-    const shieldSpell = new Spell({
-      id: "shield",
-      name: "Shield",
-      cooldownMs: this.shieldCooldownMs,
-      durationMs: this.shieldDurationMs,
-      onCast: (context, payload, time) => {
-        context.combatSystem.activateShield(time);
-      },
-      onExpire: (context) => {
-        context.combatSystem.deactivateShield();
-      },
-    });
-
-    this.spells = [shotSpell, shieldSpell];
-    this.spellMap = new Map(this.spells.map((spell) => [spell.id, spell]));
+    const context = { scene: this.scene, combatSystem: this };
+    this.spells = Array.from(spellRegistry.values())
+      .map((definition) => createSpell(definition, context))
+      .filter(Boolean);
+    this.spellMap = new Map(
+      this.spells.map((spell) => [spell.id, spell])
+    );
     this.restoreSpellCooldowns();
   }
 
@@ -128,11 +110,8 @@ export class CombatSystem {
   }
 
   getSpellIconKey(spellId) {
-    const icons = {
-      shot: "spell-shot",
-      shield: "spell-shield",
-    };
-    return icons[spellId] ?? null;
+    const spell = this.getSpell(spellId);
+    return spell?.iconKey ?? null;
   }
 
   restoreSpellCooldowns() {
