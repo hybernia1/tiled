@@ -44,6 +44,9 @@ export const NPC_DEFINITIONS = {
     type: "neutral",
     level: 1,
     maxHealth: 4,
+    attackDamage: 1,
+    aggroRange: 3,
+    attackRange: 1,
     xpReward: 10,
   },
   [NPC_IDS.pigLevel2]: {
@@ -52,6 +55,9 @@ export const NPC_DEFINITIONS = {
     type: "neutral",
     level: 2,
     maxHealth: 6,
+    attackDamage: 1,
+    aggroRange: 3,
+    attackRange: 1,
     xpReward: 12,
   },
   [NPC_IDS.pigLevel3]: {
@@ -60,6 +66,9 @@ export const NPC_DEFINITIONS = {
     type: "neutral",
     level: 3,
     maxHealth: 8,
+    attackDamage: 1,
+    aggroRange: 3,
+    attackRange: 1,
     xpReward: 15,
   },
 };

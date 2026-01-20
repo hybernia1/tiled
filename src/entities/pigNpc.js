@@ -24,8 +24,19 @@ const PIG_RESPAWN_MS = 60_000;
 export const createPigNpc = (scene) => {
   scene.pigNpcGroup = scene.physics.add.group({ allowGravity: false });
   const spawns = PIG_SPAWNS[scene.mapType] ?? [];
+  const respawnState = scene.mapState?.pigRespawns ?? {};
+  const now = Date.now();
 
-  spawns.forEach((spawn) => {
+  spawns.forEach((spawn, index) => {
+    const spawnKey = `pig_${index}`;
+    const respawnAt = Number(respawnState[spawnKey]) || 0;
+    if (respawnAt && respawnAt > now) {
+      return;
+    }
+    if (respawnAt && respawnAt <= now) {
+      delete respawnState[spawnKey];
+      scene.persistGameState?.();
+    }
     const npcDefinition = getNpcDefinition(spawn.id);
     const startPosition = findNearestOpenTilePosition(
       scene,
@@ -45,6 +56,7 @@ export const createPigNpc = (scene) => {
       showNameplate: true,
       nameplateOffsetY: 26,
     });
+    pig.setData("spawnKey", spawnKey);
     pig.setData("respawnDelayMs", PIG_RESPAWN_MS);
     pig.setData("respawnPoint", { x: startPosition.x, y: startPosition.y });
 
