@@ -1,0 +1,30 @@
+[
+  {
+    "id": "npc_villager_01",
+    "type": "npc",
+    "nameKey": "npc.villager.01",
+    "tags": ["town", "civilian"],
+    "version": 1,
+    "stats": {
+      "health": 25,
+      "speed": 1.2,
+      "courage": 0.4
+    },
+    "behaviorProfile": "passive",
+    "dialogKey": "dialog.villager.greeting"
+  },
+  {
+    "id": "npc_guard_01",
+    "type": "npc",
+    "nameKey": "npc.guard.01",
+    "tags": ["town", "guard"],
+    "version": 1,
+    "stats": {
+      "health": 60,
+      "speed": 1.4,
+      "courage": 0.9
+    },
+    "behaviorProfile": "defensive",
+    "dialogKey": "dialog.guard.idle"
+  }
+]

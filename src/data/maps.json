@@ -1,0 +1,28 @@
+[
+  {
+    "id": "map_overworld_01",
+    "type": "map",
+    "nameKey": "map.overworld.01",
+    "tags": ["outdoor", "starter"],
+    "version": 1,
+    "size": {
+      "width": 128,
+      "height": 128
+    },
+    "tilesetKey": "tileset.overworld",
+    "musicKey": "music.overworld.day"
+  },
+  {
+    "id": "map_cave_01",
+    "type": "map",
+    "nameKey": "map.cave.01",
+    "tags": ["indoor", "dungeon"],
+    "version": 1,
+    "size": {
+      "width": 64,
+      "height": 64
+    },
+    "tilesetKey": "tileset.cave",
+    "musicKey": "music.cave"
+  }
+]

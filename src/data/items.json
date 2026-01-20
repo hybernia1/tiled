@@ -1,0 +1,27 @@
+[
+  {
+    "id": "item_health_potion_01",
+    "type": "item",
+    "nameKey": "item.health_potion.01",
+    "tags": ["consumable", "healing"],
+    "version": 1,
+    "stats": {
+      "heal": 25
+    },
+    "iconKey": "icon.item.health_potion",
+    "stackSize": 10
+  },
+  {
+    "id": "item_iron_sword_01",
+    "type": "item",
+    "nameKey": "item.iron_sword.01",
+    "tags": ["weapon", "melee"],
+    "version": 1,
+    "stats": {
+      "attack": 8,
+      "durability": 120
+    },
+    "iconKey": "icon.item.iron_sword",
+    "stackSize": 1
+  }
+]

@@ -1,0 +1,43 @@
+[
+  {
+    "id": "quest_lost_ring_01",
+    "type": "quest",
+    "nameKey": "quest.lost_ring.01",
+    "tags": ["fetch", "starter"],
+    "version": 1,
+    "objectives": [
+      {
+        "objectiveKey": "quest.objective.find_ring",
+        "targetId": "item_lost_ring_01",
+        "count": 1
+      }
+    ],
+    "rewards": [
+      {
+        "rewardType": "currency",
+        "amount": 50
+      }
+    ]
+  },
+  {
+    "id": "quest_cave_cleanup_01",
+    "type": "quest",
+    "nameKey": "quest.cave_cleanup.01",
+    "tags": ["combat", "dungeon"],
+    "version": 1,
+    "objectives": [
+      {
+        "objectiveKey": "quest.objective.defeat_bats",
+        "targetId": "npc_bat_01",
+        "count": 8
+      }
+    ],
+    "rewards": [
+      {
+        "rewardType": "item",
+        "itemId": "item_health_potion_01",
+        "amount": 2
+      }
+    ]
+  }
+]

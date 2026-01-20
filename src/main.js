@@ -1,6 +1,7 @@
 import * as Phaser from "phaser";
 import { createGameConfig } from "./config/gameConfig.js";
 import { validateNpcDefinitions } from "./config/npcs.js";
+import { loadRegistry } from "./data/registry.js";
 import { CaveScene } from "./scenes/CaveScene.js";
 import { WorldScene } from "./scenes/WorldScene.js";
 import { LoadingScene } from "./scenes/LoadingScene.js";
@@ -14,5 +15,8 @@ const config = createGameConfig([
 ]);
 
 validateNpcDefinitions();
+
+const registry = loadRegistry();
+globalThis.gameRegistry = registry;
 
 new Phaser.Game(config);
