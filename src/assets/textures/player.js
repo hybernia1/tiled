@@ -184,6 +184,10 @@ const backWalkPoses = walkPoses.map((pose) => ({
 }));
 
 export const createPlayerTexture = (scene) => {
+  if (scene.textures.exists("player")) {
+    scene.textures.get("player").setFilter(Phaser.Textures.FilterMode.NEAREST);
+    return;
+  }
   const frameWidth = 32;
   const frameHeight = 32;
   const totalFrames =
@@ -191,12 +195,21 @@ export const createPlayerTexture = (scene) => {
     walkPoses.length +
     backIdlePoses.length +
     backWalkPoses.length;
+  if (scene.textures.exists("player-sheet")) {
+    return;
+  }
   const canvasTexture = scene.textures.createCanvas(
     "player-sheet",
     frameWidth * totalFrames,
     frameHeight
   );
+  if (!canvasTexture) {
+    return;
+  }
   const ctx = canvasTexture.getContext();
+  if (!ctx) {
+    return;
+  }
 
   ctx.clearRect(0, 0, frameWidth * totalFrames, frameHeight);
 

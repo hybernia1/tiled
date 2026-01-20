@@ -8,6 +8,10 @@ const MOUNTAIN_RIGHT_FILL = "#857462";
 const MOUNTAIN_STROKE = "#6c5f4f";
 
 export const createMountainTexture = (scene) => {
+  if (scene.textures.exists("mountains")) {
+    scene.textures.get("mountains").setFilter(Phaser.Textures.FilterMode.NEAREST);
+    return;
+  }
   const variants = [
     { width: TILE_WIDTH, height: TILE_HEIGHT * 1.2 },
     { width: Math.round(TILE_WIDTH * 1.4), height: TILE_HEIGHT * 1.6 },
@@ -25,7 +29,13 @@ export const createMountainTexture = (scene) => {
     totalWidth,
     frameHeight
   );
+  if (!texture) {
+    return;
+  }
   const ctx = texture.getContext();
+  if (!ctx) {
+    return;
+  }
   ctx.clearRect(0, 0, texture.width, texture.height);
 
   let offsetX = 0;

@@ -7,12 +7,22 @@ const ROCK_ALT_FILL = "#5e636c";
 const ROCK_STROKE = "#494d54";
 
 export const createRockTexture = (scene) => {
+  if (scene.textures.exists("rock")) {
+    scene.textures.get("rock").setFilter(Phaser.Textures.FilterMode.NEAREST);
+    return;
+  }
   const texture = scene.textures.createCanvas(
     "rock",
     TILE_WIDTH * 2,
     TILE_HEIGHT
   );
+  if (!texture) {
+    return;
+  }
   const ctx = texture.getContext();
+  if (!ctx) {
+    return;
+  }
 
   ctx.clearRect(0, 0, texture.width, texture.height);
 

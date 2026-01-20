@@ -6,13 +6,23 @@ const WALL_LEFT_FILL = "#7a5c3b";
 const WALL_RIGHT_FILL = "#8a663f";
 
 export const createWallTexture = (scene) => {
+  if (scene.textures.exists("wall")) {
+    scene.textures.get("wall").setFilter(Phaser.Textures.FilterMode.NEAREST);
+    return;
+  }
   const wallHeight = TILE_HEIGHT;
   const texture = scene.textures.createCanvas(
     "wall",
     TILE_WIDTH,
     TILE_HEIGHT + wallHeight
   );
+  if (!texture) {
+    return;
+  }
   const ctx = texture.getContext();
+  if (!ctx) {
+    return;
+  }
   const halfW = TILE_WIDTH / 2;
   const halfH = TILE_HEIGHT / 2;
   const topY = 0;

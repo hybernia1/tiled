@@ -7,12 +7,22 @@ const POND_STROKE = "#214e60";
 const POND_HIGHLIGHT = "#4aa0bf";
 
 export const createPondTexture = (scene) => {
+  if (scene.textures.exists("pond")) {
+    scene.textures.get("pond").setFilter(Phaser.Textures.FilterMode.NEAREST);
+    return;
+  }
   const texture = scene.textures.createCanvas(
     "pond",
     TILE_WIDTH,
     TILE_HEIGHT
   );
+  if (!texture) {
+    return;
+  }
   const ctx = texture.getContext();
+  if (!ctx) {
+    return;
+  }
 
   ctx.clearRect(0, 0, texture.width, texture.height);
   drawDiamond(ctx, 0, 0, POND_FILL, POND_STROKE);
