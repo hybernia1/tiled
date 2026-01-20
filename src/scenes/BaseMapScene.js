@@ -64,7 +64,7 @@ export class BaseMapScene extends Phaser.Scene {
 
   init(data) {
     if (!this.iso) {
-      this.plugins.installScenePlugin("IsoPlugin", IsoPlugin, "iso", this);
+      this.plugins.installScenePlugin("IsoPlugin", IsoPlugin, "iso", this, true);
     }
     this.spawnPoint = data?.spawnPoint ?? null;
   }
