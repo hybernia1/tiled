@@ -1,7 +1,9 @@
 import { TILE_HEIGHT, TILE_WIDTH } from "../config/constants.js";
+import { getNpcDefinition, NPC_IDS } from "../config/npcs.js";
 import { findNearestOpenTilePosition } from "./spawnUtils.js";
 
 export const createFriendlyNpc = (scene) => {
+  const npcDefinition = getNpcDefinition(NPC_IDS.friendlyGuide);
   const startPosition = findNearestOpenTilePosition(
     scene,
     15 * TILE_WIDTH,
@@ -17,6 +19,13 @@ export const createFriendlyNpc = (scene) => {
   scene.friendlyNpc.setDepth(2);
   scene.friendlyNpc.setData("isoOrigin", { x: 0.5, y: 1 });
   scene.friendlyNpc.setData("isoZ", TILE_HEIGHT);
+  scene.friendlyNpc.setData("definition", npcDefinition);
+  scene.friendlyNpc.setData("id", npcDefinition.id);
+  scene.friendlyNpc.setData("type", npcDefinition.type);
+  scene.friendlyNpc.setData("level", npcDefinition.level);
+  scene.friendlyNpc.setData("maxHealth", npcDefinition.maxHealth);
+  scene.friendlyNpc.setData("health", npcDefinition.maxHealth);
+  scene.friendlyNpc.setData("isProvoked", false);
 
   scene.friendlyNpcPrompt = scene.add
     .text(0, 0, "Stiskni E pro rozhovor", {

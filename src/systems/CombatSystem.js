@@ -116,7 +116,7 @@ export class CombatSystem {
   }
 
   updateNpcHealthDisplay() {
-    const { npc, npcHealthBar, npcHealthValue, npcMaxHealth } = this.scene;
+    const { npc, npcHealthBar, npcHealthValue } = this.scene;
     if (!npcHealthBar || !npcHealthValue || !npc?.active) {
       if (npcHealthBar) {
         npcHealthBar.setVisible(false);
@@ -127,7 +127,9 @@ export class CombatSystem {
       return;
     }
 
-    const maxHealth = Number(npc.getData("maxHealth")) || npcMaxHealth;
+    const npcDefinition = npc.getData("definition");
+    const maxHealth =
+      Number(npc.getData("maxHealth")) || npcDefinition?.maxHealth || 1;
     const storedHealth = Number(npc.getData("health"));
     const npcHealth = Number.isFinite(storedHealth) ? storedHealth : maxHealth;
     const barWidth = 44;
@@ -177,11 +179,18 @@ export class CombatSystem {
     bullet.setData("hitNpc", true);
     bullet.disableBody(true, true);
 
-    const maxHealth = Number(npc.getData("maxHealth")) || this.scene.npcMaxHealth;
+    const npcDefinition = npc.getData("definition");
+    const maxHealth =
+      Number(npc.getData("maxHealth")) || npcDefinition?.maxHealth || 1;
     const storedHealth = Number(npc.getData("health"));
     const currentHealth = Number.isFinite(storedHealth) ? storedHealth : maxHealth;
     const newHealth = Math.max(0, currentHealth - 1);
     npc.setData("health", newHealth);
+    const npcType = npc.getData("type");
+    if (npcType === "neutral") {
+      npc.setData("isProvoked", true);
+      this.scene.npcAggroSystem?.updateNpcAggro(this.scene.time.now);
+    }
     this.updateNpcHealthDisplay();
 
     if (newHealth === 0) {
