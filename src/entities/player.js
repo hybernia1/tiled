@@ -1,5 +1,6 @@
 import * as Phaser from "phaser";
-import { PLAYER_MAX_HEALTH, TILE_HEIGHT, TILE_WIDTH } from "../config/constants.js";
+import { TILE_HEIGHT, TILE_WIDTH } from "../config/constants.js";
+import { getMaxHealthForLevel } from "../config/playerProgression.js";
 
 const IDLE_FRAMES = 4;
 const WALK_FRAMES = 4;
@@ -9,15 +10,16 @@ const BACK_WALK_FRAMES = 4;
 export const createPlayer = (scene, startPosition = null, playerState = null) => {
   const startX = startPosition?.x ?? 4 * TILE_WIDTH;
   const startY = startPosition?.y ?? 6 * TILE_WIDTH;
-  const maxHealth = Number.isFinite(Number(playerState?.maxHealth))
-    ? Number(playerState.maxHealth)
-    : PLAYER_MAX_HEALTH;
-  const health = Number.isFinite(Number(playerState?.health))
-    ? Number(playerState.health)
-    : maxHealth;
   const level = Number.isFinite(Number(playerState?.level))
     ? Number(playerState.level)
     : 1;
+  const defaultMaxHealth = getMaxHealthForLevel(level);
+  const maxHealth = Number.isFinite(Number(playerState?.maxHealth))
+    ? Number(playerState.maxHealth)
+    : defaultMaxHealth;
+  const health = Number.isFinite(Number(playerState?.health))
+    ? Number(playerState.health)
+    : maxHealth;
 
   scene.player = scene.physics.add.sprite(startX, startY, "player", 0);
   scene.player.setCollideWorldBounds(true);
