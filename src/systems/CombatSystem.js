@@ -20,10 +20,31 @@ export class CombatSystem {
     this.spellMap = new Map();
     this.shieldDurationMs = 5000;
     this.shieldCooldownMs = 60000;
+    this.spellEventEmitter = new Phaser.Events.EventEmitter();
+    this.spellUiTicker = null;
+    this.hasSpellUiListeners = false;
   }
 
   getSpellTime() {
     return Date.now();
+  }
+
+  emitSpellEvent(eventName, payload) {
+    this.spellEventEmitter.emit(eventName, payload);
+  }
+
+  onSpellEvent(eventName, handler) {
+    this.spellEventEmitter.on(eventName, handler);
+  }
+
+  createSpellContext({ time, input } = {}) {
+    return {
+      scene: this.scene,
+      combatSystem: this,
+      player: this.scene.player ?? null,
+      time,
+      input: input ?? null,
+    };
   }
 
   setupPlayerHealth() {
@@ -87,6 +108,8 @@ export class CombatSystem {
     this.setupSpellbarDisplay();
     this.setupPlayerProgressDisplay();
     this.setupTargetHud();
+    this.setupSpellUiListeners();
+    this.startSpellUiTicker();
     this.updateActiveEffectsDisplay(this.getSpellTime());
   }
 
@@ -95,7 +118,7 @@ export class CombatSystem {
       return;
     }
 
-    const context = { scene: this.scene, combatSystem: this };
+    const context = this.createSpellContext({ time: this.getSpellTime() });
     this.spells = Array.from(spellRegistry.values())
       .map((definition) => createSpell(definition, context))
       .filter(Boolean);
@@ -133,12 +156,12 @@ export class CombatSystem {
     }
     this.scene.gameState.player.spellCooldowns[spell.id] = time;
     this.scene.persistGameState?.();
+    this.emitSpellEvent("spell:cooldownRecorded", { spell, time });
   }
 
   updateSpells(time) {
     const spellTime = this.getSpellTime();
     this.updateShieldStatus(spellTime);
-    this.updateActiveEffectsDisplay(spellTime);
     const shieldKey = this.scene.shieldKey;
     const shieldSpell = this.getSpell("shield");
     if (!shieldKey || !shieldSpell) {
@@ -146,11 +169,11 @@ export class CombatSystem {
     }
 
     if (Phaser.Input.Keyboard.JustDown(shieldKey)) {
-      const casted = shieldSpell.cast(
-        spellTime,
-        { scene: this.scene, combatSystem: this },
-        { sceneTime: time }
-      );
+      const context = this.createSpellContext({
+        time: spellTime,
+        input: { source: "keyboard", key: "shield" },
+      });
+      const casted = shieldSpell.cast(context, { sceneTime: time });
       if (casted) {
         this.recordSpellCooldown(shieldSpell, spellTime);
       }
@@ -445,11 +468,11 @@ export class CombatSystem {
     }
     const sceneTime = this.scene.time?.now ?? 0;
     const spellTime = this.getSpellTime();
-    const casted = spell.cast(
-      spellTime,
-      { scene: this.scene, combatSystem: this },
-      { sceneTime }
-    );
+    const context = this.createSpellContext({
+      time: spellTime,
+      input: { source: "spellbar", index },
+    });
+    const casted = spell.cast(context, { sceneTime });
     if (casted) {
       this.recordSpellCooldown(spell, spellTime);
     }
@@ -1068,14 +1091,50 @@ export class CombatSystem {
       return;
     }
 
-    const casted = shotSpell.cast(
-      spellTime,
-      { scene: this.scene, combatSystem: this },
-      { direction, usingSpellbar, sceneTime: time }
-    );
+    const context = this.createSpellContext({
+      time: spellTime,
+      input: { source: usingSpellbar ? "spellbar" : "keyboard" },
+    });
+    const casted = shotSpell.cast(context, {
+      direction,
+      usingSpellbar,
+      sceneTime: time,
+    });
     if (casted) {
       this.recordSpellCooldown(shotSpell, spellTime);
     }
+  }
+
+  setupSpellUiListeners() {
+    if (this.hasSpellUiListeners) {
+      return;
+    }
+    this.hasSpellUiListeners = true;
+    this.onSpellEvent("spell:cast", () => {
+      this.updateSpellbarCooldowns();
+      this.updateActiveEffectsDisplay(this.getSpellTime());
+    });
+    this.onSpellEvent("spell:expire", () => {
+      this.updateActiveEffectsDisplay(this.getSpellTime());
+    });
+    this.onSpellEvent("spell:cooldownRecorded", () => {
+      this.updateSpellbarCooldowns();
+    });
+  }
+
+  startSpellUiTicker() {
+    if (this.spellUiTicker || !this.scene.time) {
+      return;
+    }
+    this.spellUiTicker = this.scene.time.addEvent({
+      delay: 250,
+      loop: true,
+      callback: () => {
+        const spellTime = this.getSpellTime();
+        this.updateSpellbarCooldowns();
+        this.updateActiveEffectsDisplay(spellTime);
+      },
+    });
   }
 
   performShot(payload, time) {
