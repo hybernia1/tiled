@@ -1125,6 +1125,10 @@ export class CombatSystem {
 
     if (newHealth === 0) {
       this.scene.dropSystem?.handleNpcDeath(npc);
+      const npcTargetId = npcDefinition?.id ?? npc.getData("id");
+      if (npcTargetId) {
+        this.scene.questSystem?.updateObjectiveProgressForTarget?.(npcTargetId, 1);
+      }
       npc.setActive(false);
       npc.setVisible(false);
       npc.body.enable = false;

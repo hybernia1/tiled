@@ -65,5 +65,28 @@
         "unit": "silver"
       }
     ]
+  },
+  {
+    "id": "quest_boar_chunks_01",
+    "type": "quest",
+    "nameKey": "quest.boar_chunks.01",
+    "displayName": "Boar Chunks",
+    "description": "Collect 5 boar chunks for the hungry villager.",
+    "tags": ["fetch", "starter"],
+    "version": 1,
+    "objectives": [
+      {
+        "objectiveKey": "quest.objective.collect_boar_chunks",
+        "targetId": "boar_chunk",
+        "count": 5
+      }
+    ],
+    "rewards": [
+      {
+        "rewardType": "currency",
+        "amount": 25,
+        "unit": "silver"
+      }
+    ]
   }
 ]

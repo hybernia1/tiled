@@ -70,6 +70,71 @@ export class QuestSystem {
     return resolveQuestDefinition(questId);
   }
 
+  getQuestDisplayName(questId) {
+    const definition = this.getQuestDefinition(questId);
+    return (
+      definition?.displayName ??
+      definition?.nameKey ??
+      definition?.id ??
+      questId
+    );
+  }
+
+  getQuestDescription(questId) {
+    const definition = this.getQuestDefinition(questId);
+    return definition?.description ?? "";
+  }
+
+  getTargetDisplayName(targetId) {
+    if (!targetId) {
+      return "";
+    }
+    const itemIndex = getRegistryIndex("items");
+    const item = itemIndex?.[targetId];
+    if (item) {
+      return item.displayName ?? item.nameKey ?? item.id ?? targetId;
+    }
+    const npcIndex = getRegistryIndex("npcs");
+    const npc = npcIndex?.[targetId];
+    if (npc) {
+      return npc.displayName ?? npc.nameKey ?? npc.id ?? targetId;
+    }
+    return targetId;
+  }
+
+  getObjectiveKey(objective, fallbackKey) {
+    return objective?.targetId ?? objective?.objectiveKey ?? fallbackKey;
+  }
+
+  getInventoryCount(itemId) {
+    if (!itemId) {
+      return 0;
+    }
+    const inventorySystemCount = this.scene?.inventorySystem?.inventory?.[itemId];
+    if (Number.isFinite(inventorySystemCount)) {
+      return inventorySystemCount;
+    }
+    const gameStateCount = this.scene?.gameState?.inventory?.[itemId];
+    return Number.isFinite(gameStateCount) ? gameStateCount : 0;
+  }
+
+  getObjectiveProgress(questId, objective, fallbackKey) {
+    if (!questId || !objective) {
+      return 0;
+    }
+    const quests = ensureQuestState(this.scene.gameState);
+    const key = this.getObjectiveKey(objective, fallbackKey);
+    if (!key) {
+      return 0;
+    }
+    let progress = Number(quests.progress?.[questId]?.[key] ?? 0);
+    if (objective.targetId) {
+      const inventoryCount = this.getInventoryCount(objective.targetId);
+      progress = Math.max(progress, inventoryCount);
+    }
+    return progress;
+  }
+
   getQuestStatus(questId) {
     const quests = ensureQuestState(this.scene.gameState);
     if (quests.completed[questId]) {
@@ -103,6 +168,38 @@ export class QuestSystem {
     return this.getQuestStatus(questId) === "ready_to_turn_in";
   }
 
+  areObjectivesComplete(questId) {
+    const definition = this.getQuestDefinition(questId);
+    const quests = ensureQuestState(this.scene.gameState);
+    const objectives = definition?.objectives ?? [];
+    if (objectives.length === 0) {
+      return true;
+    }
+    return objectives.every((entry, index) => {
+      const key = this.getObjectiveKey(entry, `objective_${index}`);
+      if (!key) {
+        return true;
+      }
+      const required = entry?.count ?? 1;
+      const progress = this.getObjectiveProgress(questId, entry, key);
+      return progress >= required;
+    });
+  }
+
+  updateQuestStatus(questId) {
+    const quests = ensureQuestState(this.scene.gameState);
+    const activeQuest = quests.active[questId];
+    if (!activeQuest) {
+      return null;
+    }
+    if (this.areObjectivesComplete(questId)) {
+      activeQuest.status = "ready_to_turn_in";
+    } else {
+      activeQuest.status = "active";
+    }
+    return activeQuest.status;
+  }
+
   startQuest(questId) {
     if (!questId) {
       return null;
@@ -121,11 +218,15 @@ export class QuestSystem {
     quests.active[questId] = { status: "active", startedAt: Date.now() };
     quests.progress[questId] = {};
     (definition.objectives ?? []).forEach((objective, index) => {
-      const targetKey = objective?.targetId ?? objective?.objectiveKey ?? `objective_${index}`;
+      const targetKey = this.getObjectiveKey(objective, `objective_${index}`);
       if (targetKey) {
-        quests.progress[questId][targetKey] = 0;
+        const inventoryProgress = objective?.targetId
+          ? this.getInventoryCount(objective.targetId)
+          : 0;
+        quests.progress[questId][targetKey] = Math.max(0, inventoryProgress);
       }
     });
+    this.updateQuestStatus(questId);
     this.scene.persistGameState?.();
     return quests.active[questId];
   }
@@ -156,21 +257,84 @@ export class QuestSystem {
     const cappedValue = Math.min(nextValue, objective.count ?? nextValue);
     quests.progress[questId][targetId] = cappedValue;
 
-    const isComplete = objectives.every((entry) => {
-      const key = entry?.targetId ?? entry?.objectiveKey;
-      if (!key) {
-        return true;
-      }
-      const required = entry?.count ?? 1;
-      return (quests.progress[questId][key] ?? 0) >= required;
-    });
-
-    if (isComplete) {
-      activeQuest.status = "ready_to_turn_in";
-    }
-
+    this.updateQuestStatus(questId);
     this.scene.persistGameState?.();
     return quests.progress[questId][targetId];
+  }
+
+  updateObjectiveProgressForTarget(targetId, amount = 1) {
+    if (!targetId) {
+      return null;
+    }
+    const quests = ensureQuestState(this.scene.gameState);
+    const activeQuestIds = Object.keys(quests.active ?? {});
+    activeQuestIds.forEach((questId) => {
+      this.updateObjectiveProgress(questId, targetId, amount);
+    });
+    return true;
+  }
+
+  syncItemObjectiveProgress(itemId) {
+    if (!itemId) {
+      return null;
+    }
+    const quests = ensureQuestState(this.scene.gameState);
+    const activeQuestIds = Object.keys(quests.active ?? {});
+    const inventoryCount = this.getInventoryCount(itemId);
+    activeQuestIds.forEach((questId) => {
+      const definition = this.getQuestDefinition(questId);
+      const objective = (definition?.objectives ?? []).find(
+        (entry) => entry?.targetId === itemId
+      );
+      if (!objective) {
+        return;
+      }
+      if (!quests.progress[questId]) {
+        quests.progress[questId] = {};
+      }
+      const key = this.getObjectiveKey(objective, itemId);
+      quests.progress[questId][key] = Math.max(0, inventoryCount);
+      this.updateQuestStatus(questId);
+    });
+    this.scene.persistGameState?.();
+    return true;
+  }
+
+  canTurnInQuest(questId) {
+    const quests = ensureQuestState(this.scene.gameState);
+    if (!quests.active[questId]) {
+      return false;
+    }
+    return this.areObjectivesComplete(questId);
+  }
+
+  turnInQuest(questId) {
+    if (!this.canTurnInQuest(questId)) {
+      return null;
+    }
+
+    const definition = this.getQuestDefinition(questId);
+    const objectives = definition?.objectives ?? [];
+    objectives.forEach((objective) => {
+      if (!objective?.targetId) {
+        return;
+      }
+      const required = Math.max(0, Number(objective?.count ?? 0));
+      if (required <= 0) {
+        return;
+      }
+      if (this.scene?.inventorySystem?.removeItem) {
+        this.scene.inventorySystem.removeItem(objective.targetId, required);
+      } else if (this.scene?.gameState?.inventory) {
+        const current = this.getInventoryCount(objective.targetId);
+        this.scene.gameState.inventory[objective.targetId] = Math.max(
+          0,
+          current - required
+        );
+      }
+    });
+
+    return this.completeQuest(questId);
   }
 
   completeQuest(questId) {
