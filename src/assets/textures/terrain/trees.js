@@ -86,45 +86,39 @@ const createDeciduous = (ctx, width, height) => {
   ctx.fill();
 };
 
-export const createTreeTextures = (scene) => {
+const createTreeTexture = (scene, key, width, height, drawFn) => {
+  if (scene.textures.exists(key)) {
+    scene.textures.get(key).setFilter(Phaser.Textures.FilterMode.NEAREST);
+    return;
+  }
+
+  const texture = scene.textures.createCanvas(key, width, height);
+  if (!texture) {
+    return;
+  }
+  const ctx = texture.getContext();
+  if (!ctx) {
+    return;
+  }
+  ctx.clearRect(0, 0, width, height);
+  drawFn(ctx, width, height);
+  texture.refresh();
+  texture.setFilter(Phaser.Textures.FilterMode.NEAREST);
+};
+
+export const createConiferTexture = (scene) => {
   const width = TILE_WIDTH * 2;
   const height = TILE_HEIGHT * 4;
-  const coniferKey = "tree-conifer";
-  const deciduousKey = "tree-deciduous";
+  createTreeTexture(scene, "tree-conifer", width, height, createConifer);
+};
 
-  if (scene.textures.exists(coniferKey)) {
-    scene.textures.get(coniferKey).setFilter(Phaser.Textures.FilterMode.NEAREST);
-  } else {
-    const conifer = scene.textures.createCanvas(coniferKey, width, height);
-    if (!conifer) {
-      return;
-    }
-    const coniferCtx = conifer.getContext();
-    if (!coniferCtx) {
-      return;
-    }
-    coniferCtx.clearRect(0, 0, width, height);
-    createConifer(coniferCtx, width, height);
-    conifer.refresh();
-    conifer.setFilter(Phaser.Textures.FilterMode.NEAREST);
-  }
+export const createDeciduousTexture = (scene) => {
+  const width = TILE_WIDTH * 2;
+  const height = TILE_HEIGHT * 4;
+  createTreeTexture(scene, "tree-deciduous", width, height, createDeciduous);
+};
 
-  if (scene.textures.exists(deciduousKey)) {
-    scene.textures
-      .get(deciduousKey)
-      .setFilter(Phaser.Textures.FilterMode.NEAREST);
-  } else {
-    const deciduous = scene.textures.createCanvas(deciduousKey, width, height);
-    if (!deciduous) {
-      return;
-    }
-    const deciduousCtx = deciduous.getContext();
-    if (!deciduousCtx) {
-      return;
-    }
-    deciduousCtx.clearRect(0, 0, width, height);
-    createDeciduous(deciduousCtx, width, height);
-    deciduous.refresh();
-    deciduous.setFilter(Phaser.Textures.FilterMode.NEAREST);
-  }
+export const createTreeTextures = (scene) => {
+  createConiferTexture(scene);
+  createDeciduousTexture(scene);
 };

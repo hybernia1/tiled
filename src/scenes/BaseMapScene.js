@@ -13,24 +13,7 @@ import {
   PLAYER_SPEED,
   TILE_WIDTH,
 } from "../config/constants.js";
-import { createPlayerTexture } from "../assets/textures/player.js";
-import { createAppleTexture, createPearTexture } from "../assets/textures/items.js";
-import {
-  createSpellShieldTexture,
-  createSpellShotTexture,
-} from "../assets/textures/spells.js";
-import { createBulletTexture } from "../assets/textures/bullet.js";
-import { createFriendlyNpcTexture } from "../assets/textures/npcFriend.js";
-import { createNpcTexture } from "../assets/textures/npc.js";
-import { createPigTexture } from "../assets/textures/pig.js";
-import { createCollisionTilesTexture } from "../assets/textures/terrain/collision.js";
-import { createGrassTexture } from "../assets/textures/terrain/grass.js";
-import { createMountainTexture } from "../assets/textures/terrain/mountain.js";
-import { createPondTexture } from "../assets/textures/terrain/pond.js";
-import { createRockTexture } from "../assets/textures/terrain/rock.js";
-import { createStairsTexture } from "../assets/textures/terrain/stairs.js";
-import { createTreeTextures } from "../assets/textures/terrain/trees.js";
-import { createWallTexture } from "../assets/textures/terrain/wall.js";
+import { createRegisteredTextures } from "../assets/textures/registry.js";
 import { createBullets } from "../entities/bullets.js";
 import { createFriendlyNpc } from "../entities/friendlyNpc.js";
 import { createCollectibles } from "../entities/collectibles.js";
@@ -87,23 +70,7 @@ export class BaseMapScene extends Phaser.Scene {
   }
 
   preload() {
-    createGrassTexture(this);
-    createRockTexture(this);
-    createWallTexture(this);
-    createMountainTexture(this);
-    createStairsTexture(this);
-    createPondTexture(this);
-    createTreeTextures(this);
-    createCollisionTilesTexture(this);
-    createPlayerTexture(this);
-    createNpcTexture(this);
-    createFriendlyNpcTexture(this);
-    createPigTexture(this);
-    createBulletTexture(this);
-    createAppleTexture(this);
-    createPearTexture(this);
-    createSpellShotTexture(this);
-    createSpellShieldTexture(this);
+    createRegisteredTextures(this);
   }
 
   create() {
