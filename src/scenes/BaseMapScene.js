@@ -92,8 +92,8 @@ export class BaseMapScene extends Phaser.Scene {
     ]);
   }
 
-  create() {
-    this.gameState = loadGameState();
+  async create() {
+    this.gameState = await loadGameState();
     this.mapState = getMapState(this.gameState, this.mapId);
     this.persistGameState = () => saveGameState(this.gameState);
     this.registry.set("textureProperties", textureProperties);

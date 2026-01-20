@@ -1,12 +1,4 @@
-import {
-  getMaxHealthForLevel,
-  getXpNeededForNextLevel,
-  MAX_LEVEL,
-} from "../config/playerProgression.js";
-
-const STORAGE_KEY = "tiled:gameState";
-const SESSION_KEY = "tiled:sessionToken";
-const API_BASE_URL = import.meta.env.VITE_API_URL ?? "http://localhost:4000";
+import { getMaxHealthForLevel, getXpNeededForNextLevel, MAX_LEVEL } from "../state/playerProgression.js";
 
 const DEFAULT_SPELLBAR_SLOTS = [
   { spellId: "shot" },
@@ -14,10 +6,10 @@ const DEFAULT_SPELLBAR_SLOTS = [
   { spellId: null },
   { spellId: null },
   { spellId: null },
-  { spellId: null },
+  { spellId: null }
 ];
 
-const DEFAULT_STATE = {
+export const DEFAULT_STATE = {
   version: 1,
   player: {
     level: 1,
@@ -28,33 +20,33 @@ const DEFAULT_STATE = {
     mana: 100,
     currency: {
       silver: 0,
-      gold: 0,
+      gold: 0
     },
     spellCooldowns: {},
     spellbarSlots: DEFAULT_SPELLBAR_SLOTS.map((slot) => ({ ...slot })),
     effects: [],
-    shieldedUntil: 0,
+    shieldedUntil: 0
   },
   inventory: {
     apple: 0,
-    pear: 0,
+    pear: 0
   },
   quests: {
     active: {},
     completed: {},
-    progress: {},
+    progress: {}
   },
   ui: {
     inventoryAnchor: "bottom-right",
-    questLogOpen: false,
+    questLogOpen: false
   },
-  maps: {},
+  maps: {}
 };
 
 const defaultMapState = () => ({
   collectedItems: [],
   npcDefeated: false,
-  pigRespawns: {},
+  pigRespawns: {}
 });
 
 const safeNumber = (value, fallback = 0) => {
@@ -75,13 +67,12 @@ const normalizeCurrency = (rawCurrency) => {
   if (typeof rawCurrency === "number") {
     totalSilver = safeNumber(rawCurrency);
   } else if (rawCurrency && typeof rawCurrency === "object") {
-    totalSilver =
-      safeNumber(rawCurrency.silver) + safeNumber(rawCurrency.gold) * 100;
+    totalSilver = safeNumber(rawCurrency.silver) + safeNumber(rawCurrency.gold) * 100;
   }
   const safeTotal = Math.max(0, Math.floor(totalSilver));
   return {
     gold: Math.floor(safeTotal / 100),
-    silver: safeTotal % 100,
+    silver: safeTotal % 100
   };
 };
 
@@ -90,39 +81,22 @@ const normalizeSpellbarSlots = (slots) => {
   return DEFAULT_SPELLBAR_SLOTS.map((fallbackSlot, index) => {
     const rawSlot = rawSlots[index];
     const spellId =
-      typeof rawSlot?.spellId === "string"
-        ? rawSlot.spellId
-        : fallbackSlot.spellId ?? null;
+      typeof rawSlot?.spellId === "string" ? rawSlot.spellId : fallbackSlot.spellId ?? null;
     return { spellId };
   });
 };
 
-const normalizeState = (state) => {
+export const normalizeState = (state) => {
   const now = Date.now();
   const rawPlayer = state?.player ?? {};
-  const level = clampNumber(
-    rawPlayer.level,
-    1,
-    MAX_LEVEL,
-    DEFAULT_STATE.player.level
-  );
+  const level = clampNumber(rawPlayer.level, 1, MAX_LEVEL, DEFAULT_STATE.player.level);
   const derivedMaxHealth = getMaxHealthForLevel(level);
   const xp = Math.max(0, safeNumber(rawPlayer.xp));
-  const maxHealth = clampNumber(
-    rawPlayer.maxHealth,
-    1,
-    999,
-    derivedMaxHealth
-  );
+  const maxHealth = clampNumber(rawPlayer.maxHealth, 1, 999, derivedMaxHealth);
   const health = clampNumber(rawPlayer.health, 0, maxHealth, maxHealth);
   const xpNeeded = getXpNeededForNextLevel(level);
   const clampedXp = xpNeeded > 0 ? Math.min(xp, xpNeeded) : 0;
-  const maxMana = clampNumber(
-    rawPlayer.maxMana,
-    0,
-    999,
-    DEFAULT_STATE.player.maxMana
-  );
+  const maxMana = clampNumber(rawPlayer.maxMana, 0, 999, DEFAULT_STATE.player.maxMana);
   const mana = clampNumber(rawPlayer.mana, 0, maxMana, maxMana);
   const currency = normalizeCurrency(rawPlayer.currency);
   const rawSpellCooldowns =
@@ -142,7 +116,7 @@ const normalizeState = (state) => {
     .map((effect) => ({
       id: typeof effect?.id === "string" ? effect.id : null,
       expiresAt: safeNumber(effect?.expiresAt, 0),
-      stacks: Math.max(1, Math.floor(safeNumber(effect?.stacks, 1))),
+      stacks: Math.max(1, Math.floor(safeNumber(effect?.stacks, 1)))
     }))
     .filter(
       (effect) =>
@@ -155,9 +129,7 @@ const normalizeState = (state) => {
   }
 
   const rawInventory =
-    state?.inventory && typeof state.inventory === "object"
-      ? { ...state.inventory }
-      : {};
+    state?.inventory && typeof state.inventory === "object" ? { ...state.inventory } : {};
   if ("jablko" in rawInventory && rawInventory.apple === undefined) {
     rawInventory.apple = rawInventory.jablko;
   }
@@ -170,7 +142,7 @@ const normalizeState = (state) => {
   const rawUi = state?.ui && typeof state.ui === "object" ? { ...state.ui } : {};
   const ui = {
     ...DEFAULT_STATE.ui,
-    ...rawUi,
+    ...rawUi
   };
   if (typeof ui.inventoryAnchor !== "string") {
     ui.inventoryAnchor = DEFAULT_STATE.ui.inventoryAnchor;
@@ -191,11 +163,11 @@ const normalizeState = (state) => {
       spellCooldowns,
       spellbarSlots: normalizeSpellbarSlots(rawPlayer.spellbarSlots),
       effects,
-      shieldedUntil,
+      shieldedUntil
     },
     inventory: {
       ...DEFAULT_STATE.inventory,
-      ...rawInventory,
+      ...rawInventory
     },
     quests: {
       active:
@@ -209,10 +181,10 @@ const normalizeState = (state) => {
       progress:
         state?.quests?.progress && typeof state.quests.progress === "object"
           ? { ...state.quests.progress }
-          : {},
+          : {}
     },
     ui,
-    maps: { ...(state?.maps ?? {}) },
+    maps: { ...(state?.maps ?? {}) }
   };
 
   Object.keys(normalized.inventory).forEach((key) => {
@@ -264,108 +236,11 @@ const normalizeState = (state) => {
     normalized.maps[mapKey] = {
       ...defaultMapState(),
       ...(mapState ?? {}),
-      collectedItems: Array.isArray(mapState?.collectedItems)
-        ? mapState.collectedItems
-        : [],
+      collectedItems: Array.isArray(mapState?.collectedItems) ? mapState.collectedItems : [],
       npcDefeated: Boolean(mapState?.npcDefeated),
-      pigRespawns,
+      pigRespawns
     };
   });
 
   return normalized;
-};
-
-const getOfflineState = () => {
-  if (typeof localStorage === "undefined") {
-    return normalizeState(DEFAULT_STATE);
-  }
-
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) {
-      return normalizeState(DEFAULT_STATE);
-    }
-    const parsed = JSON.parse(raw);
-    return normalizeState(parsed);
-  } catch (error) {
-    return normalizeState(DEFAULT_STATE);
-  }
-};
-
-const cacheOfflineState = (state) => {
-  if (typeof localStorage === "undefined") {
-    return;
-  }
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-  } catch (error) {
-    // Ignore storage errors (quota, private mode, etc.).
-  }
-};
-
-const getSessionToken = () => {
-  if (typeof localStorage === "undefined") {
-    return null;
-  }
-  return localStorage.getItem(SESSION_KEY);
-};
-
-export const loadGameState = async () => {
-  const offlineState = getOfflineState();
-  if (typeof navigator !== "undefined" && navigator.onLine === false) {
-    return offlineState;
-  }
-
-  const token = getSessionToken();
-  if (!token) {
-    return offlineState;
-  }
-
-  try {
-    const response = await fetch(`${API_BASE_URL}/player/state`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-    if (!response.ok) {
-      return offlineState;
-    }
-    const data = await response.json();
-    const normalized = normalizeState(data?.state ?? data);
-    cacheOfflineState(normalized);
-    return normalized;
-  } catch (error) {
-    return offlineState;
-  }
-};
-
-export const saveGameState = async (state) => {
-  const normalized = normalizeState(state);
-  cacheOfflineState(normalized);
-  if (typeof navigator !== "undefined" && navigator.onLine === false) {
-    return;
-  }
-  const token = getSessionToken();
-  if (!token) {
-    return;
-  }
-  try {
-    await fetch(`${API_BASE_URL}/player/state`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({ state: normalized }),
-    });
-  } catch (error) {
-    // Ignore API errors; offline cache already stored.
-  }
-};
-
-export const getMapState = (state, mapKey) => {
-  if (!state.maps[mapKey]) {
-    state.maps[mapKey] = defaultMapState();
-  }
-  return state.maps[mapKey];
 };
