@@ -20,6 +20,57 @@ const PIG_SPAWNS = {
 };
 
 const PIG_RESPAWN_MS = 60_000;
+const PIG_WANDER_RADIUS_TILES = 3;
+const PIG_WANDER_MIN_DURATION_MS = 1800;
+const PIG_WANDER_MAX_DURATION_MS = 3600;
+const PIG_WANDER_MIN_DELAY_MS = 400;
+const PIG_WANDER_MAX_DELAY_MS = 1400;
+
+const randomBetween = (min, max) =>
+  Math.floor(Math.random() * (max - min + 1)) + min;
+
+const getRandomWanderTarget = (scene, origin) => {
+  const offsetX = randomBetween(-PIG_WANDER_RADIUS_TILES, PIG_WANDER_RADIUS_TILES);
+  const offsetY = randomBetween(-PIG_WANDER_RADIUS_TILES, PIG_WANDER_RADIUS_TILES);
+  return findNearestOpenTilePosition(
+    scene,
+    origin.x + offsetX * TILE_WIDTH,
+    origin.y + offsetY * TILE_WIDTH,
+    PIG_WANDER_RADIUS_TILES + 2
+  );
+};
+
+const startPigWander = (scene, pig) => {
+  if (!pig?.active) {
+    return;
+  }
+  const existingTimer = pig.getData("patrolTimer");
+  existingTimer?.remove();
+
+  const origin = pig.getData("respawnPoint") ?? { x: pig.x, y: pig.y };
+  const target = getRandomWanderTarget(scene, origin);
+  const duration = randomBetween(
+    PIG_WANDER_MIN_DURATION_MS,
+    PIG_WANDER_MAX_DURATION_MS
+  );
+
+  const patrolTween = scene.tweens.add({
+    targets: pig,
+    x: target.x,
+    y: target.y,
+    duration,
+    ease: "Sine.easeInOut",
+    onComplete: () => {
+      const delay = randomBetween(PIG_WANDER_MIN_DELAY_MS, PIG_WANDER_MAX_DELAY_MS);
+      const timer = scene.time.delayedCall(delay, () => {
+        startPigWander(scene, pig);
+      });
+      pig.setData("patrolTimer", timer);
+    },
+  });
+
+  pig.setData("patrolTween", patrolTween);
+};
 
 export const createPigNpc = (scene) => {
   scene.pigNpcGroup = scene.physics.add.group({ allowGravity: false });
@@ -60,32 +111,6 @@ export const createPigNpc = (scene) => {
     pig.setData("respawnDelayMs", PIG_RESPAWN_MS);
     pig.setData("respawnPoint", { x: startPosition.x, y: startPosition.y });
 
-    const baseTileX = Math.round(startPosition.x / TILE_WIDTH);
-    const baseTileY = Math.round(startPosition.y / TILE_WIDTH);
-    const patrolPoints = [
-      { x: baseTileX, y: baseTileY },
-      { x: baseTileX + 1, y: baseTileY },
-      { x: baseTileX + 1, y: baseTileY + 1 },
-      { x: baseTileX, y: baseTileY + 1 },
-    ].map((point) =>
-      findNearestOpenTilePosition(
-        scene,
-        point.x * TILE_WIDTH,
-        point.y * TILE_WIDTH
-      )
-    );
-
-    const patrolTween = scene.tweens.chain({
-      targets: pig,
-      loop: -1,
-      tweens: patrolPoints.map((point) => ({
-        x: point.x,
-        y: point.y,
-        duration: 3000,
-        ease: "Sine.easeInOut",
-      })),
-    });
-
-    pig.setData("patrolTween", patrolTween);
+    startPigWander(scene, pig);
   });
 };
