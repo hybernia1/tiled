@@ -19,9 +19,6 @@ export class InputSystem {
     this.scene.shieldKey = this.scene.input.keyboard.addKey(
       Phaser.Input.Keyboard.KeyCodes.TWO
     );
-    this.scene.jumpKey = this.scene.input.keyboard.addKey(
-      Phaser.Input.Keyboard.KeyCodes.SPACE
-    );
     this.scene.tabKey = this.scene.input.keyboard.addKey(
       Phaser.Input.Keyboard.KeyCodes.TAB
     );
