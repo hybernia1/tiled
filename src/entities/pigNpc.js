@@ -25,6 +25,7 @@ const PIG_WANDER_MIN_DURATION_MS = 1800;
 const PIG_WANDER_MAX_DURATION_MS = 3600;
 const PIG_WANDER_MIN_DELAY_MS = 400;
 const PIG_WANDER_MAX_DELAY_MS = 1400;
+const PIG_COMBAT_LEASH_TILES = 7;
 
 const randomBetween = (min, max) =>
   Math.floor(Math.random() * (max - min + 1)) + min;
@@ -110,6 +111,8 @@ export const createPigNpc = (scene) => {
     pig.setData("spawnKey", spawnKey);
     pig.setData("respawnDelayMs", PIG_RESPAWN_MS);
     pig.setData("respawnPoint", { x: startPosition.x, y: startPosition.y });
+    pig.setData("combatLeashRangePx", PIG_COMBAT_LEASH_TILES * TILE_WIDTH);
+    pig.setData("resetHealthOnDisengage", true);
 
     startPigWander(scene, pig);
   });
