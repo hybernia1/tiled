@@ -1,4 +1,5 @@
 import { createRegistry } from "./registry.js";
+import { setRegistryData } from "./registries/baseRegistry.js";
 
 let cachedRegistry = null;
 
@@ -11,6 +12,25 @@ const fetchJson = async (url) => {
 };
 
 const buildUrl = (path) => new URL(path, import.meta.url);
+
+const normalizeKeyedRegistry = (records, idKey = "id") => {
+  if (!Array.isArray(records)) {
+    return records;
+  }
+
+  const entries = records
+    .map((record) => [record?.[idKey], record])
+    .filter(([id]) => id);
+
+  if (entries.length === 0) {
+    console.warn(
+      `[registry] Expected keyed registry data but received array without "${idKey}" values.`
+    );
+    return {};
+  }
+
+  return Object.fromEntries(entries);
+};
 
 export const loadRegistries = async () => {
   if (cachedRegistry) {
@@ -47,15 +67,19 @@ export const loadRegistries = async () => {
     fetchJson(buildUrl("./schema/textures.json")),
   ]);
 
+  const normalizedRegistries = {
+    npcs: normalizeKeyedRegistry(npcs, "id"),
+    spells: normalizeKeyedRegistry(spells, "spellId"),
+    items,
+    maps,
+    quests,
+    drops,
+    textures,
+  };
+
   cachedRegistry = createRegistry(
     {
-      npcs,
-      spells,
-      items,
-      maps,
-      quests,
-      drops,
-      textures,
+      ...normalizedRegistries,
     },
     {
       npcs: npcSchema,
@@ -66,6 +90,8 @@ export const loadRegistries = async () => {
       textures: texturesSchema,
     }
   );
+
+  setRegistryData(cachedRegistry);
 
   return cachedRegistry;
 };
