@@ -1,6 +1,6 @@
 import { TILE_HEIGHT, TILE_WIDTH } from "../config/constants.js";
 
-export const createCollectibles = (scene, onPickup) => {
+export const createCollectibles = (scene, onPickup, mapState) => {
   scene.collectibles = scene.physics.add.group({ allowGravity: false });
   const appleSpots = [
     { x: 4, y: 3 },
@@ -20,21 +20,33 @@ export const createCollectibles = (scene, onPickup) => {
     sprite.setData("itemType", itemType);
   };
 
-  appleSpots.forEach((spot) => {
+  const collectedItems = mapState?.collectedItems ?? [];
+
+  appleSpots.forEach((spot, index) => {
+    const collectibleId = `apple-${index}`;
+    if (collectedItems.includes(collectibleId)) {
+      return;
+    }
     const apple = scene.collectibles.create(
       spot.x * TILE_WIDTH,
       spot.y * TILE_WIDTH,
       "apple"
     );
+    apple.setData("collectibleId", collectibleId);
     registerCollectible(apple, "jablko");
   });
 
-  pearSpots.forEach((spot) => {
+  pearSpots.forEach((spot, index) => {
+    const collectibleId = `pear-${index}`;
+    if (collectedItems.includes(collectibleId)) {
+      return;
+    }
     const pear = scene.collectibles.create(
       spot.x * TILE_WIDTH,
       spot.y * TILE_WIDTH,
       "pear"
     );
+    pear.setData("collectibleId", collectibleId);
     registerCollectible(pear, "hruska");
   });
 

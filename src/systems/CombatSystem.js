@@ -185,6 +185,10 @@ export class CombatSystem {
       }
       this.scene.npcHealthBar.setVisible(false);
       this.scene.npcHealthValue.setVisible(false);
+      if (this.scene.mapState) {
+        this.scene.mapState.npcDefeated = true;
+        this.scene.persistGameState?.();
+      }
       const npcName =
         npc.getData("displayName") ?? t(this.scene.locale, "npcName");
       this.scene.gameLogSystem?.addEntry("logNpcDefeated", { npc: npcName });

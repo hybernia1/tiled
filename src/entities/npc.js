@@ -51,6 +51,15 @@ export const createNpc = (scene) => {
       y: point.y / TILE_WIDTH,
     }));
 
+  if (scene.mapState?.npcDefeated) {
+    scene.npc.setActive(false);
+    scene.npc.setVisible(false);
+    scene.npc.body.enable = false;
+    scene.npcHealthBar.setVisible(false);
+    scene.npcHealthValue.setVisible(false);
+    return;
+  }
+
   scene.npcTween = scene.tweens.chain({
     targets: scene.npc,
     loop: -1,
