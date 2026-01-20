@@ -1,30 +1,120 @@
-[
-  {
-    "id": "npc_villager_01",
-    "type": "npc",
-    "nameKey": "npc.villager.01",
-    "tags": ["town", "civilian"],
-    "version": 1,
+{
+  "hostileWanderer": {
+    "id": "hostileWanderer",
+    "displayName": "NPC",
+    "type": "hostile",
+    "behaviorProfile": "hostile",
     "stats": {
-      "health": 25,
-      "speed": 1.2,
-      "courage": 0.4
+      "level": 1,
+      "maxHealth": 3,
+      "attackDamage": 1
     },
-    "behaviorProfile": "passive",
-    "dialogKey": "dialog.villager.greeting"
+    "ranges": {
+      "aggroRange": 3,
+      "attackRange": 1
+    },
+    "respawnRules": {
+      "delay": 0,
+      "resetHealth": true,
+      "resetAggro": true
+    }
   },
-  {
-    "id": "npc_guard_01",
-    "type": "npc",
-    "nameKey": "npc.guard.01",
-    "tags": ["town", "guard"],
-    "version": 1,
+  "neutralWanderer": {
+    "id": "neutralWanderer",
+    "displayName": "NPC",
+    "type": "neutral",
+    "behaviorProfile": "neutral",
     "stats": {
-      "health": 60,
-      "speed": 1.4,
-      "courage": 0.9
+      "level": 1,
+      "maxHealth": 3,
+      "attackDamage": 1
     },
-    "behaviorProfile": "defensive",
-    "dialogKey": "dialog.guard.idle"
+    "ranges": {
+      "aggroRange": 3,
+      "attackRange": 1
+    },
+    "respawnRules": {
+      "delay": 0,
+      "resetHealth": true,
+      "resetAggro": true
+    }
+  },
+  "friendlyGuide": {
+    "id": "friendlyGuide",
+    "displayName": "NPC",
+    "type": "friendly",
+    "behaviorProfile": "friendly",
+    "stats": {
+      "level": 1,
+      "maxHealth": 3
+    },
+    "respawnRules": {
+      "delay": 0,
+      "resetHealth": true,
+      "resetAggro": true
+    }
+  },
+  "pig_level_1": {
+    "id": "pig_level_1",
+    "displayName": "Piglet",
+    "type": "neutral",
+    "behaviorProfile": "neutral",
+    "stats": {
+      "level": 1,
+      "maxHealth": 4,
+      "attackDamage": 1,
+      "xpReward": 10
+    },
+    "ranges": {
+      "aggroRange": 3,
+      "attackRange": 1
+    },
+    "respawnRules": {
+      "delay": 60000,
+      "resetHealth": true,
+      "resetAggro": true
+    }
+  },
+  "pig_level_2": {
+    "id": "pig_level_2",
+    "displayName": "Piglet",
+    "type": "neutral",
+    "behaviorProfile": "neutral",
+    "stats": {
+      "level": 2,
+      "maxHealth": 6,
+      "attackDamage": 1,
+      "xpReward": 12
+    },
+    "ranges": {
+      "aggroRange": 3,
+      "attackRange": 1
+    },
+    "respawnRules": {
+      "delay": 60000,
+      "resetHealth": true,
+      "resetAggro": true
+    }
+  },
+  "pig_level_3": {
+    "id": "pig_level_3",
+    "displayName": "Piglet",
+    "type": "neutral",
+    "behaviorProfile": "neutral",
+    "stats": {
+      "level": 3,
+      "maxHealth": 8,
+      "attackDamage": 1,
+      "xpReward": 15
+    },
+    "ranges": {
+      "aggroRange": 3,
+      "attackRange": 1
+    },
+    "respawnRules": {
+      "delay": 60000,
+      "resetHealth": true,
+      "resetAggro": true
+    }
   }
-]
+}
