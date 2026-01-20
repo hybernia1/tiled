@@ -1,4 +1,10 @@
 import * as Phaser from "phaser";
+import { t } from "../config/localization.js";
+
+const ITEM_LOG_KEYS = {
+  jablko: "itemApple",
+  hruska: "itemPear",
+};
 
 export class InteractionSystem {
   constructor(scene, lightingSystem, inventorySystem) {
@@ -113,6 +119,9 @@ export class InteractionSystem {
     const itemType = collectible.getData("itemType");
     if (itemType) {
       this.inventorySystem.addItem(itemType);
+      const itemKey = ITEM_LOG_KEYS[itemType];
+      const itemName = itemKey ? t(this.scene.locale, itemKey) : itemType;
+      this.scene.gameLogSystem?.addEntry("logItemPicked", { item: itemName });
     }
 
     collectible.disableBody(true, true);

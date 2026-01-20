@@ -1,3 +1,5 @@
+import { t } from "../config/localization.js";
+
 export class CombatSystem {
   constructor(scene) {
     this.scene = scene;
@@ -84,7 +86,7 @@ export class CombatSystem {
       player.setVisible(false);
       player.body.enable = false;
       player.body.setVelocity(0, 0);
-      this.showCombatMessage("Postava padla!");
+      this.showCombatMessage(t(this.scene.locale, "combatPlayerDown"));
     }
   }
 
@@ -183,7 +185,8 @@ export class CombatSystem {
       }
       this.scene.npcHealthBar.setVisible(false);
       this.scene.npcHealthValue.setVisible(false);
-      this.showCombatMessage("NPC poražen!");
+      this.showCombatMessage(t(this.scene.locale, "combatNpcDefeated"));
+      this.scene.gameLogSystem?.addEntry("logNpcDefeated");
     }
   }
 

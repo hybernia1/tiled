@@ -17,4 +17,11 @@ export const cs = {
   pauseHint: "Pokračuj klávesou Esc nebo P",
   enterCave: "Stiskni E pro vstup do jeskyně",
   exitCave: "Stiskni E pro návrat ven",
+  logTitle: "Herní log",
+  logNpcDefeated: "NPC poražen.",
+  logItemPicked: "Předmět sebrán: \"{item}\".",
+  itemApple: "jablko",
+  itemPear: "hruška",
+  combatNpcDefeated: "NPC poražen!",
+  combatPlayerDown: "Postava padla!",
 };
