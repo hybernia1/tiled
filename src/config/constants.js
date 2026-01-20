@@ -11,6 +11,7 @@ export const PLAYER_SPEED = 180;
 export const BULLET_SPEED = 360;
 export const FIRE_COOLDOWN_MS = 220;
 
+// Legacy fallback for older UI or saved data; use getMaxHealthForLevel instead.
 export const PLAYER_MAX_HEALTH = 5;
 export const NPC_AGGRO_RANGE_TILES = 3;
 export const NPC_ATTACK_RANGE_TILES = 1;

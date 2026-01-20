@@ -33,6 +33,7 @@ import { createMap, MAP_PORTALS } from "../entities/map.js";
 import { createNpc } from "../entities/npc.js";
 import { createPlayer } from "../entities/player.js";
 import { resolveLocale, t } from "../config/localization.js";
+import { getMaxHealthForLevel } from "../config/playerProgression.js";
 import {
   getMapState,
   loadGameState,
@@ -113,6 +114,7 @@ export class BaseMapScene extends Phaser.Scene {
 
     createMap(this, { type: this.mapType });
     createPlayer(this, this.spawnPoint, playerState);
+    this.syncPlayerState();
     createCollectibles(
       this,
       this.interactionSystem.handleCollectiblePickup,
@@ -376,10 +378,27 @@ export class BaseMapScene extends Phaser.Scene {
       Phaser.Input.Keyboard.JustDown(this.interactKey) ||
       this.interactionSystem.consumeTouchAction("interact");
     if (interactTriggered) {
+      this.syncPlayerState();
       this.scene.start(this.portalTargetKey, {
         spawnPoint: this.getPortalSpawnPoint(this.portalTargetKey),
       });
     }
+  }
+
+  syncPlayerState() {
+    if (!this.gameState?.player || !this.player) {
+      return;
+    }
+    const level = Number(this.player.getData("level")) || 1;
+    const maxHealth =
+      Number(this.player.getData("maxHealth")) || getMaxHealthForLevel(level);
+    const storedHealth = Number(this.player.getData("health"));
+    const health = Number.isFinite(storedHealth) ? storedHealth : maxHealth;
+
+    this.gameState.player.level = level;
+    this.gameState.player.maxHealth = maxHealth;
+    this.gameState.player.health = health;
+    this.persistGameState?.();
   }
 
   getPortalSpawnPoint(targetKey) {

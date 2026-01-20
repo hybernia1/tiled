@@ -1,4 +1,7 @@
-import { PLAYER_MAX_HEALTH } from "../config/constants.js";
+import {
+  getMaxHealthForLevel,
+  MAX_LEVEL,
+} from "../config/playerProgression.js";
 
 const STORAGE_KEY = "tiled:gameState";
 
@@ -6,8 +9,8 @@ const DEFAULT_STATE = {
   version: 1,
   player: {
     level: 1,
-    maxHealth: PLAYER_MAX_HEALTH,
-    health: PLAYER_MAX_HEALTH,
+    maxHealth: getMaxHealthForLevel(1),
+    health: getMaxHealthForLevel(1),
   },
   inventory: {
     jablko: 0,
@@ -36,14 +39,20 @@ const clampNumber = (value, min, max, fallback) => {
 
 const normalizeState = (state) => {
   const rawPlayer = state?.player ?? {};
+  const level = clampNumber(
+    rawPlayer.level,
+    1,
+    MAX_LEVEL,
+    DEFAULT_STATE.player.level
+  );
+  const derivedMaxHealth = getMaxHealthForLevel(level);
   const maxHealth = clampNumber(
     rawPlayer.maxHealth,
     1,
     999,
-    DEFAULT_STATE.player.maxHealth
+    derivedMaxHealth
   );
   const health = clampNumber(rawPlayer.health, 0, maxHealth, maxHealth);
-  const level = clampNumber(rawPlayer.level, 1, 99, DEFAULT_STATE.player.level);
 
   const normalized = {
     ...DEFAULT_STATE,
