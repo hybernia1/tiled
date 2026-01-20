@@ -24,8 +24,6 @@ const DEFAULT_STATE = {
     health: getMaxHealthForLevel(1),
     maxMana: 100,
     mana: 100,
-    maxEnergy: 100,
-    energy: 100,
     spellCooldowns: {},
     spellbarSlots: DEFAULT_SPELLBAR_SLOTS.map((slot) => ({ ...slot })),
     effects: [],
@@ -96,13 +94,6 @@ const normalizeState = (state) => {
     DEFAULT_STATE.player.maxMana
   );
   const mana = clampNumber(rawPlayer.mana, 0, maxMana, maxMana);
-  const maxEnergy = clampNumber(
-    rawPlayer.maxEnergy,
-    0,
-    999,
-    DEFAULT_STATE.player.maxEnergy
-  );
-  const energy = clampNumber(rawPlayer.energy, 0, maxEnergy, maxEnergy);
   const rawSpellCooldowns =
     rawPlayer.spellCooldowns && typeof rawPlayer.spellCooldowns === "object"
       ? rawPlayer.spellCooldowns
@@ -142,8 +133,6 @@ const normalizeState = (state) => {
       health,
       maxMana,
       mana,
-      maxEnergy,
-      energy,
       spellCooldowns,
       spellbarSlots: normalizeSpellbarSlots(rawPlayer.spellbarSlots),
       effects,

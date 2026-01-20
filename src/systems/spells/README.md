@@ -21,7 +21,9 @@ A spell definition object supports the following fields:
 - `durationMs` (number | function): Duration in milliseconds for timed effects.
 - `castTimeMs` (number | function): Cast time in milliseconds.
 - `globalCooldownMs` (number | function): Global cooldown in milliseconds.
-- `resourceCost` (object | function): Resource cost payload.
+- `resourceCost` (object | function): Mana cost payload.
+- `description` (string | function): Tooltip description of the spell's purpose.
+- `damage` (number | string | function): Tooltip damage value or range.
 - `onExpire` (function): Handler when a timed spell expires.
 
 ## Validation
@@ -44,6 +46,8 @@ an error if required fields are missing.
     spellId: "blink",
     name: "Blink",
     iconKey: "spell-blink",
+    description: "Teleport a short distance ahead.",
+    damage: 0,
     cooldownMs: 2000,
     castTimeMs: 150,
     globalCooldownMs: 200,
@@ -64,6 +68,8 @@ an error if required fields are missing.
     spellId: "barrier",
     name: "Barrier",
     iconKey: "spell-barrier",
+    description: "Raise a temporary protective barrier.",
+    damage: 0,
     cooldownMs: 6000,
     durationMs: 3000,
     onCast: (context) => {
