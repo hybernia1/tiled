@@ -127,11 +127,10 @@ export class InventorySystem {
     this.scene.inventoryUi.setVisible(isVisible);
   }
 
-  updateInventoryToggle(consumeTouchAction) {
+  updateInventoryToggle() {
     if (
       !this.scene.inventoryKey ||
-      !(Phaser.Input.Keyboard.JustDown(this.scene.inventoryKey) ||
-        consumeTouchAction("inventory"))
+      !Phaser.Input.Keyboard.JustDown(this.scene.inventoryKey)
     ) {
       return;
     }

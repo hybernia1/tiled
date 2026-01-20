@@ -14,14 +14,6 @@ export class InteractionSystem {
     this.handleCollectiblePickup = this.handleCollectiblePickup.bind(this);
   }
 
-  consumeTouchAction(action) {
-    if (!this.scene.touchActions?.[action]) {
-      return false;
-    }
-    this.scene.touchActions[action] = false;
-    return true;
-  }
-
   updateFriendlyNpcInteraction() {
     const { friendlyNpc, player, friendlyNpcPrompt } = this.scene;
     if (!friendlyNpc || !player) {
@@ -52,9 +44,9 @@ export class InteractionSystem {
       return;
     }
 
-    const interactTriggered =
-      Phaser.Input.Keyboard.JustDown(this.scene.interactKey) ||
-      this.consumeTouchAction("interact");
+    const interactTriggered = Phaser.Input.Keyboard.JustDown(
+      this.scene.interactKey
+    );
     if (interactTriggered) {
       this.showFriendlyNpcDialogue();
     }
@@ -98,9 +90,9 @@ export class InteractionSystem {
       .setPosition(switchDisplay.x, switchDisplay.y - 18)
       .setVisible(true);
 
-    const interactTriggered =
-      Phaser.Input.Keyboard.JustDown(this.scene.interactKey) ||
-      this.consumeTouchAction("interact");
+    const interactTriggered = Phaser.Input.Keyboard.JustDown(
+      this.scene.interactKey
+    );
     if (interactTriggered) {
       closestSwitch.setData("isOn", !isOn);
       const zone = this.scene.lightZones.find((entry) => entry.id === zoneId);

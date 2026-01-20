@@ -53,9 +53,6 @@ export class BaseMapScene extends Phaser.Scene {
     this.portalTargetKey = portalTargetKey;
     this.portalPromptKey = portalPromptKey;
     this.playerSpeed = PLAYER_SPEED;
-    this.touchState = null;
-    this.touchActions = null;
-    this.mobileControls = null;
     this.mapWidthPx = TILE_WIDTH * MAP_W;
     this.mapHeightPx = TILE_WIDTH * MAP_H;
     this.bulletSpeed = BULLET_SPEED;
@@ -127,7 +124,6 @@ export class BaseMapScene extends Phaser.Scene {
     this.combatSystem.setupPlayerHealth();
     this.combatSystem.setupNpcCombat();
     this.inputSystem.setupControls();
-    this.inputSystem.setupMobileControls();
     this.setupPauseInput();
     this.setupFullscreenInput();
     this.setupColliders();
@@ -143,9 +139,7 @@ export class BaseMapScene extends Phaser.Scene {
     this.combatSystem.cleanupBullets(time);
     this.combatSystem.updateNpcHealthDisplay();
     this.interactionSystem.updateFriendlyNpcInteraction();
-    this.inventorySystem.updateInventoryToggle(
-      this.interactionSystem.consumeTouchAction.bind(this.interactionSystem)
-    );
+    this.inventorySystem.updateInventoryToggle();
     this.updatePortalInteraction();
     this.syncIsometricSprites();
   }

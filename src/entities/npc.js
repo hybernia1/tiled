@@ -1,4 +1,5 @@
 import { MAP_H, MAP_W, TILE_HEIGHT, TILE_WIDTH } from "../config/constants.js";
+import { t } from "../config/localization.js";
 import { findNearestOpenTilePosition } from "./spawnUtils.js";
 
 export const createNpc = (scene) => {
@@ -18,6 +19,7 @@ export const createNpc = (scene) => {
   scene.npc.setData("maxHealth", scene.npcMaxHealth);
   scene.npc.setData("health", scene.npcMaxHealth);
   scene.npc.setData("nextAttackAt", 0);
+  scene.npc.setData("displayName", t(scene.locale, "npcName"));
 
   scene.npcHealthBar = scene.add.graphics().setDepth(9);
   scene.npcHealthValue = scene.add
