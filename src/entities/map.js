@@ -49,7 +49,7 @@ export const createMap = (scene, options = {}) => {
     tileHeight: TILE_WIDTH, // pokud máš zvlášť TILE_HEIGHT_2D, dej ho sem
   });
 
-  const tiles = map.addTilesetImage(
+  const tileset = map.addTilesetImage(
     "collision-tiles",
     null,
     TILE_WIDTH,
@@ -58,7 +58,7 @@ export const createMap = (scene, options = {}) => {
     0
   );
 
-  const layer = map.createLayer(0, tiles, 0, 0);
+  const layer = map.createLayer(0, tileset, 0, 0);
   layer.setScale(1);
   layer.setCollision([TILE_TYPES.WALL, TILE_TYPES.HARD_WALL]);
   if (layer.calculateFacesWithin) {
