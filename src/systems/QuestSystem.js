@@ -227,6 +227,7 @@ export class QuestSystem {
       }
     });
     this.updateQuestStatus(questId);
+    this.scene.spawnQuestCollectibles?.(questId);
     this.scene.persistGameState?.();
     return quests.active[questId];
   }

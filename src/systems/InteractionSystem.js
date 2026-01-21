@@ -107,7 +107,20 @@ export class InteractionSystem {
   }
 
   showFriendlyNpcDialogue() {
-    const questId = "quest_boar_chunks_01";
-    this.scene.showQuestDialog?.(questId);
+    const firstQuestId = "quest_boar_chunks_01";
+    const secondQuestId = "quest_fruit_harvest_01";
+    const questSystem = this.scene.questSystem;
+    const firstStatus = questSystem?.getQuestStatus?.(firstQuestId) ?? "available";
+    const secondStatus =
+      questSystem?.getQuestStatus?.(secondQuestId) ?? "available";
+
+    if (firstStatus !== "completed") {
+      this.scene.showQuestDialog?.(firstQuestId);
+      return;
+    }
+
+    if (secondStatus !== "completed") {
+      this.scene.showQuestDialog?.(secondQuestId);
+    }
   }
 }

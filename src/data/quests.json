@@ -83,9 +83,40 @@
     ],
     "rewards": [
       {
+        "rewardType": "xp",
+        "amount": 50
+      },
+      {
         "rewardType": "currency",
-        "amount": 25,
+        "amount": 1,
         "unit": "silver"
+      }
+    ]
+  },
+  {
+    "id": "quest_fruit_harvest_01",
+    "type": "quest",
+    "nameKey": "quest.fruit_harvest.01",
+    "displayName": "Fruit Harvest",
+    "description": "Collect 3 apples and 3 pears for the villager.",
+    "tags": ["fetch", "starter"],
+    "version": 1,
+    "objectives": [
+      {
+        "objectiveKey": "quest.objective.collect_apples",
+        "targetId": "apple",
+        "count": 3
+      },
+      {
+        "objectiveKey": "quest.objective.collect_pears",
+        "targetId": "pear",
+        "count": 3
+      }
+    ],
+    "rewards": [
+      {
+        "rewardType": "xp",
+        "amount": 50
       }
     ]
   }

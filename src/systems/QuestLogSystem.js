@@ -32,13 +32,15 @@ export class QuestLogSystem {
 
   createQuestLogUi() {
     this.questLogOpen = this.scene?.gameState?.ui?.questLogOpen ?? false;
+    this.activeTab = this.scene?.gameState?.ui?.questLogTab ?? "active";
     this.panelWidth = 360;
-    this.panelHeight = 240;
+    this.panelHeight = 260;
 
     const panelX = 0;
     const panelY = 0;
     const contentPadding = UI_PADDING;
     const titleHeight = 22;
+    const tabHeight = 18;
 
     this.scene.questLogUi = this.scene.add
       .container(0, 0)
@@ -65,10 +67,37 @@ export class QuestLogSystem {
       .setScrollFactor(0);
     this.scene.questLogUi.add(this.title);
 
+    this.activeTabText = this.scene.add
+      .text(panelX + contentPadding, panelY + contentPadding + titleHeight, "Active", {
+        fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+        fontSize: "12px",
+        color: uiTheme.textPrimary,
+      })
+      .setScrollFactor(0)
+      .setInteractive({ useHandCursor: true })
+      .on("pointerdown", () => this.setQuestLogTab("active"));
+    this.scene.questLogUi.add(this.activeTabText);
+
+    this.completedTabText = this.scene.add
+      .text(
+        panelX + contentPadding + 70,
+        panelY + contentPadding + titleHeight,
+        "Completed",
+        {
+          fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+          fontSize: "12px",
+          color: uiTheme.textMuted,
+        }
+      )
+      .setScrollFactor(0)
+      .setInteractive({ useHandCursor: true })
+      .on("pointerdown", () => this.setQuestLogTab("completed"));
+    this.scene.questLogUi.add(this.completedTabText);
+
     this.contentText = this.scene.add
       .text(
         panelX + contentPadding,
-        panelY + contentPadding + titleHeight,
+        panelY + contentPadding + titleHeight + tabHeight,
         "",
         {
           fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
@@ -85,6 +114,19 @@ export class QuestLogSystem {
     this.scene.scale.on("resize", this.handleResize, this);
     this.updateQuestLogUi();
     this.setQuestLogVisible(this.questLogOpen);
+  }
+
+  setQuestLogTab(tab) {
+    if (tab !== "active" && tab !== "completed") {
+      return;
+    }
+    this.activeTab = tab;
+    if (!this.scene.gameState.ui) {
+      this.scene.gameState.ui = {};
+    }
+    this.scene.gameState.ui.questLogTab = tab;
+    this.scene.persistGameState?.();
+    this.updateQuestLogUi();
   }
 
   setQuestLogVisible(isVisible) {
@@ -131,71 +173,115 @@ export class QuestLogSystem {
     const questLines = [];
     const questSystem = this.scene.questSystem;
     const activeQuests = this.scene?.gameState?.quests?.active ?? {};
-    const questIds = Object.keys(activeQuests);
+    const completedQuests = this.scene?.gameState?.quests?.completed ?? {};
 
-    if (questIds.length === 0) {
-      questLines.push("No active quests.");
-      this.contentText.setText(questLines);
-      return;
-    }
-
-    questIds.forEach((questId, index) => {
-      const quest = questSystem?.getQuest?.(questId);
-      const definition =
-        quest?.definition ?? questSystem?.getQuestDefinition?.(questId);
-      const questName =
-        questSystem?.getQuestDisplayName?.(questId) ??
-        definition?.nameKey ??
-        definition?.id ??
-        questId;
-      questLines.push(`${index + 1}. ${questName}`);
-
-      const status = quest?.status ?? activeQuests[questId]?.status ?? "active";
-      if (status === "ready_to_turn_in") {
-        questLines.push("  Status: Ready to turn in");
-      } else if (status !== "active") {
-        questLines.push(`  Status: ${status}`);
-      }
-
-      const objectives = definition?.objectives ?? [];
-      if (objectives.length === 0) {
-        questLines.push("  • No objectives listed");
+    if (this.activeTab === "completed") {
+      const questIds = Object.keys(completedQuests);
+      if (questIds.length === 0) {
+        questLines.push("No completed quests.");
       } else {
-        objectives.forEach((objective, objectiveIndex) => {
-          const targetKey =
-            objective?.targetId ??
-            objective?.objectiveKey ??
-            `objective_${objectiveIndex}`;
-          const label =
-            questSystem?.getTargetDisplayName?.(objective?.targetId) ??
-            objective?.objectiveKey ??
-            objective?.targetId ??
-            targetKey;
-          const required = Math.max(1, Number(objective?.count ?? 1));
-          const progress = Math.min(
-            required,
-            questSystem?.getObjectiveProgress?.(questId, objective, targetKey) ??
-              Number(quest?.progress?.[targetKey] ?? 0)
-          );
-          questLines.push(`  • ${label}: ${progress}/${required}`);
+        questIds.forEach((questId, index) => {
+          const definition = questSystem?.getQuestDefinition?.(questId);
+          const questName =
+            questSystem?.getQuestDisplayName?.(questId) ??
+            definition?.nameKey ??
+            definition?.id ??
+            questId;
+          questLines.push(`${index + 1}. ${questName}`);
+          questLines.push("  Status: Completed");
+
+          const objectives = definition?.objectives ?? [];
+          if (objectives.length > 0) {
+            objectives.forEach((objective, objectiveIndex) => {
+              const targetKey =
+                objective?.targetId ??
+                objective?.objectiveKey ??
+                `objective_${objectiveIndex}`;
+              const label =
+                questSystem?.getTargetDisplayName?.(objective?.targetId) ??
+                objective?.objectiveKey ??
+                objective?.targetId ??
+                targetKey;
+              const required = Math.max(1, Number(objective?.count ?? 1));
+              questLines.push(`  • ${label}: ${required}/${required}`);
+            });
+          }
+
+          if (index < questIds.length - 1) {
+            questLines.push(" ");
+          }
         });
       }
+    } else {
+      const questIds = Object.keys(activeQuests);
+      if (questIds.length === 0) {
+        questLines.push("No active quests.");
+      } else {
+        questIds.forEach((questId, index) => {
+          const quest = questSystem?.getQuest?.(questId);
+          const definition =
+            quest?.definition ?? questSystem?.getQuestDefinition?.(questId);
+          const questName =
+            questSystem?.getQuestDisplayName?.(questId) ??
+            definition?.nameKey ??
+            definition?.id ??
+            questId;
+          questLines.push(`${index + 1}. ${questName}`);
 
-      const rewards = definition?.rewards ?? [];
-      if (rewards.length > 0) {
-        const rewardLabels = rewards
-          .map((reward) => formatReward(reward))
-          .filter(Boolean);
-        if (rewardLabels.length > 0) {
-          questLines.push(`  Rewards: ${rewardLabels.join(", ")}`);
-        }
-      }
+          const status = quest?.status ?? activeQuests[questId]?.status ?? "active";
+          if (status === "ready_to_turn_in") {
+            questLines.push("  Status: Ready to turn in");
+          } else if (status !== "active") {
+            questLines.push(`  Status: ${status}`);
+          }
 
-      if (index < questIds.length - 1) {
-        questLines.push(" ");
+          const objectives = definition?.objectives ?? [];
+          if (objectives.length === 0) {
+            questLines.push("  • No objectives listed");
+          } else {
+            objectives.forEach((objective, objectiveIndex) => {
+              const targetKey =
+                objective?.targetId ??
+                objective?.objectiveKey ??
+                `objective_${objectiveIndex}`;
+              const label =
+                questSystem?.getTargetDisplayName?.(objective?.targetId) ??
+                objective?.objectiveKey ??
+                objective?.targetId ??
+                targetKey;
+              const required = Math.max(1, Number(objective?.count ?? 1));
+              const progress = Math.min(
+                required,
+                questSystem?.getObjectiveProgress?.(questId, objective, targetKey) ??
+                  Number(quest?.progress?.[targetKey] ?? 0)
+              );
+              questLines.push(`  • ${label}: ${progress}/${required}`);
+            });
+          }
+
+          const rewards = definition?.rewards ?? [];
+          if (rewards.length > 0) {
+            const rewardLabels = rewards
+              .map((reward) => formatReward(reward))
+              .filter(Boolean);
+            if (rewardLabels.length > 0) {
+              questLines.push(`  Rewards: ${rewardLabels.join(", ")}`);
+            }
+          }
+
+          if (index < questIds.length - 1) {
+            questLines.push(" ");
+          }
+        });
       }
-    });
+    }
 
     this.contentText.setText(questLines);
+    this.activeTabText?.setColor(
+      this.activeTab === "active" ? uiTheme.textPrimary : uiTheme.textMuted
+    );
+    this.completedTabText?.setColor(
+      this.activeTab === "completed" ? uiTheme.textPrimary : uiTheme.textMuted
+    );
   }
 }
