@@ -15,6 +15,7 @@ export const createCollectibles = (scene, onPickup, mapState) => {
   const spawnPlan = [
     {
       itemId: "apple",
+      requiredQuestId: "quest_fruit_harvest_01",
       spots: [
         { x: 4, y: 3 },
         { x: 9, y: 6 },
@@ -23,6 +24,7 @@ export const createCollectibles = (scene, onPickup, mapState) => {
     },
     {
       itemId: "pear",
+      requiredQuestId: "quest_fruit_harvest_01",
       spots: [
         { x: 6, y: 9 },
         { x: 16, y: 4 },
@@ -38,36 +40,73 @@ export const createCollectibles = (scene, onPickup, mapState) => {
     sprite.setData("itemId", itemId);
   };
 
-  const collectedItems = mapState?.collectedItems ?? [];
-  const collectedIds = new Set(
-    collectedItems
-      .map((entry) =>
-        typeof entry === "string" ? entry : entry?.collectibleId ?? entry?.id
-      )
-      .filter(Boolean)
-  );
+  const getCollectedIds = () =>
+    new Set(
+      (mapState?.collectedItems ?? [])
+        .map((entry) =>
+          typeof entry === "string" ? entry : entry?.collectibleId ?? entry?.id
+        )
+        .filter(Boolean)
+    );
 
-  spawnPlan.forEach(({ itemId, spots }) => {
-    const item = itemIndex[itemId];
-    if (!item) {
-      return;
+  const getActiveCollectibleIds = () =>
+    new Set(
+      scene.collectibles
+        .getChildren()
+        .map((entry) => entry?.getData?.("collectibleId"))
+        .filter(Boolean)
+    );
+
+  const shouldSpawnForQuest = (questId) => {
+    if (!questId) {
+      return true;
     }
-    const iconKey = item.iconKey ?? itemId;
+    const questStatus = scene.questSystem?.getQuestStatus?.(questId);
+    return questStatus === "active" || questStatus === "ready_to_turn_in";
+  };
 
-    spots.forEach((spot, index) => {
-      const collectibleId = `${itemId}-${index}`;
-      if (collectedIds.has(collectibleId)) {
+  const spawnCollectibles = (options = {}) => {
+    const { questId } = options;
+    const collectedIds = getCollectedIds();
+    const activeCollectibleIds = getActiveCollectibleIds();
+
+    spawnPlan.forEach(({ itemId, spots, requiredQuestId }) => {
+      if (questId && requiredQuestId !== questId) {
         return;
       }
-      const collectible = scene.collectibles.create(
-        spot.x * TILE_WIDTH,
-        spot.y * TILE_WIDTH,
-        iconKey
-      );
-      collectible.setData("collectibleId", collectibleId);
-      registerCollectible(collectible, itemId);
+      if (!shouldSpawnForQuest(requiredQuestId)) {
+        return;
+      }
+      const item = itemIndex[itemId];
+      if (!item) {
+        return;
+      }
+      const iconKey = item.iconKey ?? itemId;
+
+      spots.forEach((spot, index) => {
+        const collectibleId = `${itemId}-${index}`;
+        if (collectedIds.has(collectibleId) || activeCollectibleIds.has(collectibleId)) {
+          return;
+        }
+        const collectible = scene.collectibles.create(
+          spot.x * TILE_WIDTH,
+          spot.y * TILE_WIDTH,
+          iconKey
+        );
+        collectible.setData("collectibleId", collectibleId);
+        registerCollectible(collectible, itemId);
+      });
     });
-  });
+  };
+
+  spawnCollectibles();
+
+  scene.spawnQuestCollectibles = (questId) => {
+    if (!questId) {
+      return;
+    }
+    spawnCollectibles({ questId });
+  };
 
   scene.physics.add.overlap(scene.player, scene.collectibles, onPickup, null, scene);
 };
