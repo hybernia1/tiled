@@ -36,6 +36,9 @@ export const applyNpcDefinition = (scene, sprite, npcDefinition, options = {}) =
   sprite.setData("attackDamage", baseAttackDamage);
   sprite.setData("aggroRange", baseAggroRange);
   sprite.setData("attackRange", baseAttackRange);
+  if (Number.isFinite(npcDefinition.xpReward)) {
+    sprite.setData("xpReward", npcDefinition.xpReward);
+  }
 
   if (showNameplate) {
     const nameplate = scene.add

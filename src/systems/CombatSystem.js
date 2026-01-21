@@ -1164,7 +1164,11 @@ export class CombatSystem {
       }
       const npcName = npc.getData("displayName") ?? "NPC";
       this.scene.gameLogSystem?.addEntry("logNpcDefeated", { npc: npcName });
-      const xpReward = Number(npcDefinition?.xpReward);
+      const xpReward = Number(
+        npcDefinition?.xpReward ??
+          npcDefinition?.stats?.xpReward ??
+          npc.getData("xpReward")
+      );
       if (Number.isFinite(xpReward) && xpReward > 0) {
         this.addPlayerXp(xpReward);
       }

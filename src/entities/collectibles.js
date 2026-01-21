@@ -28,6 +28,7 @@ export const createCollectibles = (scene, onPickup, mapState) => {
       spots: [
         { x: 6, y: 9 },
         { x: 16, y: 4 },
+        { x: 12, y: 14 },
       ],
     },
   ];
