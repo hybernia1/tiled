@@ -9,7 +9,7 @@ const STORAGE_KEY = "tiled:gameState";
 const DEFAULT_SPELLBAR_SLOTS = [
   { spellId: "shot" },
   { spellId: "shield" },
-  { spellId: null },
+  { spellId: "meditate" },
   { spellId: null },
   { spellId: null },
   { spellId: null },

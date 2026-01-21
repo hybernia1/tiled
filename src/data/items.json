@@ -5,6 +5,8 @@
     "displayName": "Apple",
     "iconKey": "apple",
     "stackSize": 99,
+    "sellPrice": 0,
+    "buyPrice": 1,
     "rarity": "common",
     "tags": ["food", "fruit"]
   },
@@ -14,6 +16,8 @@
     "displayName": "Pear",
     "iconKey": "pear",
     "stackSize": 99,
+    "sellPrice": 0,
+    "buyPrice": 1,
     "rarity": "common",
     "tags": ["food", "fruit"]
   },
@@ -23,6 +27,8 @@
     "displayName": "Boar Chunk",
     "iconKey": "boar_chunk",
     "stackSize": 99,
+    "sellPrice": 1,
+    "buyPrice": 2,
     "rarity": "common",
     "tags": ["food", "meat"]
   }

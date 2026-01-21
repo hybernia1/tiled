@@ -35,6 +35,31 @@ export class InteractionSystem {
       .setVisible(isClose);
   }
 
+  updateTraderNpcInteraction() {
+    const { traderNpc, player, traderNpcPrompt } = this.scene;
+    if (!traderNpc || !player || !traderNpcPrompt) {
+      return;
+    }
+
+    const traderNpcDisplay = this.scene.getDisplaySprite(traderNpc);
+    const promptDepth =
+      traderNpcDisplay?.depth !== undefined
+        ? traderNpcDisplay.depth + 2
+        : 12;
+    traderNpcPrompt.setDepth(promptDepth);
+    const distance = Phaser.Math.Distance.Between(
+      player.x,
+      player.y,
+      traderNpc.x,
+      traderNpc.y
+    );
+    const isClose = distance < 70;
+
+    traderNpcPrompt
+      .setPosition(traderNpcDisplay.x, traderNpcDisplay.y - 30)
+      .setVisible(isClose);
+  }
+
   consumeTouchAction(action) {
     const touchActions = this.scene?.touchActions;
     if (!touchActions || typeof touchActions.has !== "function") {
@@ -103,6 +128,36 @@ export class InteractionSystem {
     }
 
     this.showFriendlyNpcDialogue();
+    return true;
+  }
+
+  handleTraderNpcClick(worldPoint) {
+    const { traderNpc, player } = this.scene;
+    if (!traderNpc?.active || !player) {
+      return false;
+    }
+    const distanceToPlayer = Phaser.Math.Distance.Between(
+      player.x,
+      player.y,
+      traderNpc.x,
+      traderNpc.y
+    );
+    if (distanceToPlayer >= 70) {
+      return false;
+    }
+
+    const traderNpcDisplay = this.scene.getDisplaySprite(traderNpc);
+    const clickDistance = Phaser.Math.Distance.Between(
+      worldPoint.x,
+      worldPoint.y,
+      traderNpcDisplay.x,
+      traderNpcDisplay.y
+    );
+    if (clickDistance > 28) {
+      return false;
+    }
+
+    this.scene.tradeSystem?.showTrade?.();
     return true;
   }
 

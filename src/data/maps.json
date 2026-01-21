@@ -24,5 +24,18 @@
     },
     "tilesetKey": "tileset.cave",
     "musicKey": "music.cave"
+  },
+  {
+    "id": "map_tavern_01",
+    "type": "map",
+    "nameKey": "map.tavern.01",
+    "tags": ["indoor", "town"],
+    "version": 1,
+    "size": {
+      "width": 64,
+      "height": 64
+    },
+    "tilesetKey": "tileset.tavern",
+    "musicKey": "music.tavern"
   }
 ]

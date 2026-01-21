@@ -100,7 +100,29 @@ export const pinewoodMap = {
   roomId: null,
   floorTextureKey: "grass",
   floorFramePrefix: "grass",
-  portal: { x: 12, y: 44, targetMapId: "pinewood:cave" },
+  portals: [
+    {
+      x: 12,
+      y: 44,
+      targetMapId: "pinewood:cave",
+      targetSceneKey: "cave",
+      promptKey: "enterCave",
+      textureKey: "cave-entrance",
+    },
+    {
+      x: 20,
+      y: 42,
+      targetMapId: "pinewood:tavern",
+      targetSceneKey: "tavern",
+      promptKey: "enterTavern",
+      textureKey: "tavern-entrance",
+    },
+  ],
   tiles: buildPinewoodTiles(),
   graveyard: { x: 32, y: 31, width: 4, height: 4 },
+  npcSpawns: {
+    friendlyGuide: true,
+    pigs: true,
+    trader: false,
+  },
 };

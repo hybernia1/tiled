@@ -9,7 +9,11 @@ import { createNpcTexture } from "./npc.js";
 import { createFriendlyNpcTexture } from "./npcFriend.js";
 import { createPigTexture } from "./pig.js";
 import { createPlayerTexture } from "./player.js";
-import { createSpellShieldTexture, createSpellShotTexture } from "./spells.js";
+import {
+  createSpellMeditateTexture,
+  createSpellShieldTexture,
+  createSpellShotTexture,
+} from "./spells.js";
 import { createCollisionTilesTexture } from "./terrain/collision.js";
 import { createGrassTexture } from "./terrain/grass.js";
 import { createGraveyardTexture } from "./terrain/graveyard.js";
@@ -17,6 +21,7 @@ import { createMountainTexture } from "./terrain/mountain.js";
 import { createPondTexture } from "./terrain/pond.js";
 import { createRockTexture } from "./terrain/rock.js";
 import { createCaveEntranceTexture } from "./terrain/caveEntrance.js";
+import { createTavernEntranceTexture } from "./terrain/tavernEntrance.js";
 import {
   createConiferTexture,
   createDeciduousTexture,
@@ -140,6 +145,22 @@ export const textureRegistry = [
     lightEmission: 0,
     version: 1,
     create: createCaveEntranceTexture,
+  },
+  {
+    id: "tavern-entrance",
+    type: "terrain",
+    size: { width: TILE_WIDTH, height: TILE_HEIGHT },
+    palette: ["#b58a5a", "#8a623e", "#7a3a2b", "#4b2d1a"],
+    rarity: "common",
+    isAnimated: false,
+    tags: ["structure", "tile", "portal"],
+    effectTag: "structure",
+    materialType: "wood",
+    impactVFX: "wood-splinter",
+    soundId: "hit-wood",
+    lightEmission: 0.1,
+    version: 1,
+    create: createTavernEntranceTexture,
   },
   {
     id: "pond",
@@ -408,6 +429,22 @@ export const textureRegistry = [
     lightEmission: 0.8,
     version: 1,
     create: createSpellShieldTexture,
+  },
+  {
+    id: "spell-meditate",
+    type: "spell",
+    size: { width: 20, height: 20 },
+    palette: ["#7ed6a5", "#d6f5e2"],
+    rarity: "rare",
+    isAnimated: false,
+    tags: ["spell", "restoration"],
+    effectTag: "spell",
+    materialType: "arcane",
+    impactVFX: "magic-burst",
+    soundId: "spell-cast",
+    lightEmission: 0.4,
+    version: 1,
+    create: createSpellMeditateTexture,
   },
 ];
 

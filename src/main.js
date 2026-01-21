@@ -8,6 +8,7 @@ const startGame = async () => {
       Phaser,
       { createGameConfig },
       { CaveScene },
+      { TavernScene },
       { WorldScene },
       { LoadingScene },
       { MenuScene },
@@ -15,6 +16,7 @@ const startGame = async () => {
       import("phaser"),
       import("./config/gameConfig.js"),
       import("./scenes/CaveScene.js"),
+      import("./scenes/TavernScene.js"),
       import("./scenes/WorldScene.js"),
       import("./scenes/LoadingScene.js"),
       import("./scenes/MenuScene.js"),
@@ -25,6 +27,7 @@ const startGame = async () => {
       MenuScene,
       WorldScene,
       CaveScene,
+      TavernScene,
     ]);
 
     new Phaser.Game(config);

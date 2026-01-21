@@ -35,5 +35,20 @@
       "amount": 20
     },
     "handler": "shield"
+  },
+  "meditate": {
+    "spellId": "meditate",
+    "name": "Meditate",
+    "iconKey": "spell-meditate",
+    "description": "Restore 20 mana instantly. Cannot be used at full mana.",
+    "damage": 0,
+    "cooldownMs": 30000,
+    "globalCooldownMs": 0,
+    "castTimeMs": 0,
+    "resourceCost": {
+      "type": "mana",
+      "amount": 0
+    },
+    "handler": "meditate"
   }
 }

@@ -25,8 +25,10 @@ export const createMap = (scene, options = {}) => {
     floorTextureKey = "grass",
     floorFramePrefix = "grass",
     portal,
+    portals,
     tiles = {},
   } = mapDefinition ?? {};
+  const portalList = Array.isArray(portals) ? portals : portal ? [portal] : [];
   const {
     data = Array.from({ length: MAP_H }, () =>
       Array.from({ length: MAP_W }, () => TILE_TYPES.FLOOR)
@@ -51,7 +53,10 @@ export const createMap = (scene, options = {}) => {
   textureLoader?.ensureTexture("mountains");
   textureLoader?.ensureTexture("pond");
   textureLoader?.ensureTexture("rock");
-  textureLoader?.ensureTexture("cave-entrance");
+  portalList.forEach((entry) => {
+    const portalTextureKey = entry?.textureKey ?? "cave-entrance";
+    textureLoader?.ensureTexture(portalTextureKey);
+  });
   textureLoader?.ensureTexture("tree-conifer");
   textureLoader?.ensureTexture("tree-deciduous");
 
@@ -100,10 +105,6 @@ export const createMap = (scene, options = {}) => {
   const mountainFrames = ["mountain-0", "mountain-1", "mountain-2"];
   const pondW = getFrameWidth(scene, "pond") || 0;
   const pondScale = pondW ? desiredFloorW / pondW : floorScale;
-  const caveEntranceW = getFrameWidth(scene, "cave-entrance") || 0;
-  const caveEntranceScale = caveEntranceW
-    ? desiredFloorW / caveEntranceW
-    : floorScale;
   const treeW = getFrameWidth(scene, "tree-conifer") || desiredFloorW;
   const treeScale = treeW ? desiredFloorW / treeW : floorScale;
 
@@ -217,26 +218,31 @@ export const createMap = (scene, options = {}) => {
     }
   }
 
-  if (portal) {
-    const portalIsoX = portal.x * ISO_STEP;
-    const portalIsoY = portal.y * ISO_STEP;
-    const portalTile = scene.add.isoSprite(
-      portalIsoX,
-      portalIsoY,
-      1,
-      "cave-entrance"
-    );
-    portalTile.setOrigin(0.5, 1);
-    portalTile.setScale(caveEntranceScale);
-    portalTile.isoX = portalIsoX;
-    portalTile.isoY = portalIsoY;
-    portalTile.isoZ = 1;
-    portalTile.setDepth(portalTile.isoX + portalTile.isoY + TILE_HEIGHT);
-    scene.portalSprite = portalTile;
-    scene.portalTile = portal;
+  scene.portals = [];
+  if (portalList.length) {
+    portalList.forEach((portalEntry) => {
+      const portalTextureKey = portalEntry?.textureKey ?? "cave-entrance";
+      const portalIsoX = portalEntry.x * ISO_STEP;
+      const portalIsoY = portalEntry.y * ISO_STEP;
+      const portalW = getFrameWidth(scene, portalTextureKey) || 0;
+      const portalScale = portalW ? desiredFloorW / portalW : floorScale;
+      const portalTile = scene.add.isoSprite(
+        portalIsoX,
+        portalIsoY,
+        1,
+        portalTextureKey
+      );
+      portalTile.setOrigin(0.5, 1);
+      portalTile.setScale(portalScale);
+      portalTile.isoX = portalIsoX;
+      portalTile.isoY = portalIsoY;
+      portalTile.isoZ = 1;
+      portalTile.setDepth(portalTile.isoX + portalTile.isoY + TILE_HEIGHT);
+      scene.portals.push({ portal: portalEntry, sprite: portalTile });
+    });
   }
 
   return {
-    portal,
+    portals: scene.portals,
   };
 };

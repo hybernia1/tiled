@@ -1,5 +1,8 @@
 import { getRegistryData } from "./baseRegistry.js";
-import { spellHandlers } from "../../systems/spells/handlers.js";
+import {
+  spellCanCastHandlers,
+  spellHandlers,
+} from "../../systems/spells/handlers.js";
 import { Spell } from "../../systems/spells/Spell.js";
 
 const resolveValue = (value, context, fallback) => {
@@ -39,6 +42,7 @@ export const createSpell = (definition, context = {}) => {
     resourceCost,
     castTimeMs,
     globalCooldownMs,
+    canCast: definition.canCast,
     onCast: definition.onCast,
     onExpire: definition.onExpire,
   });
@@ -66,6 +70,7 @@ const resolveDefinitionValue = (value) => {
 const hydrateDefinition = (definition, registryKey) => {
   const { handler, ...rest } = definition;
   const onCast = spellHandlers[handler];
+  const canCast = spellCanCastHandlers?.[handler] ?? null;
 
   if (!onCast) {
     console.error(
@@ -83,6 +88,7 @@ const hydrateDefinition = (definition, registryKey) => {
   return {
     ...hydrated,
     onCast,
+    canCast,
   };
 };
 

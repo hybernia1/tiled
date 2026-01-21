@@ -56,6 +56,21 @@
       "resetAggro": true
     }
   },
+  "trader": {
+    "id": "trader",
+    "displayName": "Trader",
+    "type": "friendly",
+    "behaviorProfile": "friendly",
+    "stats": {
+      "level": 1,
+      "maxHealth": 3
+    },
+    "respawnRules": {
+      "delay": 0,
+      "resetHealth": true,
+      "resetAggro": true
+    }
+  },
   "pig_level_1": {
     "id": "pig_level_1",
     "displayName": "Piglet",
