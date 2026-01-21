@@ -7,7 +7,8 @@
     "stats": {
       "level": 1,
       "maxHealth": 3,
-      "attackDamage": 1
+      "attackDamage": 1,
+      "xpReward": 5
     },
     "ranges": {
       "aggroRange": 3,
@@ -27,7 +28,8 @@
     "stats": {
       "level": 1,
       "maxHealth": 3,
-      "attackDamage": 1
+      "attackDamage": 1,
+      "xpReward": 4
     },
     "ranges": {
       "aggroRange": 3,
