@@ -18,6 +18,7 @@ import { TextureLoader } from "../assets/textures/TextureLoader.js";
 import { textureProperties } from "../assets/textures/registry.js";
 import { createBullets } from "../entities/bullets.js";
 import { createFriendlyNpc } from "../entities/friendlyNpc.js";
+import { createTraderNpc } from "../entities/traderNpc.js";
 import { createCollectibles } from "../entities/collectibles.js";
 import { createMap } from "../entities/map.js";
 import { createPigNpc } from "../entities/pigNpc.js";
@@ -41,17 +42,21 @@ import { EffectSystem } from "../systems/effects/EffectSystem.js";
 import { QuestSystem } from "../systems/QuestSystem.js";
 import { QuestLogSystem } from "../systems/QuestLogSystem.js";
 import { DropSystem } from "../systems/DropSystem.js";
+import { TradeSystem } from "../systems/TradeSystem.js";
 import { getMapDefinition } from "../worlds/registry.js";
 import { getItemDisplayName } from "../data/registries/items.js";
 
 const MAP_NAMES = {
   pinewood: "Pinewood",
   "pinewood:cave": "Spider cave",
+  "pinewood:tavern": "Tavern",
 };
 
 const PORTAL_PROMPTS = {
   enterCave: "Click to enter the cave",
   exitCave: "Click to go back outside",
+  enterTavern: "Click to enter the tavern",
+  exitTavern: "Click to go back outside",
 };
 
 export class BaseMapScene extends Phaser.Scene {
@@ -74,6 +79,7 @@ export class BaseMapScene extends Phaser.Scene {
     this.targetRing = null;
     this.targetRingTween = null;
     this.isPlayerDead = false;
+    this.portals = [];
   }
 
   init(data) {
@@ -90,6 +96,7 @@ export class BaseMapScene extends Phaser.Scene {
     this.textureLoader.prefetch([
       "spell-shot",
       "spell-shield",
+      "spell-meditate",
       "npcFriend",
       "pig",
     ]);
@@ -98,6 +105,7 @@ export class BaseMapScene extends Phaser.Scene {
   create() {
     this.gameState = loadGameState();
     this.mapState = getMapState(this.gameState, this.mapId);
+    this.mapDefinition = getMapDefinition(this.mapId);
     this.persistGameState = () => saveGameState(this.gameState);
     this.registry.set("textureProperties", textureProperties);
     const playerState = this.gameState.player;
@@ -110,14 +118,15 @@ export class BaseMapScene extends Phaser.Scene {
     this.combatSystem = new CombatSystem(this);
     this.npcAggroSystem = new NpcAggroSystem(this);
     this.inventorySystem = new InventorySystem(this);
+    this.tradeSystem = new TradeSystem(this, this.inventorySystem);
     this.questSystem = new QuestSystem(this);
     this.questLogSystem = new QuestLogSystem(this);
     this.dropSystem = new DropSystem(this);
     this.interactionSystem = new InteractionSystem(this, this.inventorySystem);
     this.gameLogSystem = new GameLogSystem(this);
 
-    const { portal } = createMap(this, { mapId: this.mapId });
-    this.portalTargetMapId = portal?.targetMapId ?? null;
+    const { portals } = createMap(this, { mapId: this.mapId });
+    this.portals = portals ?? [];
     createPlayer(this, this.spawnPoint, playerState);
     this.syncPlayerState();
     this.effectSystem.restoreEffects();
@@ -127,9 +136,22 @@ export class BaseMapScene extends Phaser.Scene {
       this.mapState
     );
     createBullets(this);
-    createFriendlyNpc(this);
-    createPigNpc(this);
+    const npcSpawns = this.mapDefinition?.npcSpawns ?? {};
+    const spawnFriendlyNpc = npcSpawns.friendlyGuide ?? true;
+    const spawnPigNpc = npcSpawns.pigs ?? true;
+    const traderSpawn = npcSpawns.trader ?? null;
+    if (spawnFriendlyNpc) {
+      createFriendlyNpc(this);
+    }
+    if (spawnPigNpc) {
+      createPigNpc(this);
+    }
+    if (traderSpawn) {
+      const spawnData = typeof traderSpawn === "object" ? traderSpawn : {};
+      createTraderNpc(this, spawnData);
+    }
     this.inventorySystem.createInventoryUi();
+    this.tradeSystem.createTradeUi();
     this.questLogSystem.createQuestLogUi();
     this.gameLogSystem.createLogUi();
     this.gameLogSystem.addEntry("logMapEntered", {
@@ -176,9 +198,13 @@ export class BaseMapScene extends Phaser.Scene {
     this.combatSystem.updateNpcHealthDisplay();
     this.combatSystem.updateTargetHud();
     this.interactionSystem.updateFriendlyNpcInteraction();
+    this.interactionSystem.updateTraderNpcInteraction();
     this.inventorySystem.updateInventoryToggle();
     this.questLogSystem.updateQuestLogToggle();
     this.questLogSystem.updateQuestLogUi();
+    if (this.tradeSystem?.tradeDialog?.visible) {
+      this.tradeSystem.updateTradeUi();
+    }
     this.updatePortalInteraction();
     this.syncIsometricSprites();
     this.updateNpcNameplates();
@@ -192,6 +218,7 @@ export class BaseMapScene extends Phaser.Scene {
     this.attachIsoSprite(this.player);
     this.attachIsoSprite(this.npc);
     this.attachIsoSprite(this.friendlyNpc);
+    this.attachIsoSprite(this.traderNpc);
     this.attachIsoGroup(this.collectibles);
     this.attachIsoGroup(this.pigNpcGroup);
   }
@@ -271,6 +298,7 @@ export class BaseMapScene extends Phaser.Scene {
     this.syncIsoSprite(this.player);
     this.syncIsoSprite(this.npc);
     this.syncIsoSprite(this.friendlyNpc);
+    this.syncIsoSprite(this.traderNpc);
     this.syncIsoGroup(this.bullets, { createIfMissing: true });
     this.syncIsoGroup(this.collectibles, { createIfMissing: true });
     this.syncIsoGroup(this.pigNpcGroup, { createIfMissing: true });
@@ -299,6 +327,7 @@ export class BaseMapScene extends Phaser.Scene {
 
     updateForSprite(this.npc);
     updateForSprite(this.friendlyNpc);
+    updateForSprite(this.traderNpc);
     if (this.pigNpcGroup) {
       this.pigNpcGroup.children.iterate((child) => updateForSprite(child));
     }
@@ -333,6 +362,7 @@ export class BaseMapScene extends Phaser.Scene {
 
     collectTarget(this.npc);
     collectTarget(this.friendlyNpc);
+    collectTarget(this.traderNpc);
     if (this.pigNpcGroup) {
       this.pigNpcGroup.children.iterate((child) => collectTarget(child));
     }
@@ -384,46 +414,68 @@ export class BaseMapScene extends Phaser.Scene {
     if (this.interactionSystem?.handleFriendlyNpcClick?.(worldPoint)) {
       return true;
     }
+    if (this.interactionSystem?.handleTraderNpcClick?.(worldPoint)) {
+      return true;
+    }
 
     return false;
   }
 
   handlePortalClick(worldPoint) {
-    if (!this.portalSprite || !this.player) {
+    if (!this.portals?.length || !this.player) {
       return false;
     }
-
-    const portalWorldX = this.portalTile
-      ? this.portalTile.x * TILE_WIDTH
-      : this.portalSprite.isoX ?? this.portalSprite.x;
-    const portalWorldY = this.portalTile
-      ? this.portalTile.y * TILE_WIDTH
-      : this.portalSprite.isoY ?? this.portalSprite.y;
-    const distanceToPlayer = Phaser.Math.Distance.Between(
-      this.player.x,
-      this.player.y,
-      portalWorldX,
-      portalWorldY
-    );
-    if (distanceToPlayer >= 70) {
-      return false;
+    for (const portalEntry of this.portals) {
+      const portalSprite = this.getPortalSprite(portalEntry);
+      if (!portalSprite) {
+        continue;
+      }
+      const portalWorldX =
+        portalEntry.portal?.x !== undefined
+          ? portalEntry.portal.x * TILE_WIDTH
+          : portalSprite.isoX ?? portalSprite.x;
+      const portalWorldY =
+        portalEntry.portal?.y !== undefined
+          ? portalEntry.portal.y * TILE_WIDTH
+          : portalSprite.isoY ?? portalSprite.y;
+      const distanceToPlayer = Phaser.Math.Distance.Between(
+        this.player.x,
+        this.player.y,
+        portalWorldX,
+        portalWorldY
+      );
+      if (distanceToPlayer >= 70) {
+        continue;
+      }
+      const clickDistance = Phaser.Math.Distance.Between(
+        worldPoint.x,
+        worldPoint.y,
+        portalSprite.x,
+        portalSprite.y
+      );
+      if (clickDistance > 32) {
+        continue;
+      }
+      const targetSceneKey =
+        portalEntry.portal?.targetSceneKey ?? this.portalTargetKey;
+      this.syncPlayerState();
+      this.scene.start(targetSceneKey, {
+        spawnPoint: this.getPortalSpawnPoint(
+          portalEntry.portal?.targetMapId,
+          this.mapId
+        ),
+      });
+      return true;
     }
 
-    const clickDistance = Phaser.Math.Distance.Between(
-      worldPoint.x,
-      worldPoint.y,
-      this.portalSprite.x,
-      this.portalSprite.y
-    );
-    if (clickDistance > 32) {
-      return false;
-    }
+    return false;
+  }
 
-    this.syncPlayerState();
-    this.scene.start(this.portalTargetKey, {
-      spawnPoint: this.getPortalSpawnPoint(this.portalTargetMapId),
-    });
-    return true;
+  getPortalSprite(portalEntry) {
+    if (!portalEntry) {
+      return null;
+    }
+    return portalEntry.sprite ?? portalEntry.portalSprite ?? null;
   }
 
   cycleTarget() {
@@ -656,7 +708,7 @@ export class BaseMapScene extends Phaser.Scene {
 
   createPortalPrompt() {
     this.portalPrompt = this.add
-      .text(0, 0, PORTAL_PROMPTS[this.portalPromptKey] ?? this.portalPromptKey, {
+      .text(0, 0, "", {
         fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
         fontSize: "16px",
         color: "#f6f2ee",
@@ -1099,33 +1151,49 @@ export class BaseMapScene extends Phaser.Scene {
   }
 
   updatePortalInteraction() {
-    if (!this.portalSprite || !this.player) {
+    if (!this.portals?.length || !this.player || !this.portalPrompt) {
+      return;
+    }
+    let closestPortal = null;
+    let closestDistance = Infinity;
+
+    this.portals.forEach((entry) => {
+      const portalSprite = this.getPortalSprite(entry);
+      if (!portalSprite) {
+        return;
+      }
+      const portalWorldX =
+        entry.portal?.x !== undefined
+          ? entry.portal.x * TILE_WIDTH
+          : portalSprite.isoX ?? portalSprite.x;
+      const portalWorldY =
+        entry.portal?.y !== undefined
+          ? entry.portal.y * TILE_WIDTH
+          : portalSprite.isoY ?? portalSprite.y;
+      const distance = Phaser.Math.Distance.Between(
+        this.player.x,
+        this.player.y,
+        portalWorldX,
+        portalWorldY
+      );
+      if (distance < closestDistance) {
+        closestDistance = distance;
+        closestPortal = { entry, portalSprite };
+      }
+    });
+
+    if (!closestPortal || closestDistance >= 70) {
+      this.portalPrompt.setVisible(false);
       return;
     }
 
-    const portalWorldX = this.portalTile
-      ? this.portalTile.x * TILE_WIDTH
-      : this.portalSprite.isoX ?? this.portalSprite.x;
-    const portalWorldY = this.portalTile
-      ? this.portalTile.y * TILE_WIDTH
-      : this.portalSprite.isoY ?? this.portalSprite.y;
-    const distance = Phaser.Math.Distance.Between(
-      this.player.x,
-      this.player.y,
-      portalWorldX,
-      portalWorldY
-    );
-    const isClose = distance < 70;
-
+    const promptKey =
+      closestPortal.entry.portal?.promptKey ?? this.portalPromptKey;
     this.portalPrompt
-      .setPosition(this.portalSprite.x, this.portalSprite.y - 32)
-      .setDepth(this.portalSprite.depth + 2)
-      .setVisible(isClose);
-
-    if (!isClose) {
-      return;
-    }
-
+      .setText(PORTAL_PROMPTS[promptKey] ?? promptKey)
+      .setPosition(closestPortal.portalSprite.x, closestPortal.portalSprite.y - 32)
+      .setDepth(closestPortal.portalSprite.depth + 2)
+      .setVisible(true);
   }
 
   getNpcQuestTooltipData() {
@@ -1289,11 +1357,19 @@ export class BaseMapScene extends Phaser.Scene {
     this.persistGameState?.();
   }
 
-  getPortalSpawnPoint(targetMapId) {
+  getPortalSpawnPoint(targetMapId, sourceMapId = null) {
     if (!targetMapId) {
       return null;
     }
-    const targetPortal = getMapDefinition(targetMapId)?.portal;
+    const targetMap = getMapDefinition(targetMapId);
+    const portals = Array.isArray(targetMap?.portals)
+      ? targetMap.portals
+      : targetMap?.portal
+      ? [targetMap.portal]
+      : [];
+    const targetPortal =
+      portals.find((entry) => entry?.targetMapId === sourceMapId) ??
+      portals[0];
     if (!targetPortal) {
       return null;
     }
@@ -1456,6 +1532,9 @@ export class BaseMapScene extends Phaser.Scene {
     }
     if (this.friendlyNpc) {
       this.physics.add.collider(this.friendlyNpc, this.mapLayer);
+    }
+    if (this.traderNpc) {
+      this.physics.add.collider(this.traderNpc, this.mapLayer);
     }
     if (this.pigNpcGroup) {
       this.physics.add.collider(this.pigNpcGroup, this.mapLayer);

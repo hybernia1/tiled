@@ -1,16 +1,16 @@
 import { MAP_H, MAP_W } from "../../../config/constants.js";
 import { TILE_TYPES } from "../../tiles.js";
 
-const buildCaveTiles = () => {
+const buildTavernTiles = () => {
   const data = Array.from({ length: MAP_H }, () =>
-    Array.from({ length: MAP_W }, () => TILE_TYPES.HARD_WALL)
+    Array.from({ length: MAP_W }, () => TILE_TYPES.WALL)
   );
 
   const room = {
     x: 20,
     y: 20,
     width: 20,
-    height: 20,
+    height: 18,
   };
 
   for (let y = room.y; y < room.y + room.height; y += 1) {
@@ -27,26 +27,26 @@ const buildCaveTiles = () => {
   };
 };
 
-export const pinewoodCaveMap = {
-  id: "pinewood:cave",
+export const pinewoodTavernMap = {
+  id: "pinewood:tavern",
   worldId: "pinewood",
-  roomId: "cave",
-  floorTextureKey: "rock",
-  floorFramePrefix: "rock",
+  roomId: "tavern",
+  floorTextureKey: "grass",
+  floorFramePrefix: "grass",
   portals: [
     {
-      x: 30,
-      y: 30,
+      x: 29,
+      y: 34,
       targetMapId: "pinewood",
       targetSceneKey: "world",
-      promptKey: "exitCave",
-      textureKey: "cave-entrance",
+      promptKey: "exitTavern",
+      textureKey: "tavern-entrance",
     },
   ],
-  tiles: buildCaveTiles(),
+  tiles: buildTavernTiles(),
   npcSpawns: {
     friendlyGuide: false,
     pigs: false,
-    trader: false,
+    trader: { x: 28, y: 28 },
   },
 };

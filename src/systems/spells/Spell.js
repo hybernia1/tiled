@@ -8,6 +8,7 @@ export class Spell {
     resourceCost = null,
     castTimeMs = 0,
     globalCooldownMs = 0,
+    canCast = null,
     onCast,
     onExpire,
   }) {
@@ -19,6 +20,7 @@ export class Spell {
     this.resourceCost = resourceCost;
     this.castTimeMs = castTimeMs;
     this.globalCooldownMs = globalCooldownMs;
+    this.canCast = canCast;
     this.onCast = onCast;
     this.onExpire = onExpire;
     this.lastCastAt = -Infinity;
@@ -47,6 +49,9 @@ export class Spell {
       combatSystem?.isGlobalCooldownReady &&
       !combatSystem.isGlobalCooldownReady(this, spellTime)
     ) {
+      return false;
+    }
+    if (this.canCast && !this.canCast(context, payload)) {
       return false;
     }
     if (

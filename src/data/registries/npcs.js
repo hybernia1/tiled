@@ -6,6 +6,7 @@ export const NPC_IDS = {
   hostileWanderer: "hostileWanderer",
   neutralWanderer: "neutralWanderer",
   friendlyGuide: "friendlyGuide",
+  trader: "trader",
   piglet: "pig",
   withLevel: createNpcLevelId,
   pigLevel: (level) => createNpcLevelId("pig", level),

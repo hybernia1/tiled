@@ -62,3 +62,33 @@ export const createSpellShieldTexture = (scene) => {
 
   shield.refresh();
 };
+
+export const createSpellMeditateTexture = (scene) => {
+  if (scene.textures.exists("spell-meditate")) {
+    return;
+  }
+  const meditate = scene.textures.createCanvas("spell-meditate", 20, 20);
+  if (!meditate) {
+    return;
+  }
+  const ctx = meditate.getContext();
+  if (!ctx) {
+    return;
+  }
+
+  ctx.fillStyle = "#7ed6a5";
+  ctx.beginPath();
+  ctx.arc(10, 10, 6, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.strokeStyle = "#d6f5e2";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(10, 5);
+  ctx.lineTo(10, 15);
+  ctx.moveTo(5, 10);
+  ctx.lineTo(15, 10);
+  ctx.stroke();
+
+  meditate.refresh();
+};

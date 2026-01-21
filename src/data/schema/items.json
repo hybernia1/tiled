@@ -10,6 +10,8 @@
       "displayName": { "type": "string" },
       "iconKey": { "type": "string" },
       "stackSize": { "type": "number" },
+      "sellPrice": { "type": "number" },
+      "buyPrice": { "type": "number" },
       "rarity": { "type": "string" },
       "tags": {
         "type": "array",
